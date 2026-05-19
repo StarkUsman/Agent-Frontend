@@ -21,14 +21,16 @@ const Dashboard = () => {
       {/* Left: fixed sidebar */}
       <Sidebar />
 
-      {/* Right: scrollable main content */}
-      <main className="flex-1 overflow-y-auto">
+      {/* Right: header fixed + content scrolls */}
+      <main className="flex-1 flex flex-col overflow-hidden">
 
-        {/* Step 2 ✓ */}
-        <DashboardHeader />
+        {/* Sticky top bar — never scrolls */}
+        <div className="bg-slate-50 border-b border-slate-100 shrink-0">
+          <DashboardHeader />
+        </div>
 
-        {/* Steps 3–7 will stack here inside this padding wrapper */}
-        <div className="px-8 pb-3 space-y-4">
+        {/* Scrollable content area */}
+        <div className="flex-1 overflow-y-auto px-8 pb-3 pt-5 space-y-4">
 
           {/* Step 3 ✓ */}
           <StatsRow />

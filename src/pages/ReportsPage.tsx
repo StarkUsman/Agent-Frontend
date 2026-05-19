@@ -97,17 +97,18 @@ const ReportsPage = () => {
     <div className="flex h-screen bg-slate-50 overflow-hidden">
       <Sidebar />
 
-      <main className="flex-1 overflow-y-auto">
+      <main className="flex-1 flex flex-col overflow-hidden">
 
-        {/* ── Page header ── */}
-        <div className="px-8 pt-5 pb-4">
+        {/* Sticky top bar — never scrolls */}
+        <div className="px-8 pt-5 pb-4 bg-slate-50 border-b border-slate-100 shrink-0">
           <h1 className="text-xl font-bold text-slate-900 tracking-tight">Reports</h1>
           <p className="text-sm text-slate-500 mt-0.5">
             Performance and usage data from pipecat metrics.
           </p>
         </div>
 
-        <div className="px-8 pb-6 space-y-5">
+        {/* Scrollable content area */}
+        <div className="flex-1 overflow-y-auto px-8 pt-5 pb-6 space-y-5">
 
           {/* ── Section 1: Stat cards ── */}
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">

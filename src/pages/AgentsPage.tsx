@@ -104,10 +104,10 @@ const AgentsPage = () => {
       <Sidebar />
 
       {/* Main content */}
-      <main className="flex-1 overflow-y-auto">
+      <main className="flex-1 flex flex-col overflow-hidden">
 
-        {/* Page header */}
-        <div className="flex items-center justify-between px-8 pt-5 pb-4">
+        {/* Sticky top bar — never scrolls */}
+        <div className="flex items-center justify-between px-8 pt-5 pb-4 bg-slate-50 border-b border-slate-100 shrink-0">
           <div>
             <h1 className="text-xl font-bold text-slate-900 tracking-tight">My agents</h1>
             <p className="text-sm text-slate-500 mt-0.5">
@@ -123,8 +123,8 @@ const AgentsPage = () => {
           </button>
         </div>
 
-        {/* Table card */}
-        <div className="px-8 pb-8">
+        {/* Scrollable content area */}
+        <div className="flex-1 overflow-y-auto px-8 pt-5 pb-8">
           <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
             <table className="w-full">
 

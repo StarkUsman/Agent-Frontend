@@ -114,17 +114,18 @@ const CallHistoryPage = () => {
       <Sidebar />
 
       {/* Main content */}
-      <main className="flex-1 overflow-y-auto">
+      <main className="flex-1 flex flex-col overflow-hidden">
 
-        {/* Page header */}
-        <div className="px-8 pt-5 pb-4">
+        {/* Sticky top bar — never scrolls */}
+        <div className="px-8 pt-5 pb-4 bg-slate-50 border-b border-slate-100 shrink-0">
           <h1 className="text-xl font-bold text-slate-900 tracking-tight">Call history</h1>
           <p className="text-sm text-slate-500 mt-0.5">
             A record of every call handled by your agents.
           </p>
         </div>
 
-        <div className="px-8 pb-8 space-y-4">
+        {/* Scrollable content area */}
+        <div className="flex-1 overflow-y-auto px-8 pt-5 pb-8 space-y-4">
 
           {/* Filter row */}
           <div className="flex items-center gap-3">
