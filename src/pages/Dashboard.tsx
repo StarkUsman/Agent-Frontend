@@ -2,6 +2,8 @@ import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Sidebar from '../components/dashboard/Sidebar'
 import DashboardHeader from '../components/dashboard/DashboardHeader'
+import StatsRow from '../components/dashboard/StatsRow'
+import LiveCallsSection from '../components/dashboard/LiveCallsSection'
 
 const Dashboard = () => {
   const navigate = useNavigate()
@@ -27,10 +29,16 @@ const Dashboard = () => {
         {/* Steps 3–7 will stack here inside this padding wrapper */}
         <div className="px-8 pb-8 space-y-8">
 
-          {/* Placeholder — Step 3 replaces this with stats cards */}
+          {/* Step 3 ✓ */}
+          <StatsRow />
+
+          {/* Step 4 ✓ */}
+          <LiveCallsSection />
+
+          {/* Placeholder — Step 5 replaces this with Agents grid */}
           <div className="flex items-center justify-center h-40 border-2 border-dashed border-slate-200 rounded-2xl">
             <p className="text-slate-300 text-sm font-medium">
-              Step 3 → Stats cards coming next
+              Step 5 → Agents grid coming next
             </p>
           </div>
 
