@@ -181,6 +181,7 @@ const DecisionSection = ({
   const [isOpen, setIsOpen] = useState(false)
 
   const current = decision ?? { action: '', conditions: [] }
+  const conditions = current.conditions ?? []
 
   const handleToggle = () => {
     // First open: create the decision object if it doesn't exist yet
@@ -199,20 +200,20 @@ const DecisionSection = ({
     onChange({
       ...current,
       conditions: [
-        ...current.conditions,
+        ...conditions,
         { id: `cond-${Date.now()}`, operator: '==', value: '', next_node: null },
       ],
     })
 
   const updateCondition = (i: number, updated: DecisionCondition) => {
-    const next = [...current.conditions]; next[i] = updated
+    const next = [...conditions]; next[i] = updated
     onChange({ ...current, conditions: next })
   }
 
   const deleteCondition = (i: number) =>
     onChange({
       ...current,
-      conditions: current.conditions.filter((_, idx) => idx !== i),
+      conditions: conditions.filter((_, idx) => idx !== i),
     })
 
   return (
@@ -273,13 +274,13 @@ const DecisionSection = ({
               </button>
             </div>
 
-            {current.conditions.length === 0 ? (
+            {conditions.length === 0 ? (
               <p className="text-[11px] text-slate-400 italic">
                 No conditions — click + Add to create one.
               </p>
             ) : (
               <div className="space-y-3">
-                {current.conditions.map((cond, i) => (
+                {conditions.map((cond, i) => (
                   <ConditionCard
                     key={cond.id}
                     cond={cond}
@@ -397,21 +398,22 @@ const FunctionCard = ({
   onDelete: () => void
 }) => {
   const [isOpen, setIsOpen] = useState(true)
+  const props = fn.properties ?? []
 
   const addProperty = () =>
     onChange({
       ...fn,
       properties: [
-        ...fn.properties,
+        ...props,
         { id: `prop-${Date.now()}`, name: '', required: false, type: 'string', validation: 'none', enumValues: '', pattern: '' },
       ],
     })
 
   const updateProp = (i: number, p: FnProperty) => {
-    const next = [...fn.properties]; next[i] = p; onChange({ ...fn, properties: next })
+    const next = [...props]; next[i] = p; onChange({ ...fn, properties: next })
   }
   const deleteProp = (i: number) =>
-    onChange({ ...fn, properties: fn.properties.filter((_, idx) => idx !== i) })
+    onChange({ ...fn, properties: props.filter((_, idx) => idx !== i) })
 
   return (
     <div className={`rounded-xl border-2 overflow-hidden transition-colors ${isOpen ? 'border-indigo-300' : 'border-slate-200'}`}>
@@ -458,11 +460,11 @@ const FunctionCard = ({
                 <MdAdd className="text-sm" /> Add Property
               </button>
             </div>
-            {fn.properties.length === 0 ? (
+            {props.length === 0 ? (
               <p className="text-[11px] text-slate-400 italic">No properties. Click "Add Property" to create one.</p>
             ) : (
               <div className="space-y-3">
-                {fn.properties.map((prop, i) => (
+                {props.map((prop, i) => (
                   <PropertyCard key={prop.id} prop={prop} onChange={(p) => updateProp(i, p)} onDelete={() => deleteProp(i)} />
                 ))}
               </div>

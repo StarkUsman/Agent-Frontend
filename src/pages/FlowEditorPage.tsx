@@ -12,6 +12,8 @@ import FlowCanvas    from '../components/flow/FlowCanvas'
 import NodeInspector from '../components/flow/NodeInspector'
 import { AGENTS } from '../data/agents'
 import { flowToPython } from '../utils/flowToPython'
+import { flowToJson } from '../utils/flowToJson'
+import { jsonToFlow, isPipecatFlow } from '../utils/jsonToFlow'
 
 // ── localStorage key per agent ─────────────────────────────────────────────
 const storageKey = (agentId: string) => `pipcat-flow-agent-${agentId}`
@@ -24,7 +26,9 @@ const loadFlow = (agentId: string): { nodes: Node[]; edges: Edge[] } | null => {
     if (!raw) return null
     const parsed = JSON.parse(raw)
     if (parsed?.nodes && parsed?.edges) return parsed
-  } catch {}
+  } catch {
+    console.warn('Failed to load flow from localStorage for agent', agentId)
+  }
   return null
 }
 
@@ -102,7 +106,7 @@ const FlowEditorInner = ({ agentId, agentName, savedFlow }: InnerProps) => {
   }, [getNodes, setNodes, setEdges, showToast])
 
   const handleExport = useCallback(() => {
-    const flow = { nodes: getNodes(), edges: getEdges() }
+    const flow = flowToJson(getNodes(), getEdges(), agentName)
     const blob = new Blob([JSON.stringify(flow, null, 2)], { type: 'application/json' })
     const url  = URL.createObjectURL(blob)
     const a    = document.createElement('a')
@@ -142,9 +146,16 @@ const FlowEditorInner = ({ agentId, agentName, savedFlow }: InnerProps) => {
       const reader = new FileReader()
       reader.onload = (e) => {
         try {
-          const { nodes, edges } = JSON.parse(e.target?.result as string)
-          setNodes(nodes ?? [])
-          setEdges(edges ?? [])
+          const parsed = JSON.parse(e.target?.result as string)
+          if (isPipecatFlow(parsed)) {
+            const { nodes, edges } = jsonToFlow(parsed)
+            setNodes(nodes)
+            setEdges(edges)
+          } else {
+            // Legacy ReactFlow format
+            setNodes(parsed.nodes ?? [])
+            setEdges(parsed.edges ?? [])
+          }
           showToast('Flow imported')
         } catch {
           showToast('Invalid file — check the JSON format')
@@ -165,7 +176,10 @@ const FlowEditorInner = ({ agentId, agentName, savedFlow }: InnerProps) => {
     const py      = flowToPython(getNodes(), getEdges(), agentName)
     const payload = { agent_name: agentName, script: py }
     console.log('[Deploy] button pressed')
-    console.log('[Deploy] payload:', payload)
+    console.log(payload)
+    console.log('===============================')
+    console.log(JSON.stringify(payload.script, null, 2))
+    console.log('===============================')
     showToast('Deploy triggered — check console')
   }, [getNodes, getEdges, agentName, showToast])
 
