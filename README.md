@@ -11,6 +11,14 @@ Currently, two official plugins are available:
 
 The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
 
+## Environment Variables
+
+Set `VITE_FLOW_SERVER_URL` to control where the flow editor sends deploy requests.
+
+```bash
+VITE_FLOW_SERVER_URL=http://localhost:8080
+```
+
 ## Expanding the ESLint configuration
 
 If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:

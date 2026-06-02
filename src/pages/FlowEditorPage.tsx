@@ -56,6 +56,8 @@ const NEW_FLOW_NODES: Node[] = [
   { id: '1', type: 'initial', position: { x: 240, y: 60 }, data: { label: 'Initial' } },
 ]
 
+const flowServerUrl = import.meta.env.VITE_FLOW_SERVER_URL ?? 'http://localhost:8080'
+
 // ── Toast ──────────────────────────────────────────────────────────────────
 const Toast = ({ message }: { message: string }) => (
   <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-slate-900 text-white text-xs font-medium px-4 py-2.5 rounded-xl shadow-xl pointer-events-none">
@@ -172,7 +174,7 @@ const FlowEditorInner = ({ agentId, agentName, savedFlow }: InnerProps) => {
     showToast('Example flow loaded')
   }, [setNodes, setEdges, showToast])
 
-  const handleDeploy = useCallback(() => {
+  const handleDeploy = useCallback(async () => {
     const py      = flowToPython(getNodes(), getEdges(), agentName)
     const payload = { agent_name: agentName, script: py }
     console.log('[Deploy] button pressed')
@@ -180,7 +182,24 @@ const FlowEditorInner = ({ agentId, agentName, savedFlow }: InnerProps) => {
     console.log('===============================')
     console.log(JSON.stringify(payload.script, null, 2))
     console.log('===============================')
-    showToast('Deploy triggered — check console')
+    try {
+      const response = await fetch(new URL('/deployNewFlow', flowServerUrl), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ code: payload.script }),
+      })
+
+      if (!response.ok) {
+        throw new Error(`Deploy request failed with status ${response.status}`)
+      }
+
+      showToast('Deploy triggered')
+    } catch (error) {
+      console.error('Deploy request failed:', error)
+      showToast('Deploy failed — check the console for details')
+    }
   }, [getNodes, getEdges, agentName, showToast])
 
   return (
