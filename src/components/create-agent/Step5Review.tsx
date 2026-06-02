@@ -68,7 +68,8 @@ const Step5Review = ({ draft, onEdit }: Props) => {
           <Row label="Language"         value={LANGUAGE_LABELS[draft.language] ?? draft.language} />
           <Row label="Voice recognition" value={`${draft.voiceProvider} (nova-3)`} />
           <Row label="AI pipeline"      value="Speech-to-speech — Voice-native AI" />
-          <Row label="Model"            value={draft.model} />
+          <Row label="Model"            value={draft.openaiModel} />
+          <Row label="Base URL"         value={draft.openaiBaseUrl} />
           <Row label="Opening greeting" value={truncate(draft.openingGreeting, 70) || '—'} />
           <Row label="Topics handled"   value={topicsValue || '—'} />
           {draft.topicsToAvoid.trim() && (
