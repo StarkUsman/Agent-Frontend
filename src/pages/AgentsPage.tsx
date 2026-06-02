@@ -8,6 +8,19 @@ import { AGENTS } from '../data/agents'
 // ── Config ─────────────────────────────────────────────────────────────────
 const ITEMS_PER_PAGE = 6
 
+// ── Read live flow node count from localStorage ────────────────────────────
+const getStoredFlow = (agentId: number): { nodes: number } | null => {
+  try {
+    const raw = localStorage.getItem(`pipcat-flow-agent-${agentId}`)
+    if (!raw) return null
+    const parsed = JSON.parse(raw)
+    if (Array.isArray(parsed?.nodes) && parsed.nodes.length > 0) {
+      return { nodes: parsed.nodes.length }
+    }
+  } catch {}
+  return null
+}
+
 const COLUMNS = [
   { label: 'Agent name',        width: 'w-[35%]' },
   { label: 'Voice',             width: 'w-[12%]' },
@@ -28,12 +41,14 @@ const AgentsPage = () => {
     if (!token) navigate('/', { replace: true })
   }, [navigate])
 
-  const totalPages  = Math.ceil(AGENTS.length / ITEMS_PER_PAGE)
+  // Merge static agent data with live flow counts from localStorage
+  const agents      = AGENTS.map((a) => ({ ...a, flow: getStoredFlow(a.id) ?? a.flow }))
+  const totalPages  = Math.ceil(agents.length / ITEMS_PER_PAGE)
   const startIndex  = (currentPage - 1) * ITEMS_PER_PAGE
-  const paginated   = AGENTS.slice(startIndex, startIndex + ITEMS_PER_PAGE)
+  const paginated   = agents.slice(startIndex, startIndex + ITEMS_PER_PAGE)
   const startItem   = startIndex + 1
-  const endItem     = Math.min(startIndex + ITEMS_PER_PAGE, AGENTS.length)
-  const noFlowCount = AGENTS.filter((a) => a.flow === null).length
+  const endItem     = Math.min(startIndex + ITEMS_PER_PAGE, agents.length)
+  const noFlowCount = agents.filter((a) => a.flow === null).length
 
   return (
     <div className="flex h-screen bg-slate-50 overflow-hidden">

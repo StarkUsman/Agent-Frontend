@@ -22,8 +22,9 @@ export interface AgentDraft {
   voiceProvider: string
   voiceGender: 'male' | 'female' | 'neutral'
   // Step 3
-  model: string
   openaiApiKey: string
+  openaiModel: string
+  openaiBaseUrl: string
   // Step 4
   openingGreeting: string
   topicsHandled: string
@@ -38,8 +39,9 @@ const INITIAL_DRAFT: AgentDraft = {
   voiceName: '',
   voiceProvider: '',
   voiceGender: 'neutral',
-  model: 'gpt-4o-realtime-preview',
   openaiApiKey: '',
+  openaiModel: 'llama-3.3-70b-versatile',
+  openaiBaseUrl: 'https://api.groq.com/openai/v1',
   openingGreeting: "Hello! Thank you for calling. My name is Clara and I'm here to help you today. What can I do for you?",
   topicsHandled: 'Billing questions and invoice queries\nAccount management and password resets\nOrder status and delivery enquiries\nProduct information',
   topicsToAvoid: '',
