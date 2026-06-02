@@ -50,6 +50,7 @@ const AgentsPage = () => {
             </p>
           </div>
           <button
+            onClick={() => navigate('/agents/new')}
             className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-white text-sm font-semibold hover:opacity-90 active:scale-95 transition-all cursor-pointer shrink-0"
             style={{ backgroundColor: '#6366f1' }}
           >

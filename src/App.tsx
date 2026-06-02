@@ -5,6 +5,7 @@ import AgentsPage from './pages/AgentsPage'
 import CallHistoryPage from './pages/CallHistoryPage'
 import ReportsPage from './pages/ReportsPage'
 import FlowEditorPage from './pages/FlowEditorPage'
+import CreateAgentPage from './pages/CreateAgentPage'
 
 const App = () => {
   return (
@@ -13,6 +14,7 @@ const App = () => {
         <Route path="/" element={<LoginPage />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/agents" element={<AgentsPage />} />
+        <Route path="/agents/new" element={<CreateAgentPage />} />
         <Route path="/calls" element={<CallHistoryPage />} />
         <Route path="/reports" element={<ReportsPage />} />
         <Route path="/agents/:id/flow" element={<FlowEditorPage />} />
