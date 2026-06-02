@@ -85,6 +85,22 @@ const CreateAgentPage = () => {
     if (step < TOTAL_STEPS) {
       setStep((s) => s + 1)
     } else {
+      const payload = {
+        agent_name:      draft.name,
+        purpose:         draft.purpose,
+        language:        draft.language,
+        voice_id:        draft.voiceId,
+        voice_name:      draft.voiceName,
+        voice_provider:  draft.voiceProvider,
+        opening_greeting: draft.openingGreeting,
+        topics_handled:  draft.topicsHandled.split('\n').filter(Boolean),
+        topics_to_avoid: draft.topicsToAvoid.split('\n').filter(Boolean),
+        OPENAI_API_KEY:  draft.openaiApiKey,
+        OPENAI_MODEL:    draft.openaiModel,
+        OPENAI_BASE_URL: draft.openaiBaseUrl,
+      }
+      console.log('[CreateAgent] payload:', payload)
+
       AGENTS.push({
         id: AGENTS.length + 1,
         name: draft.name,
