@@ -165,7 +165,7 @@ const FlowToolbar = ({
           <MdOutlinePets className="text-white text-sm" />
         </div>
         <div className="leading-tight">
-          <p className="text-xs font-bold text-slate-800 tracking-tight">PipCat Studio</p>
+          <p className="text-xs font-bold text-slate-800 tracking-tight">PipeCat Studio</p>
           <p className="text-[10px] text-slate-400">Voice AI Platform</p>
         </div>
       </div>

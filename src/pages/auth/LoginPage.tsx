@@ -81,7 +81,7 @@ const LoginPage = () => {
             <MdOutlinePets className="text-white text-xl" />
           </div>
           <span className="text-white font-bold text-xl tracking-tight">
-            PipCat Studio
+            PipeCat Studio
           </span>
         </div>
 
@@ -109,7 +109,7 @@ const LoginPage = () => {
 
         {/* Footer */}
         <p className="relative z-10 text-slate-600 text-xs">
-          © {new Date().getFullYear()} PipCat Studio. All rights reserved.
+          © {new Date().getFullYear()} PipeCat Studio. All rights reserved.
         </p>
       </div>
 
@@ -126,7 +126,7 @@ const LoginPage = () => {
               <MdOutlinePets className="text-white text-lg" />
             </div>
             <span className="font-bold text-gray-900 text-lg tracking-tight">
-              PipCat Studio
+              PipeCat Studio
             </span>
           </div>
 

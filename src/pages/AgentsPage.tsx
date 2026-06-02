@@ -11,7 +11,7 @@ const ITEMS_PER_PAGE = 6
 // ── Read live flow node count from localStorage ────────────────────────────
 const getStoredFlow = (agentId: number): { nodes: number } | null => {
   try {
-    const raw = localStorage.getItem(`pipcat-flow-agent-${agentId}`)
+    const raw = localStorage.getItem(`pipecat-flow-agent-${agentId}`)
     if (!raw) return null
     const parsed = JSON.parse(raw)
     if (Array.isArray(parsed?.nodes) && parsed.nodes.length > 0) {

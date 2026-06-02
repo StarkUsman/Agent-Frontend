@@ -16,7 +16,7 @@ import { flowToJson } from '../utils/flowToJson'
 import { jsonToFlow, isPipecatFlow } from '../utils/jsonToFlow'
 
 // ── localStorage key per agent ─────────────────────────────────────────────
-const storageKey = (agentId: string) => `pipcat-flow-agent-${agentId}`
+const storageKey = (agentId: string) => `pipecat-flow-agent-${agentId}`
 
 // ── Load a saved flow from localStorage ───────────────────────────────────
 // Returns { nodes, edges } if found, otherwise null (canvas uses its defaults)

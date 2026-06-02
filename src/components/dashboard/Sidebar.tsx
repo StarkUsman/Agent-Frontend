@@ -41,7 +41,7 @@ const Sidebar = () => {
           <MdOutlinePets className="text-white text-lg" />
         </div>
         <div className="leading-tight">
-          <p className="text-sm font-bold text-slate-900 tracking-tight">PipCat Studio</p>
+          <p className="text-sm font-bold text-slate-900 tracking-tight">PipeCat Studio</p>
           <p className="text-[11px] text-slate-400">Voice AI Platform</p>
         </div>
       </div>
@@ -95,13 +95,13 @@ const Sidebar = () => {
             className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-white text-xs font-bold"
             style={{ backgroundColor: '#6366f1' }}
           >
-            SA
+            MU
           </div>
 
           {/* Name + role */}
           <div className="flex-1 min-w-0 leading-tight">
-            <p className="text-sm font-semibold text-slate-800 truncate">Sara Ahmed</p>
-            <p className="text-[11px] text-slate-400 truncate">Operations manager</p>
+            <p className="text-sm font-semibold text-slate-800 truncate">M Usman</p>
+            <p className="text-[11px] text-slate-400 truncate">Admin</p>
           </div>
 
           {/* Actions */}
