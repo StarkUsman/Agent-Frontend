@@ -4,8 +4,8 @@ import axios from 'axios'
 import { MdEmail } from 'react-icons/md'
 import { HiLockClosed, HiEye, HiEyeOff } from 'react-icons/hi'
 import { FaGoogle, FaFacebook, FaApple } from 'react-icons/fa'
-import { MdOutlinePets } from 'react-icons/md'
 import { BsCheckCircleFill } from 'react-icons/bs'
+import logo from '../../assets/logo.png'
 
 const FEATURES = [
   'Manage your creative projects in one place',
@@ -76,9 +76,9 @@ const LoginPage = () => {
         <div className="relative z-10 flex items-center gap-3">
           <div
             className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-            style={{ backgroundColor: '#ea6c2e' }}
+            style={{ backgroundColor: '#dde3e3' }}
           >
-            <MdOutlinePets className="text-white text-xl" />
+            <img src={logo} alt="PipeCat Studio logo" className="w-8 h-8 object-contain" />
           </div>
           <span className="text-white font-bold text-xl tracking-tight">
             PipeCat Studio
@@ -123,7 +123,7 @@ const LoginPage = () => {
               className="w-9 h-9 rounded-xl flex items-center justify-center"
               style={{ backgroundColor: '#ea6c2e' }}
             >
-              <MdOutlinePets className="text-white text-lg" />
+              <img src={logo} alt="PipeCat Studio logo" className="w-7 h-7 object-contain" />
             </div>
             <span className="font-bold text-gray-900 text-lg tracking-tight">
               PipeCat Studio
@@ -233,14 +233,14 @@ const LoginPage = () => {
           </form>
 
           {/* Demo credentials hint */}
-          <div className="mt-4 px-4 py-3 rounded-lg border border-dashed border-gray-200 bg-gray-50">
+          {/* <div className="mt-4 px-4 py-3 rounded-lg border border-dashed border-gray-200 bg-gray-50">
             <p className="text-xs text-gray-400 font-medium mb-0.5">Demo credentials</p>
             <p className="text-xs text-gray-500">
               Email: <span className="font-mono text-gray-700">john@mail.com</span>
               &nbsp;·&nbsp;
               Password: <span className="font-mono text-gray-700">changeme</span>
             </p>
-          </div>
+          </div> */}
 
           {/* Divider */}
           <div className="flex items-center gap-3 my-6">

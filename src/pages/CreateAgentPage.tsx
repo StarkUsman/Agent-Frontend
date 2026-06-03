@@ -42,8 +42,8 @@ const INITIAL_DRAFT: AgentDraft = {
   openaiApiKey: '',
   openaiModel: 'llama-3.3-70b-versatile',
   openaiBaseUrl: 'https://api.groq.com/openai/v1',
-  openingGreeting: "Hello! Thank you for calling. My name is Clara and I'm here to help you today. What can I do for you?",
-  topicsHandled: 'Billing questions and invoice queries\nAccount management and password resets\nOrder status and delivery enquiries\nProduct information',
+  openingGreeting: "Hello! Thank you for calling. I'm here to help you today. What can I do for you?",
+  topicsHandled: 'Billing questions and invoice queries\nOrder status and delivery enquiries\nOrder information',
   topicsToAvoid: '',
 }
 

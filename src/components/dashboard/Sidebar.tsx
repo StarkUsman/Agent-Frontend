@@ -1,6 +1,7 @@
 import { NavLink, useNavigate } from 'react-router-dom'
-import { MdOutlineDashboard, MdOutlineSmartToy, MdOutlineAddCircleOutline, MdOutlineHistory, MdOutlineBarChart, MdOutlineSettings, MdOutlinePets } from 'react-icons/md'
+import { MdOutlineDashboard, MdOutlineSmartToy, MdOutlineAddCircleOutline, MdOutlineHistory, MdOutlineBarChart, MdOutlineSettings } from 'react-icons/md'
 import { HiOutlineLogout } from 'react-icons/hi'
+import logo from '../../assets/logo.png'
 
 // ── Nav item definition ────────────────────────────────────────────────────
 interface NavItem {
@@ -36,9 +37,9 @@ const Sidebar = () => {
       <div className="px-5 py-6 flex items-center gap-3">
         <div
           className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
-          style={{ backgroundColor: '#6366f1' }}
+          style={{ backgroundColor: '#dde3e3' }}
         >
-          <MdOutlinePets className="text-white text-lg" />
+          <img src={logo} alt="PipeCat Studio logo" className="w-7 h-7 object-contain" />
         </div>
         <div className="leading-tight">
           <p className="text-sm font-bold text-slate-900 tracking-tight">PipeCat Studio</p>

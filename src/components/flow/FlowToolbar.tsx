@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  MdOutlinePets,
   MdArrowBack,
   MdOutlineNoteAdd,
   MdOutlineUndo,
@@ -14,6 +13,7 @@ import {
   MdKeyboardArrowDown,
   MdRocketLaunch,
 } from 'react-icons/md'
+import logo from '../../assets/logo.png'
 import { TbLayoutGridAdd } from 'react-icons/tb'
 
 // ── Types ──────────────────────────────────────────────────────────────────
@@ -160,9 +160,9 @@ const FlowToolbar = ({
       <div className="flex items-center gap-2.5 pr-4 border-r border-slate-200 shrink-0">
         <div
           className="w-7 h-7 rounded-lg flex items-center justify-center"
-          style={{ backgroundColor: '#6366f1' }}
+          style={{ backgroundColor: '#dde3e3' }}
         >
-          <MdOutlinePets className="text-white text-sm" />
+          <img src={logo} alt="PipeCat Studio logo" className="w-4 h-4 object-contain" />
         </div>
         <div className="leading-tight">
           <p className="text-xs font-bold text-slate-800 tracking-tight">PipeCat Studio</p>
