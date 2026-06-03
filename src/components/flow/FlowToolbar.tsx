@@ -162,10 +162,10 @@ const FlowToolbar = ({
           className="w-7 h-7 rounded-lg flex items-center justify-center"
           style={{ backgroundColor: '#dde3e3' }}
         >
-          <img src={logo} alt="PipeCat Studio logo" className="w-4 h-4 object-contain" />
+          <img src={logo} alt="Octavebytes Voice Studio logo" className="w-4 h-4 object-contain" />
         </div>
         <div className="leading-tight">
-          <p className="text-xs font-bold text-slate-800 tracking-tight">PipeCat Studio</p>
+          <p className="text-xs font-bold text-slate-800 tracking-tight">Octavebytes Voice Studio</p>
           <p className="text-[10px] text-slate-400">Voice AI Platform</p>
         </div>
       </div>

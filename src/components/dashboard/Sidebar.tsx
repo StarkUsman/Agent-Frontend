@@ -39,10 +39,10 @@ const Sidebar = () => {
           className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
           style={{ backgroundColor: '#dde3e3' }}
         >
-          <img src={logo} alt="PipeCat Studio logo" className="w-7 h-7 object-contain" />
+          <img src={logo} alt="Octavebytes Voice Studio logo" className="w-7 h-7 object-contain" />
         </div>
         <div className="leading-tight">
-          <p className="text-sm font-bold text-slate-900 tracking-tight">PipeCat Studio</p>
+          <p className="text-sm font-bold text-slate-900 tracking-tight">Octavebytes Voice Studio</p>
           <p className="text-[11px] text-slate-400">Voice AI Platform</p>
         </div>
       </div>

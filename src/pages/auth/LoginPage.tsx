@@ -78,10 +78,10 @@ const LoginPage = () => {
             className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
             style={{ backgroundColor: '#dde3e3' }}
           >
-            <img src={logo} alt="PipeCat Studio logo" className="w-8 h-8 object-contain" />
+            <img src={logo} alt="Octavebytes Voice Studio logo" className="w-8 h-8 object-contain" />
           </div>
           <span className="text-white font-bold text-xl tracking-tight">
-            PipeCat Studio
+            Octavebytes Voice Studio
           </span>
         </div>
 
@@ -109,7 +109,7 @@ const LoginPage = () => {
 
         {/* Footer */}
         <p className="relative z-10 text-slate-600 text-xs">
-          © {new Date().getFullYear()} PipeCat Studio. All rights reserved.
+          © {new Date().getFullYear()} Octavebytes Voice Studio. All rights reserved.
         </p>
       </div>
 
@@ -123,10 +123,10 @@ const LoginPage = () => {
               className="w-9 h-9 rounded-xl flex items-center justify-center"
               style={{ backgroundColor: '#ea6c2e' }}
             >
-              <img src={logo} alt="PipeCat Studio logo" className="w-7 h-7 object-contain" />
+              <img src={logo} alt="Octavebytes Voice Studio logo" className="w-7 h-7 object-contain" />
             </div>
             <span className="font-bold text-gray-900 text-lg tracking-tight">
-              PipeCat Studio
+              Octavebytes Voice Studio
             </span>
           </div>
 
