@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { MdAdd, MdOutlineWarningAmber, MdChevronLeft, MdChevronRight } from 'react-icons/md'
+import { MdAdd, MdOutlineWarningAmber, MdChevronLeft, MdChevronRight, MdSearch } from 'react-icons/md'
 import Sidebar from '../components/dashboard/Sidebar'
 import AgentTableRow from '../components/agents/AgentTableRow'
 import { AGENTS } from '../data/agents'
@@ -35,20 +35,30 @@ const COLUMNS = [
 const AgentsPage = () => {
   const navigate = useNavigate()
   const [currentPage, setCurrentPage] = useState(1)
+  const [searchQuery, setSearchQuery] = useState('')
 
   useEffect(() => {
     const token = localStorage.getItem('access_token')
     if (!token) navigate('/', { replace: true })
   }, [navigate])
 
-  // Merge static agent data with live flow counts from localStorage
-  const agents      = AGENTS.map((a) => ({ ...a, flow: getStoredFlow(a.id) ?? a.flow }))
-  const totalPages  = Math.ceil(agents.length / ITEMS_PER_PAGE)
-  const startIndex  = (currentPage - 1) * ITEMS_PER_PAGE
+  const allAgents   = AGENTS.map((a) => ({ ...a, flow: getStoredFlow(a.id) ?? a.flow }))
+  const q           = searchQuery.trim().toLowerCase()
+  const agents      = q
+    ? allAgents.filter((a) => a.name.toLowerCase().includes(q) || a.description?.toLowerCase().includes(q))
+    : allAgents
+  const totalPages  = Math.max(1, Math.ceil(agents.length / ITEMS_PER_PAGE))
+  const safePage    = Math.min(currentPage, totalPages)
+  const startIndex  = (safePage - 1) * ITEMS_PER_PAGE
   const paginated   = agents.slice(startIndex, startIndex + ITEMS_PER_PAGE)
-  const startItem   = startIndex + 1
+  const startItem   = agents.length === 0 ? 0 : startIndex + 1
   const endItem     = Math.min(startIndex + ITEMS_PER_PAGE, agents.length)
   const noFlowCount = agents.filter((a) => a.flow === null).length
+
+  const handleSearch = (value: string) => {
+    setSearchQuery(value)
+    setCurrentPage(1)
+  }
 
   return (
     <div className="flex h-screen bg-slate-50 overflow-hidden">
@@ -64,14 +74,26 @@ const AgentsPage = () => {
               Manage and configure your voice agents.
             </p>
           </div>
-          <button
-            onClick={() => navigate('/agents/new')}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-white text-sm font-semibold hover:opacity-90 active:scale-95 transition-all cursor-pointer shrink-0"
-            style={{ backgroundColor: '#6366f1' }}
-          >
-            <MdAdd className="text-lg" />
-            Create agent
-          </button>
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <MdSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 text-lg pointer-events-none" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => handleSearch(e.target.value)}
+                placeholder="Search agents..."
+                className="pl-9 pr-4 py-2 text-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all w-56"
+              />
+            </div>
+            <button
+              onClick={() => navigate('/agents/new')}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-white text-sm font-semibold hover:opacity-90 active:scale-95 transition-all cursor-pointer shrink-0"
+              style={{ backgroundColor: '#6366f1' }}
+            >
+              <MdAdd className="text-lg" />
+              Create agent
+            </button>
+          </div>
         </div>
 
         {/* Scrollable content */}
@@ -92,9 +114,17 @@ const AgentsPage = () => {
                 </tr>
               </thead>
               <tbody>
-                {paginated.map((agent) => (
-                  <AgentTableRow key={agent.id} {...agent} />
-                ))}
+                {paginated.length === 0 ? (
+                  <tr>
+                    <td colSpan={COLUMNS.length} className="py-16 text-center text-sm text-slate-400 dark:text-slate-500">
+                      No agents match <span className="font-semibold text-slate-600 dark:text-slate-300">"{searchQuery}"</span>
+                    </td>
+                  </tr>
+                ) : (
+                  paginated.map((agent) => (
+                    <AgentTableRow key={agent.id} {...agent} />
+                  ))
+                )}
               </tbody>
             </table>
 
@@ -111,17 +141,17 @@ const AgentsPage = () => {
               </div>
             )}
 
-            {/* Pagination */}
-            <div className="flex items-center justify-between px-6 py-3 border-t border-slate-100">
-              <p className="text-xs text-slate-400">
-                Showing <span className="font-semibold text-slate-600">{startItem}–{endItem}</span> of{' '}
-                <span className="font-semibold text-slate-600">{AGENTS.length}</span> agents
+            <div className="flex items-center justify-between px-6 py-3 border-t border-slate-100 dark:border-slate-700">
+              <p className="text-xs text-slate-400 dark:text-slate-500">
+                Showing <span className="font-semibold text-slate-600 dark:text-slate-300">{startItem}–{endItem}</span> of{' '}
+                <span className="font-semibold text-slate-600 dark:text-slate-300">{agents.length}</span> agents
+                {q && <span className="ml-1">for "{searchQuery}"</span>}
               </p>
               <div className="flex items-center gap-1">
                 <button
                   onClick={() => setCurrentPage((p) => p - 1)}
-                  disabled={currentPage === 1}
-                  className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                  disabled={safePage === 1}
+                  className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-700 dark:hover:text-slate-300 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                 >
                   <MdChevronLeft className="text-lg" />
                 </button>
@@ -130,17 +160,17 @@ const AgentsPage = () => {
                     key={page}
                     onClick={() => setCurrentPage(page)}
                     className={`w-7 h-7 rounded-lg text-xs font-semibold transition-colors ${
-                      page === currentPage ? 'text-white' : 'text-slate-500 hover:bg-slate-100'
+                      page === safePage ? 'text-white' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'
                     }`}
-                    style={page === currentPage ? { backgroundColor: '#6366f1' } : {}}
+                    style={page === safePage ? { backgroundColor: '#6366f1' } : {}}
                   >
                     {page}
                   </button>
                 ))}
                 <button
                   onClick={() => setCurrentPage((p) => p + 1)}
-                  disabled={currentPage === totalPages}
-                  className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                  disabled={safePage === totalPages}
+                  className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-700 dark:hover:text-slate-300 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                 >
                   <MdChevronRight className="text-lg" />
                 </button>
