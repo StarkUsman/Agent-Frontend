@@ -20,11 +20,11 @@ const StatCard = ({
   iconColor,
 }: StatCardProps) => {
   return (
-    <div className="bg-white rounded-xl px-4 py-3.5 border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
+    <div className="bg-white dark:bg-slate-800 rounded-xl px-4 py-3.5 border border-slate-100 dark:border-slate-700 shadow-sm hover:shadow-md transition-shadow">
 
       {/* Top row: label + icon */}
       <div className="flex items-center justify-between mb-2">
-        <span className="text-xs text-slate-500 font-medium">
+        <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
           {label}
         </span>
         <div
@@ -36,7 +36,7 @@ const StatCard = ({
       </div>
 
       {/* Value */}
-      <p className="text-2xl font-bold text-slate-900 leading-none mb-1">
+      <p className="text-2xl font-bold text-slate-900 dark:text-slate-100 leading-none mb-1">
         {value}
       </p>
 
@@ -45,7 +45,7 @@ const StatCard = ({
         className={`text-xs font-medium ${
           subType === 'positive' ? 'text-emerald-500'
           : subType === 'indigo'   ? 'text-indigo-500'
-          : 'text-slate-400'
+          : 'text-slate-400 dark:text-slate-500'
         }`}
       >
         {sub}

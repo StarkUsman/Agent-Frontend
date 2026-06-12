@@ -128,16 +128,16 @@ const CreateAgentPage = () => {
   const continueReady = canAdvance(step, draft)
 
   return (
-    <div className="flex h-screen bg-white overflow-hidden">
+    <div className="flex h-screen bg-white dark:bg-slate-900 overflow-hidden">
       <Sidebar />
 
-      <main className="flex-1 flex flex-col overflow-hidden bg-white">
+      <main className="flex-1 flex flex-col overflow-hidden bg-white dark:bg-slate-900">
 
         {/* ── Header ── */}
-        <div className="flex items-center justify-between px-8 pt-6 pb-5 bg-white border-b border-slate-100 shrink-0">
+        <div className="flex items-center justify-between px-8 pt-6 pb-5 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 shrink-0">
           <div>
-            <h1 className="text-xl font-bold text-slate-900 tracking-tight">Create a new agent</h1>
-            <p className="text-sm text-slate-500 mt-0.5">
+            <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">Create a new agent</h1>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
               Follow the steps below to set up your voice agent.
             </p>
           </div>
@@ -146,7 +146,7 @@ const CreateAgentPage = () => {
             {step > 1 && (
               <button
                 onClick={handleBack}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold text-slate-600 border border-slate-200 hover:bg-slate-50 active:scale-95 transition-all cursor-pointer"
+                className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-95 transition-all cursor-pointer"
               >
                 <MdArrowBack className="text-base" />
                 Back
@@ -154,7 +154,7 @@ const CreateAgentPage = () => {
             )}
             <button
               onClick={() => navigate('/agents')}
-              className="px-4 py-2 rounded-xl text-sm font-semibold text-slate-600 border border-slate-200 hover:bg-slate-50 active:scale-95 transition-all cursor-pointer"
+              className="px-4 py-2 rounded-xl text-sm font-semibold text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-95 transition-all cursor-pointer"
             >
               Cancel
             </button>
@@ -183,7 +183,7 @@ const CreateAgentPage = () => {
         <StepIndicator steps={STEPS} currentStep={step} onStepClick={setStep} />
 
         {/* ── Step content ── */}
-        <div className="flex-1 overflow-y-auto px-8 py-10 bg-slate-50">
+        <div className="flex-1 overflow-y-auto px-8 py-10 bg-slate-50 dark:bg-slate-900">
           {step === 1 && <Step1BasicInfo   draft={draft} onChange={updateDraft} />}
           {step === 2 && <Step2ChooseVoice draft={draft} onChange={updateDraft} />}
           {step === 3 && <Step3AISettings  draft={draft} onChange={updateDraft} />}

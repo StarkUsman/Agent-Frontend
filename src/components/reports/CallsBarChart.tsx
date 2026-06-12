@@ -1,3 +1,5 @@
+import { useTheme } from '../../contexts/ThemeContext'
+
 // ── Types ──────────────────────────────────────────────────────────────────
 interface BarData {
   day: string
@@ -20,20 +22,23 @@ const BAR_HEIGHT = 140 // px — height of the bar area
 
 // ── Component ──────────────────────────────────────────────────────────────
 const CallsBarChart = () => {
+  const { theme } = useTheme()
+  const barDefault = theme === 'dark' ? '#3730a3' : '#c7d2fe'
+
   return (
-    <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
+    <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-100 dark:border-slate-700 shadow-sm">
 
       {/* Section title */}
       <div className="mb-6">
-        <h2 className="text-base font-bold text-slate-900">Calls per day</h2>
-        <p className="text-xs text-slate-400 mt-0.5">This week</p>
+        <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">Calls per day</h2>
+        <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">This week</p>
       </div>
 
       {/* Value labels row — sits above bars */}
       <div className="flex items-end gap-2 mb-1 px-1">
         {BAR_DATA.map(({ day, value }) => (
           <div key={day} className="flex-1 text-center">
-            <span className="text-[11px] text-slate-400">{value}</span>
+            <span className="text-[11px] text-slate-400 dark:text-slate-500">{value}</span>
           </div>
         ))}
       </div>
@@ -49,7 +54,7 @@ const CallsBarChart = () => {
             className="flex-1 rounded-t-md transition-all hover:opacity-80"
             style={{
               height: `${(value / MAX_VALUE) * 100}%`,
-              backgroundColor: isToday ? '#6366f1' : '#c7d2fe',
+              backgroundColor: isToday ? '#6366f1' : barDefault,
             }}
           />
         ))}
@@ -61,7 +66,7 @@ const CallsBarChart = () => {
           <div key={day} className="flex-1 text-center">
             <span
               className={`text-xs font-medium ${
-                isToday ? 'text-indigo-600' : 'text-slate-400'
+                isToday ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400 dark:text-slate-500'
               }`}
             >
               {day}

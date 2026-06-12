@@ -61,16 +61,16 @@ const AgentsPage = () => {
   }
 
   return (
-    <div className="flex h-screen bg-slate-50 overflow-hidden">
+    <div className="flex h-screen bg-slate-50 dark:bg-slate-900 overflow-hidden">
       <Sidebar />
 
       <main className="flex-1 flex flex-col overflow-hidden">
 
         {/* Sticky top bar */}
-        <div className="flex items-center justify-between px-8 pt-5 pb-4 bg-slate-50 border-b border-slate-100 shrink-0">
+        <div className="flex items-center justify-between px-8 pt-5 pb-4 bg-slate-50 dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 shrink-0">
           <div>
-            <h1 className="text-xl font-bold text-slate-900 tracking-tight">My agents</h1>
-            <p className="text-sm text-slate-500 mt-0.5">
+            <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">My agents</h1>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
               Manage and configure your voice agents.
             </p>
           </div>
@@ -98,15 +98,15 @@ const AgentsPage = () => {
 
         {/* Scrollable content */}
         <div className="flex-1 overflow-y-auto px-8 pt-5 pb-8">
-          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden">
 
             <table className="w-full">
               <thead className="sticky top-0 z-10">
-                <tr className="bg-slate-50 border-b border-slate-200">
+                <tr className="bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700">
                   {COLUMNS.map((col) => (
                     <th
                       key={col.label}
-                      className={`${col.width} py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider first:pl-6 last:pr-6 px-4`}
+                      className={`${col.width} py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider first:pl-6 last:pr-6 px-4`}
                     >
                       {col.label}
                     </th>
@@ -129,12 +129,12 @@ const AgentsPage = () => {
             </table>
 
             {noFlowCount > 0 && (
-              <div className="flex items-center gap-3 mx-6 mt-2 mb-3 px-4 py-3 rounded-xl bg-amber-50 border border-amber-100">
+              <div className="flex items-center gap-3 mx-6 mt-2 mb-3 px-4 py-3 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800/40">
                 <MdOutlineWarningAmber className="text-amber-500 text-lg shrink-0" />
-                <p className="text-sm text-slate-600">
+                <p className="text-sm text-slate-600 dark:text-slate-300">
                   {noFlowCount} agent{noFlowCount > 1 ? 's have' : ' has'} no conversation flow
                   and cannot handle calls.{' '}
-                  <a href="#" className="font-semibold text-amber-600 underline underline-offset-2 hover:text-amber-700">
+                  <a href="#" className="font-semibold text-amber-600 dark:text-amber-400 underline underline-offset-2 hover:text-amber-700 dark:hover:text-amber-300">
                     Add a flow →
                   </a>
                 </p>

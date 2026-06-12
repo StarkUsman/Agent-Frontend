@@ -70,14 +70,14 @@ const AGENT_CALLS = [
 const MAX_AGENT_CALLS = Math.max(...AGENT_CALLS.map((a) => a.calls))
 
 const QUALITY_METRICS = [
-  { label: 'Avg turns per call',        value: '7.4',    color: 'text-slate-800' },
+  { label: 'Avg turns per call',        value: '7.4',    color: 'text-slate-800 dark:text-slate-200' },
   { label: 'Calls with interruptions',  value: '12%',    color: 'text-amber-500' },
   { label: 'Calls with 0 interruptions',value: '88%',    color: 'text-emerald-500' },
-  { label: 'Avg call duration',         value: '2m 14s', color: 'text-slate-800' },
+  { label: 'Avg call duration',         value: '2m 14s', color: 'text-slate-800 dark:text-slate-200' },
 ]
 
 const OUTCOMES = [
-  { label: 'Resolved by agent',     value: '94.2%', dot: '#10b981', text: 'text-emerald-600' },
+  { label: 'Resolved by agent',     value: '94.2%', dot: '#10b981', text: 'text-emerald-600 dark:text-emerald-400' },
   { label: 'Transferred to person', value: '4.1%',  dot: '#f97316', text: 'text-amber-500'   },
   { label: 'Call dropped or failed',value: '1.7%',  dot: '#ef4444', text: 'text-red-500'     },
 ]
@@ -94,15 +94,15 @@ const ReportsPage = () => {
   }, [navigate])
 
   return (
-    <div className="flex h-screen bg-slate-50 overflow-hidden">
+    <div className="flex h-screen bg-slate-50 dark:bg-slate-900 overflow-hidden">
       <Sidebar />
 
       <main className="flex-1 flex flex-col overflow-hidden">
 
         {/* Sticky top bar — never scrolls */}
-        <div className="px-8 pt-5 pb-4 bg-slate-50 border-b border-slate-100 shrink-0">
-          <h1 className="text-xl font-bold text-slate-900 tracking-tight">Reports</h1>
-          <p className="text-sm text-slate-500 mt-0.5">
+        <div className="px-8 pt-5 pb-4 bg-slate-50 dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 shrink-0">
+          <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">Reports</h1>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
             Performance and usage data from pipecat metrics.
           </p>
         </div>
@@ -121,12 +121,12 @@ const ReportsPage = () => {
           <CallsBarChart />
 
           {/* ── Section 3: Response latency per service ── */}
-          <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-100 dark:border-slate-700 shadow-sm">
             <div className="mb-5">
-              <h2 className="text-base font-bold text-slate-900">
+              <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">
                 Response latency per service
               </h2>
-              <p className="text-xs text-slate-400 mt-0.5">
+              <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
                 TTFB — pipecat TTFBMetricsData · this week averages
               </p>
             </div>
@@ -134,7 +134,7 @@ const ReportsPage = () => {
               {LATENCY_SERVICES.map((s) => (
                 <div
                   key={s.label}
-                  className="bg-slate-50 rounded-xl p-4 border border-slate-100"
+                  className="bg-slate-50 dark:bg-slate-900 rounded-xl p-4 border border-slate-100 dark:border-slate-700"
                 >
                   <p
                     className="text-2xl font-bold mb-1"
@@ -142,8 +142,8 @@ const ReportsPage = () => {
                   >
                     {s.value}
                   </p>
-                  <p className="text-sm font-semibold text-slate-700">{s.label}</p>
-                  <p className="text-xs text-slate-400 mt-0.5">{s.sub}</p>
+                  <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">{s.label}</p>
+                  <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">{s.sub}</p>
                 </div>
               ))}
             </div>
@@ -156,17 +156,17 @@ const ReportsPage = () => {
             <div className="space-y-6">
 
               {/* API usage */}
-              <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
+              <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-100 dark:border-slate-700 shadow-sm">
                 <div className="mb-5">
-                  <h2 className="text-base font-bold text-slate-900">API usage this week</h2>
-                  <p className="text-xs text-slate-400 mt-0.5">
+                  <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">API usage this week</h2>
+                  <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
                     LLMUsageMetricsData + TTSUsageMetricsData
                   </p>
                 </div>
                 <div className="space-y-4">
                   {API_USAGE.map((row) => (
                     <div key={row.label} className="flex items-center justify-between">
-                      <span className="text-sm text-slate-600">{row.label}</span>
+                      <span className="text-sm text-slate-600 dark:text-slate-400">{row.label}</span>
                       <span
                         className="text-sm font-bold"
                         style={{ color: row.color }}
@@ -176,22 +176,22 @@ const ReportsPage = () => {
                     </div>
                   ))}
                 </div>
-                <p className="text-xs text-slate-400 mt-5 leading-relaxed">
+                <p className="text-xs text-slate-400 dark:text-slate-500 mt-5 leading-relaxed">
                   Usage affects your Anthropic, OpenAI, and ElevenLabs bills directly.
                 </p>
               </div>
 
               {/* Calls by agent */}
-              <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
-                <h2 className="text-base font-bold text-slate-900 mb-5">Calls by agent</h2>
+              <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-100 dark:border-slate-700 shadow-sm">
+                <h2 className="text-base font-bold text-slate-900 dark:text-slate-100 mb-5">Calls by agent</h2>
                 <div className="space-y-4">
                   {AGENT_CALLS.map(({ name, calls }) => (
                     <div key={name}>
                       <div className="flex items-center justify-between mb-1.5">
-                        <span className="text-sm text-slate-600">{name}</span>
-                        <span className="text-sm font-semibold text-slate-700">{calls}</span>
+                        <span className="text-sm text-slate-600 dark:text-slate-400">{name}</span>
+                        <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">{calls}</span>
                       </div>
-                      <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                      <div className="h-1.5 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
                         <div
                           className="h-full rounded-full transition-all"
                           style={{
@@ -211,17 +211,17 @@ const ReportsPage = () => {
             <div className="space-y-6">
 
               {/* Conversation quality */}
-              <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
+              <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-100 dark:border-slate-700 shadow-sm">
                 <div className="mb-5">
-                  <h2 className="text-base font-bold text-slate-900">Conversation quality</h2>
-                  <p className="text-xs text-slate-400 mt-0.5">
+                  <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">Conversation quality</h2>
+                  <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
                     TurnTrackingObserver — this week
                   </p>
                 </div>
                 <div className="space-y-4">
                   {QUALITY_METRICS.map((m) => (
                     <div key={m.label} className="flex items-center justify-between">
-                      <span className="text-sm text-slate-600">{m.label}</span>
+                      <span className="text-sm text-slate-600 dark:text-slate-400">{m.label}</span>
                       <span className={`text-sm font-bold ${m.color}`}>{m.value}</span>
                     </div>
                   ))}
@@ -229,8 +229,8 @@ const ReportsPage = () => {
               </div>
 
               {/* Call outcomes */}
-              <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
-                <h2 className="text-base font-bold text-slate-900 mb-5">Call outcomes</h2>
+              <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-100 dark:border-slate-700 shadow-sm">
+                <h2 className="text-base font-bold text-slate-900 dark:text-slate-100 mb-5">Call outcomes</h2>
                 <div className="space-y-4">
                   {OUTCOMES.map((o) => (
                     <div key={o.label} className="flex items-center justify-between">
@@ -239,7 +239,7 @@ const ReportsPage = () => {
                           className="w-2 h-2 rounded-full shrink-0"
                           style={{ backgroundColor: o.dot }}
                         />
-                        <span className="text-sm text-slate-600">{o.label}</span>
+                        <span className="text-sm text-slate-600 dark:text-slate-400">{o.label}</span>
                       </div>
                       <span className={`text-sm font-bold ${o.text}`}>{o.value}</span>
                     </div>

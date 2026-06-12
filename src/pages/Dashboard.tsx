@@ -16,7 +16,7 @@ const Dashboard = () => {
   }, [navigate])
 
   return (
-    <div className="flex h-screen bg-slate-50 overflow-hidden">
+    <div className="flex h-screen bg-slate-50 dark:bg-slate-900 overflow-hidden">
 
       {/* Left: fixed sidebar */}
       <Sidebar />
@@ -25,7 +25,7 @@ const Dashboard = () => {
       <main className="flex-1 flex flex-col overflow-hidden">
 
         {/* Sticky top bar — never scrolls */}
-        <div className="bg-slate-50 border-b border-slate-100 shrink-0">
+        <div className="bg-slate-50 dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 shrink-0">
           <DashboardHeader />
         </div>
 

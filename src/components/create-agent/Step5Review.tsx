@@ -22,9 +22,9 @@ const truncate = (s: string, max: number) =>
 
 // ── Single label / value row ───────────────────────────────────────────────
 const Row = ({ label, value }: { label: string; value: string }) => (
-  <div className="flex items-start justify-between gap-6 py-3.5 border-b border-slate-100 last:border-0">
-    <span className="text-sm text-slate-400 shrink-0 w-36">{label}</span>
-    <span className="text-sm text-slate-800 font-medium text-right">{value}</span>
+  <div className="flex items-start justify-between gap-6 py-3.5 border-b border-slate-100 dark:border-slate-700 last:border-0">
+    <span className="text-sm text-slate-400 dark:text-slate-500 shrink-0 w-36">{label}</span>
+    <span className="text-sm text-slate-800 dark:text-slate-200 font-medium text-right">{value}</span>
   </div>
 )
 
@@ -48,14 +48,14 @@ const Step5Review = ({ draft, onEdit }: Props) => {
 
   return (
     <div className="max-w-2xl">
-      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+      <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
 
         {/* Card header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
-          <h3 className="text-sm font-semibold text-slate-900">Agent configuration</h3>
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-700">
+          <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Agent configuration</h3>
           <button
             onClick={onEdit}
-            className="text-sm font-medium text-indigo-600 hover:text-indigo-700 transition-colors cursor-pointer"
+            className="text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors cursor-pointer"
           >
             Edit
           </button>

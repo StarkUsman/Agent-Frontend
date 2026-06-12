@@ -27,10 +27,10 @@ const VoiceCard = ({ voice, isSelected, onSelect }: CardProps) => (
   <div
     onClick={onSelect}
     className={`
-      relative bg-white rounded-2xl border-2 p-5 cursor-pointer transition-all
+      relative bg-white dark:bg-slate-800 rounded-2xl border-2 p-5 cursor-pointer transition-all
       ${isSelected
-        ? 'border-indigo-500 shadow-md shadow-indigo-100'
-        : 'border-slate-200 hover:border-slate-300 hover:shadow-sm'}
+        ? 'border-indigo-500 shadow-md shadow-indigo-100 dark:shadow-indigo-900/30 dark:border-indigo-400'
+        : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 hover:shadow-sm'}
     `}
   >
     {/* Selected badge */}
@@ -41,22 +41,22 @@ const VoiceCard = ({ voice, isSelected, onSelect }: CardProps) => (
     )}
 
     {/* Avatar */}
-    <div className="w-11 h-11 rounded-full bg-indigo-100 flex items-center justify-center mb-3">
-      <span className="text-sm font-semibold text-indigo-700">{voice.initial}</span>
+    <div className="w-11 h-11 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center mb-3">
+      <span className="text-sm font-semibold text-indigo-700 dark:text-indigo-400">{voice.initial}</span>
     </div>
 
     {/* Name */}
-    <p className="text-base font-bold text-slate-900 mb-1">{voice.name}</p>
+    <p className="text-base font-bold text-slate-900 dark:text-slate-100 mb-1">{voice.name}</p>
 
     {/* Description */}
-    <p className="text-sm text-slate-500 leading-snug mb-3">{voice.description}</p>
+    <p className="text-sm text-slate-500 dark:text-slate-400 leading-snug mb-3">{voice.description}</p>
 
     {/* Accent + gender tags */}
     <div className="flex flex-wrap gap-1.5 mb-4">
-      <span className="text-xs bg-slate-100 text-slate-600 px-2.5 py-0.5 rounded-full">
+      <span className="text-xs bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 px-2.5 py-0.5 rounded-full">
         {voice.accent}
       </span>
-      <span className="text-xs bg-slate-100 text-slate-600 px-2.5 py-0.5 rounded-full">
+      <span className="text-xs bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 px-2.5 py-0.5 rounded-full">
         {voice.genderLabel}
       </span>
     </div>
@@ -64,7 +64,7 @@ const VoiceCard = ({ voice, isSelected, onSelect }: CardProps) => (
     {/* Preview button — stops click propagating to card select */}
     <button
       onClick={(e) => e.stopPropagation()}
-      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 text-xs text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer"
+      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-600 text-xs text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors cursor-pointer"
     >
       <MdPlayArrow className="text-sm" />
       Preview voice
@@ -95,7 +95,7 @@ const Step2ChooseVoice = ({ draft, onChange }: Props) => {
 
   return (
     <div>
-      <p className="text-sm text-slate-600 mb-6">
+      <p className="text-sm text-slate-600 dark:text-slate-400 mb-6">
         Choose a voice for your agent. Callers will hear this voice throughout the conversation.
       </p>
 

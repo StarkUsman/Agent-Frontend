@@ -48,10 +48,10 @@ const AgentsGrid = () => {
 
       {/* Section header */}
       <div className="flex items-center justify-between mb-3">
-        <h2 className="text-base font-bold text-slate-900">Your agents</h2>
+        <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">Your agents</h2>
         <a
           href="#"
-          className="text-sm font-semibold text-indigo-500 hover:text-indigo-700 hover:underline transition-colors"
+          className="text-sm font-semibold text-indigo-500 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 hover:underline transition-colors"
         >
           View all →
         </a>

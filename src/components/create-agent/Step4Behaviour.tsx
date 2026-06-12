@@ -11,10 +11,10 @@ const Card = ({ title, subtitle, children }: {
   subtitle: string
   children: React.ReactNode
 }) => (
-  <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-    <div className="px-6 py-4 border-b border-slate-100">
-      <h3 className="text-sm font-semibold text-slate-900">{title}</h3>
-      <p className="text-xs text-slate-500 mt-0.5">{subtitle}</p>
+  <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+    <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-700">
+      <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">{title}</h3>
+      <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{subtitle}</p>
     </div>
     <div className="px-6 py-5 space-y-5">{children}</div>
   </div>
@@ -28,19 +28,19 @@ const Field = ({ label, required, helper, children }: {
   children:  React.ReactNode
 }) => (
   <div>
-    <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+    <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
       {label}
       {required && <span className="text-red-500 ml-0.5">*</span>}
     </label>
     {children}
-    {helper && <p className="text-xs text-slate-400 mt-1.5">{helper}</p>}
+    {helper && <p className="text-xs text-slate-400 dark:text-slate-500 mt-1.5">{helper}</p>}
   </div>
 )
 
 const textareaClass =
-  'w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-800 ' +
-  'placeholder-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-300 ' +
-  'focus:border-indigo-400 transition resize-y'
+  'w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 text-sm ' +
+  'text-slate-800 dark:text-slate-200 bg-white dark:bg-slate-800 placeholder-slate-300 dark:placeholder-slate-500 ' +
+  'focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400 transition resize-y'
 
 // ── Step component ─────────────────────────────────────────────────────────
 const Step4Behaviour = ({ draft, onChange }: Props) => (

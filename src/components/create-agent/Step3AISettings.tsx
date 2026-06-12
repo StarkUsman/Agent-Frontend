@@ -22,9 +22,9 @@ const RadioDot = () => (
 )
 
 const inputClass =
-  'w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-800 ' +
-  'placeholder-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-300 ' +
-  'focus:border-indigo-400 transition'
+  'w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 text-sm ' +
+  'text-slate-800 dark:text-slate-200 bg-white dark:bg-slate-800 placeholder-slate-300 dark:placeholder-slate-500 ' +
+  'focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400 transition'
 
 const Step3AISettings = ({ draft, onChange }: Props) => {
   const [showKey, setShowKey] = useState(false)
@@ -33,9 +33,9 @@ const Step3AISettings = ({ draft, onChange }: Props) => {
     <div className="max-w-2xl space-y-5">
 
       {/* ── Info banner ── */}
-      <div className="flex items-start gap-3 px-4 py-3.5 bg-indigo-50 border border-indigo-100 rounded-xl">
-        <MdInfoOutline className="text-indigo-500 text-base shrink-0 mt-0.5" />
-        <p className="text-xs text-slate-600 leading-relaxed">
+      <div className="flex items-start gap-3 px-4 py-3.5 bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-100 dark:border-indigo-800 rounded-xl">
+        <MdInfoOutline className="text-indigo-500 dark:text-indigo-400 text-base shrink-0 mt-0.5" />
+        <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
           Choose the AI services that power your agent. Each service requires an API key — these are
           stored securely and never visible after saving. If your IT team manages shared keys
           centrally, they may already be configured.
@@ -43,30 +43,30 @@ const Step3AISettings = ({ draft, onChange }: Props) => {
       </div>
 
       {/* ── Pipeline mode ── */}
-      <div className="bg-white rounded-xl border border-slate-200 p-5">
-        <h3 className="text-sm font-semibold text-slate-900">Pipeline mode</h3>
-        <p className="text-xs text-slate-500 mt-0.5 mb-4">
+      <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5">
+        <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Pipeline mode</h3>
+        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 mb-4">
           Choose how your agent processes voice. This affects latency, cost, and which providers you can use.
         </p>
 
-        <div className="border-2 border-indigo-500 rounded-xl p-4 bg-white">
+        <div className="border-2 border-indigo-500 dark:border-indigo-400 rounded-xl p-4 bg-white dark:bg-slate-800">
           <div className="flex items-start gap-3">
             <RadioDot />
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap mb-1.5">
-                <span className="text-sm font-semibold text-slate-900">
+                <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">
                   Speech-to-speech — Voice-native AI
                 </span>
-                <span className="text-[10px] font-semibold bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
+                <span className="text-[10px] font-semibold bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 px-2 py-0.5 rounded-full">
                   Lowest latency
                 </span>
               </div>
-              <p className="text-xs text-slate-500 leading-relaxed mb-3">
+              <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mb-3">
                 One AI model handles voice directly — no separate recognition or output steps.
                 Callers hear a response faster and interruptions feel completely natural.
                 Supported providers: OpenAI Realtime, Gemini Live, AWS Nova Sonic, Ultravox.
               </p>
-              <div className="flex items-center gap-1 text-xs text-green-600 font-medium">
+              <div className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400 font-medium">
                 <span>Voice in</span>
                 <span>→</span>
                 <span>Voice out (one model)</span>
@@ -77,26 +77,26 @@ const Step3AISettings = ({ draft, onChange }: Props) => {
       </div>
 
       {/* ── Provider ── */}
-      <div className="bg-white rounded-xl border border-slate-200 p-5">
-        <h3 className="text-sm font-semibold text-slate-900">Speech-to-speech provider</h3>
-        <p className="text-xs text-slate-500 mt-0.5 mb-4">
+      <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5">
+        <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Speech-to-speech provider</h3>
+        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 mb-4">
           One model handles voice recognition, understanding, and speaking — all at once.
         </p>
 
-        <div className="border-2 border-indigo-500 rounded-xl p-4">
+        <div className="border-2 border-indigo-500 dark:border-indigo-400 rounded-xl p-4">
           <div className="flex items-start gap-3">
             <RadioDot />
             <div className="flex-1 min-w-0">
 
               <div className="flex items-center gap-2 flex-wrap mb-1.5">
-                <span className="text-sm font-semibold text-slate-900">Groq</span>
-                <span className="text-xs text-slate-400">OpenAI-compatible</span>
-                <span className="text-[10px] font-semibold bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
+                <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">Groq</span>
+                <span className="text-xs text-slate-400 dark:text-slate-500">OpenAI-compatible</span>
+                <span className="text-[10px] font-semibold bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 px-2 py-0.5 rounded-full">
                   Recommended
                 </span>
               </div>
 
-              <p className="text-xs text-slate-500 leading-relaxed mb-3">
+              <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mb-3">
                 Run open-source models via Groq's fast inference API using the OpenAI-compatible
                 endpoint. Fastest token generation with near-zero cold start.
               </p>
@@ -105,7 +105,7 @@ const Step3AISettings = ({ draft, onChange }: Props) => {
                 {['Fast inference', 'OpenAI-compatible', 'Open-source models'].map((tag) => (
                   <span
                     key={tag}
-                    className="text-[10px] font-medium bg-green-50 text-green-700 border border-green-200 px-2.5 py-0.5 rounded-full"
+                    className="text-[10px] font-medium bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800 px-2.5 py-0.5 rounded-full"
                   >
                     {tag}
                   </span>
@@ -113,15 +113,15 @@ const Step3AISettings = ({ draft, onChange }: Props) => {
               </div>
 
               {/* ── Connection settings ── */}
-              <div className="pt-4 border-t border-slate-100 space-y-4">
-                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+              <div className="pt-4 border-t border-slate-100 dark:border-slate-700 space-y-4">
+                <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
                   Connection settings
                 </p>
 
                 {/* OPENAI_API_KEY */}
                 <div>
-                  <label className="block text-xs text-slate-600 mb-1.5">
-                    <span className="font-mono text-slate-500">OPENAI_API_KEY</span>
+                  <label className="block text-xs text-slate-600 dark:text-slate-400 mb-1.5">
+                    <span className="font-mono text-slate-500 dark:text-slate-400">OPENAI_API_KEY</span>
                     <span className="text-red-500 ml-0.5">*</span>
                   </label>
                   <div className="relative">
@@ -135,22 +135,22 @@ const Step3AISettings = ({ draft, onChange }: Props) => {
                     <button
                       type="button"
                       onClick={() => setShowKey((v) => !v)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 cursor-pointer"
                     >
                       {showKey
                         ? <MdVisibilityOff className="text-base" />
                         : <MdVisibility   className="text-base" />}
                     </button>
                   </div>
-                  <p className="text-xs text-slate-400 mt-1.5">
+                  <p className="text-xs text-slate-400 dark:text-slate-500 mt-1.5">
                     Stored securely — never shown after saving. Get yours from console.groq.com.
                   </p>
                 </div>
 
                 {/* OPENAI_BASE_URL */}
                 <div>
-                  <label className="block text-xs text-slate-600 mb-1.5">
-                    <span className="font-mono text-slate-500">OPENAI_BASE_URL</span>
+                  <label className="block text-xs text-slate-600 dark:text-slate-400 mb-1.5">
+                    <span className="font-mono text-slate-500 dark:text-slate-400">OPENAI_BASE_URL</span>
                   </label>
                   <input
                     type="text"
@@ -162,8 +162,8 @@ const Step3AISettings = ({ draft, onChange }: Props) => {
 
                 {/* OPENAI_MODEL */}
                 <div>
-                  <label className="block text-xs text-slate-600 mb-1.5">
-                    <span className="font-mono text-slate-500">OPENAI_MODEL</span>
+                  <label className="block text-xs text-slate-600 dark:text-slate-400 mb-1.5">
+                    <span className="font-mono text-slate-500 dark:text-slate-400">OPENAI_MODEL</span>
                   </label>
                   <select
                     value={draft.openaiModel}

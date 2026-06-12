@@ -57,8 +57,8 @@ const LiveCallsSection = () => {
       {/* Section header */}
       <div className="flex items-start justify-between mb-3">
         <div>
-          <h2 className="text-base font-bold text-slate-900">Agents on calls now</h2>
-          <p className="text-xs text-slate-400 mt-0.5">
+          <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">Agents on calls now</h2>
+          <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
             Live activity — updates every 10 seconds
           </p>
         </div>
@@ -74,10 +74,10 @@ const LiveCallsSection = () => {
       </div>
 
       {/* Calls card */}
-      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+      <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden">
         {calls.length === 0 ? (
           <div className="flex items-center justify-center py-12">
-            <p className="text-sm text-slate-400">No active calls right now</p>
+            <p className="text-sm text-slate-400 dark:text-slate-500">No active calls right now</p>
           </div>
         ) : (
           calls.map((call, index) => (
@@ -85,7 +85,7 @@ const LiveCallsSection = () => {
               <LiveCallRow {...call} />
               {/* Divider between rows (not after the last one) */}
               {index < calls.length - 1 && (
-                <div className="h-px bg-slate-50 mx-5" />
+                <div className="h-px bg-slate-50 dark:bg-slate-700 mx-5" />
               )}
             </div>
           ))
