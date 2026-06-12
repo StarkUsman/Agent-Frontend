@@ -1,61 +1,37 @@
 
-import { Monitor, Moon, Sun } from "lucide-react";
-import { useThemeMode } from "@/hooks/useThemeMode";
+import { Moon, Sun } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useTheme } from "../../../contexts/ThemeContext";
 
 export function ThemeSwitch() {
-  const { theme, setTheme } = useThemeMode();
-
-  const getIcon = () => {
-    switch (theme) {
-      case "light":
-        return <Sun className="h-4 w-4" />;
-      case "dark":
-        return <Moon className="h-4 w-4" />;
-      default:
-        return <Monitor className="h-4 w-4" />;
-    }
-  };
+  // The flow editor no longer owns theme state — the whole app's theme is
+  // controlled by the single toggle in the sidebar / user-profile section.
+  // This control is kept (disabled) so the toolbar layout is unchanged.
+  const { theme } = useTheme();
 
   return (
-    <DropdownMenu>
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <DropdownMenuTrigger asChild>
-              <Button variant="secondary" size="sm" className="h-8 w-8 p-0">
-                {getIcon()}
-              </Button>
-            </DropdownMenuTrigger>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>Theme: {theme === "system" ? "System" : theme === "light" ? "Light" : "Dark"}</p>
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
-      <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={() => setTheme("light")} className="gap-2">
-          <Sun className="h-4 w-4" />
-          Light
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme("dark")} className="gap-2">
-          <Moon className="h-4 w-4" />
-          Dark
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme("system")} className="gap-2">
-          <Monitor className="h-4 w-4" />
-          System
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          {/* span wrapper so the tooltip still works while the button is disabled */}
+          <span className="inline-flex">
+            <Button
+              variant="secondary"
+              size="sm"
+              className="h-8 w-8 p-0"
+              disabled
+              aria-label="Theme is controlled from the sidebar"
+            >
+              {theme === "dark" ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
+            </Button>
+          </span>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>Theme is controlled from the sidebar</p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 }
-

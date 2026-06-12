@@ -24,7 +24,6 @@ import NodePalette from "@/components/palette/NodePalette";
 import ToastContainer from "@/components/ui/Toast";
 import { extractDecisionNodeFromChange, useDecisionNodes } from "@/hooks/useDecisionNodes";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
-import { useThemeMode } from "@/hooks/useThemeMode";
 import { getTemplateByType } from "@/lib/nodes/templates";
 import type { FlowFunctionJson } from "@/lib/schema/flow.schema";
 import { loadCurrent, saveCurrent } from "@/lib/storage/localStore";
@@ -45,6 +44,7 @@ import {
   updateFunctionReferences,
   updateNodeData,
 } from "@/lib/utils/nodeUpdates";
+import { useTheme } from "../../../contexts/ThemeContext";
 
 function useInitialGraph() {
   return useMemo(() => {
@@ -332,7 +332,8 @@ export default function EditorShell() {
     setContextMenuOpen(false);
   }, [contextMenuNodeId, nodes, setNodes, selectedNodeId, clearSelection]);
 
-  const { colorMode } = useThemeMode();
+  // Theme is controlled globally by the app's single theme toggle (sidebar / profile).
+  const { theme: colorMode } = useTheme();
 
   return (
     <div className="h-screen w-screen flex overflow-hidden">
