@@ -4,7 +4,7 @@
 // documented local port. The manager serves permissive CORS ("*").
 
 const BASE_URL = (
-  (import.meta.env.VITE_MANAGER_URL as string | undefined) ?? "http://localhost:8080"
+  (import.meta.env.VITE_MANAGER_URL as string | undefined) ?? "http://84.46.251.98:8080"
 ).replace(/\/+$/, "");
 
 export type AgentStatus = "running" | "inactive";
