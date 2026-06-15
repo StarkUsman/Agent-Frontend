@@ -1,5 +1,3 @@
-import { useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
 import Sidebar from '../components/dashboard/Sidebar'
 import DashboardHeader from '../components/dashboard/DashboardHeader'
 import StatsRow from '../components/dashboard/StatsRow'
@@ -7,14 +5,6 @@ import LiveCallsSection from '../components/dashboard/LiveCallsSection'
 import AgentsGrid from '../components/dashboard/AgentsGrid'
 
 const Dashboard = () => {
-  const navigate = useNavigate()
-
-  // Guard: redirect unauthenticated users to login
-  useEffect(() => {
-    const token = localStorage.getItem('access_token')
-    if (!token) navigate('/', { replace: true })
-  }, [navigate])
-
   return (
     <div className="flex h-screen bg-slate-50 dark:bg-slate-900 overflow-hidden">
 

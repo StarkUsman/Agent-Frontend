@@ -4,6 +4,7 @@ import { HiOutlineLogout } from 'react-icons/hi'
 import { Sun, Moon } from 'lucide-react'
 import { useTheme } from '../../contexts/ThemeContext'
 import { useCurrentUser } from '../../contexts/CurrentUserContext'
+import type { Permission } from '../../lib/permissions'
 import UserAvatar from '../users/UserAvatar'
 
 // ── Nav item definition ────────────────────────────────────────────────────
@@ -13,29 +14,25 @@ interface NavItem {
   to: string
   end?: boolean
   badge?: number
+  permission?: Permission
 }
 
 const NAV_ITEMS: NavItem[] = [
   { label: 'Overview',      icon: MdOutlineDashboard,         to: '/dashboard', end: true },
   { label: 'My agents',     icon: MdOutlineSmartToy,          to: '/agents',    badge: 6 },
-  { label: 'Create agent',  icon: MdOutlineAddCircleOutline,  to: '/agents/new' },
+  { label: 'Create agent',  icon: MdOutlineAddCircleOutline,  to: '/agents/new', permission: 'agents:create' },
   { label: 'Call history',  icon: MdOutlineHistory,           to: '/calls',     badge: 3 },
   { label: 'Reports',       icon: MdOutlineBarChart,          to: '/reports' },
   { label: 'Users',         icon: MdOutlinePeopleAlt,         to: '/users' },
 ]
 
-// Nav items hidden from the Viewer role (create/edit-oriented links)
-const VIEWER_HIDDEN_LABELS = ['Create agent']
-
 // ── Sidebar ────────────────────────────────────────────────────────────────
 const Sidebar = () => {
   const navigate = useNavigate()
   const { theme, toggleTheme } = useTheme()
-  const { user, isViewer, logout } = useCurrentUser()
+  const { user, hasPermission, logout } = useCurrentUser()
 
-  const navItems = isViewer
-    ? NAV_ITEMS.filter((item) => !VIEWER_HIDDEN_LABELS.includes(item.label))
-    : NAV_ITEMS
+  const navItems = NAV_ITEMS.filter((item) => !item.permission || hasPermission(item.permission))
 
   const handleLogout = () => {
     localStorage.removeItem('access_token')

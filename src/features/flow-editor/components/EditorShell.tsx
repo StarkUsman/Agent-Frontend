@@ -270,7 +270,8 @@ export default function EditorShell() {
     return () => clearTimeout(id);
   }, [nodes, edges]);
 
-  const { isViewer } = useCurrentUser();
+  const { hasPermission } = useCurrentUser();
+  const readOnly = !hasPermission('agents:edit');
 
   // Keyboard shortcuts (excluding undo/redo which is handled by Toolbar)
   useKeyboardShortcuts({
@@ -281,7 +282,7 @@ export default function EditorShell() {
     setNodes,
     clearSelection,
     selectNode,
-    readOnly: isViewer,
+    readOnly,
   });
 
   // Handle node context menu
@@ -289,7 +290,7 @@ export default function EditorShell() {
     (event: React.MouseEvent, node: FlowNode) => {
       event.preventDefault();
 
-      if (isViewer) return;
+      if (readOnly) return;
 
       // Don't show context menu for decision nodes
       if (node.type === "decision") {
@@ -308,7 +309,7 @@ export default function EditorShell() {
       setContextMenuNodeId(node.id);
       setContextMenuOpen(true);
     },
-    [rfInstance, isViewer]
+    [rfInstance, readOnly]
   );
 
   // Handle duplicate action
@@ -354,7 +355,7 @@ export default function EditorShell() {
             showNodesPanel ? "translate-x-0" : "-translate-x-full"
           }`}
         >
-          <NodePalette nodes={nodes} readOnly={isViewer} />
+          <NodePalette nodes={nodes} readOnly={readOnly} />
         </div>
       </div>
       <Toolbar
@@ -397,7 +398,7 @@ export default function EditorShell() {
             }
           }, 100);
         }}
-        readOnly={isViewer}
+        readOnly={readOnly}
       />
       <div
         className="flex-1 min-w-0 relative overflow-hidden"
@@ -409,12 +410,12 @@ export default function EditorShell() {
           edges={edges}
           nodeTypes={nodeTypes}
           edgeTypes={edgeTypes}
-          nodesDraggable={!isViewer}
-          nodesConnectable={!isViewer}
+          nodesDraggable={!readOnly}
+          nodesConnectable={!readOnly}
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
           onConnect={(params) => {
-            if (isViewer) return;
+            if (readOnly) return;
             if (!params.source || !params.target) return;
 
             // Try decision node connection first, fallback to regular connection
@@ -468,12 +469,12 @@ export default function EditorShell() {
           snapToGrid={true}
           snapGrid={[20, 20]}
           onDragOver={(e) => {
-            if (isViewer) return;
+            if (readOnly) return;
             e.preventDefault();
             e.dataTransfer.dropEffect = "move";
           }}
           onDrop={(e) => {
-            if (isViewer) return;
+            if (readOnly) return;
             e.preventDefault();
             const type = e.dataTransfer.getData("application/x-node-type");
             if (!type) return;
@@ -548,7 +549,7 @@ export default function EditorShell() {
             <InspectorPanel
               nodes={nodes}
               availableNodeIds={nodes.map((n) => n.id)}
-              readOnly={isViewer}
+              readOnly={readOnly}
               onChange={(next) => {
                 if (!selectedNodeId || selectedNodeId !== next.id) return;
 

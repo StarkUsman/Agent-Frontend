@@ -1,5 +1,4 @@
-import { useState, useMemo, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState, useMemo } from 'react'
 import { MdKeyboardArrowDown, MdSearch, MdChevronLeft, MdChevronRight } from 'react-icons/md'
 import Sidebar from '../components/dashboard/Sidebar'
 import CallTableRow, { type CallRecord, type CallResult } from '../components/calls/CallTableRow'
@@ -58,18 +57,11 @@ const FilterSelect = ({ value, options, onChange }: FilterSelectProps) => (
 
 // ── Page ───────────────────────────────────────────────────────────────────
 const CallHistoryPage = () => {
-  const navigate = useNavigate()
-
   const [agentFilter,  setAgentFilter]  = useState('All agents')
   const [resultFilter, setResultFilter] = useState('All results')
   const [dateFilter,   setDateFilter]   = useState('Today')
   const [searchQuery,  setSearchQuery]  = useState('')
   const [currentPage,  setCurrentPage]  = useState(1)
-
-  useEffect(() => {
-    const token = localStorage.getItem('access_token')
-    if (!token) navigate('/', { replace: true })
-  }, [navigate])
 
   const handleSearch = (value: string) => {
     setSearchQuery(value)

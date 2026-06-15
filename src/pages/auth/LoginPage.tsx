@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import axios from 'axios'
 import { MdEmail } from 'react-icons/md'
 import { HiLockClosed, HiEye, HiEyeOff } from 'react-icons/hi'
 import { FaGoogle, FaFacebook, FaApple } from 'react-icons/fa'
@@ -9,6 +8,7 @@ import { BsCheckCircleFill } from 'react-icons/bs'
 import { Sun, Moon } from 'lucide-react'
 import { useTheme } from '../../contexts/ThemeContext'
 import { useCurrentUser } from '../../contexts/CurrentUserContext'
+import { USERS } from '../../data/users'
 
 const FEATURES = [
   'Manage your creative projects in one place',
@@ -36,24 +36,21 @@ const LoginPage = () => {
     }
 
     setIsLoading(true)
-    try {
-      const { data } = await axios.post(
-        'https://api.escuelajs.co/api/v1/auth/login',
-        { email, password }
-      )
-      localStorage.setItem('access_token', data.access_token)
-      localStorage.setItem('refresh_token', data.refresh_token)
-      loginAs(email)
-      navigate('/dashboard')
-    } catch (err: unknown) {
-      if (axios.isAxiosError(err) && err.response?.status === 401) {
-        setError('Invalid email or password. Please try again.')
-      } else {
-        setError('Something went wrong. Please check your connection.')
-      }
-    } finally {
+
+    const match = USERS.find(
+      (u) => u.email.toLowerCase() === email.trim().toLowerCase() && u.password === password
+    )
+
+    if (!match) {
+      setError('Invalid email or password. Please try again.')
       setIsLoading(false)
+      return
     }
+
+    localStorage.setItem('access_token', `local-${match.id}`)
+    localStorage.setItem('refresh_token', `local-${match.id}`)
+    loginAs(email)
+    navigate('/dashboard')
   }
 
   return (
@@ -252,9 +249,12 @@ const LoginPage = () => {
           <div className="mt-4 px-4 py-3 rounded-lg border border-dashed border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800">
             <p className="text-xs text-gray-400 dark:text-slate-500 font-medium mb-0.5">Demo credentials</p>
             <p className="text-xs text-gray-500 dark:text-slate-400">
-              Email: <span className="font-mono text-gray-700 dark:text-slate-300">john@mail.com</span>
+              Email: <span className="font-mono text-gray-700 dark:text-slate-300">sara.ahmed@octavebytes.com</span>
               &nbsp;·&nbsp;
               Password: <span className="font-mono text-gray-700 dark:text-slate-300">changeme</span>
+            </p>
+            <p className="text-xs text-gray-400 dark:text-slate-500 mt-1">
+              Or sign in as any user from the Users page (password: <span className="font-mono">changeme</span>) to see their role's access.
             </p>
           </div>
 

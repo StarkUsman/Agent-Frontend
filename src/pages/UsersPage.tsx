@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { MdAdd, MdChevronLeft, MdChevronRight, MdSearch } from 'react-icons/md'
 import Sidebar from '../components/dashboard/Sidebar'
@@ -22,16 +22,12 @@ const ACTIONS_COLUMN = { label: 'Actions', width: 'w-[10%]' }
 // ── Page ───────────────────────────────────────────────────────────────────
 const UsersPage = () => {
   const navigate = useNavigate()
-  const { isViewer } = useCurrentUser()
-  const COLUMNS = isViewer ? BASE_COLUMNS : [...BASE_COLUMNS, ACTIONS_COLUMN]
+  const { hasPermission } = useCurrentUser()
+  const canManageUsers = hasPermission('users:manage')
+  const COLUMNS = canManageUsers ? [...BASE_COLUMNS, ACTIONS_COLUMN] : BASE_COLUMNS
   const [users, setUsers] = useState(() => [...USERS])
   const [currentPage, setCurrentPage] = useState(1)
   const [searchQuery, setSearchQuery] = useState('')
-
-  useEffect(() => {
-    const token = localStorage.getItem('access_token')
-    if (!token) navigate('/', { replace: true })
-  }, [navigate])
 
   const q       = searchQuery.trim().toLowerCase()
   const filtered = q
@@ -93,7 +89,7 @@ const UsersPage = () => {
                 className="pl-9 pr-4 py-2 text-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all w-56"
               />
             </div>
-            {!isViewer && (
+            {canManageUsers && (
               <button
                 onClick={() => navigate('/users/new')}
                 className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-white text-sm font-semibold hover:opacity-90 active:scale-95 transition-all cursor-pointer shrink-0"
@@ -132,7 +128,7 @@ const UsersPage = () => {
                   </tr>
                 ) : (
                   paginated.map((user) => (
-                    <UserTableRow key={user.id} {...user} onDelete={handleDelete} showActions={!isViewer} />
+                    <UserTableRow key={user.id} {...user} onDelete={handleDelete} showActions={canManageUsers} />
                   ))
                 )}
               </tbody>

@@ -1,5 +1,3 @@
-import { useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { MdOutlineAccessTime, MdOutlinePause, MdOutlineSyncAlt } from 'react-icons/md'
 import { BiPhoneCall } from 'react-icons/bi'
 import Sidebar from '../components/dashboard/Sidebar'
@@ -86,13 +84,6 @@ const OUTCOMES = [
 // Page
 // ════════════════════════════════════════════
 const ReportsPage = () => {
-  const navigate = useNavigate()
-
-  useEffect(() => {
-    const token = localStorage.getItem('access_token')
-    if (!token) navigate('/', { replace: true })
-  }, [navigate])
-
   return (
     <div className="flex h-screen bg-slate-50 dark:bg-slate-900 overflow-hidden">
       <Sidebar />

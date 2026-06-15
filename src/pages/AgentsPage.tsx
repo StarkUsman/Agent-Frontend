@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { MdAdd, MdOutlineWarningAmber, MdChevronLeft, MdChevronRight, MdSearch } from 'react-icons/md'
 import Sidebar from '../components/dashboard/Sidebar'
@@ -35,14 +35,10 @@ const COLUMNS = [
 // ── Page ───────────────────────────────────────────────────────────────────
 const AgentsPage = () => {
   const navigate = useNavigate()
-  const { isViewer } = useCurrentUser()
+  const { hasPermission } = useCurrentUser()
+  const canCreateAgents = hasPermission('agents:create')
   const [currentPage, setCurrentPage] = useState(1)
   const [searchQuery, setSearchQuery] = useState('')
-
-  useEffect(() => {
-    const token = localStorage.getItem('access_token')
-    if (!token) navigate('/', { replace: true })
-  }, [navigate])
 
   const allAgents   = AGENTS.map((a) => ({ ...a, flow: getStoredFlow(a.id) ?? a.flow }))
   const q           = searchQuery.trim().toLowerCase()
@@ -87,7 +83,7 @@ const AgentsPage = () => {
                 className="pl-9 pr-4 py-2 text-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all w-56"
               />
             </div>
-            {!isViewer && (
+            {canCreateAgents && (
               <button
                 onClick={() => navigate('/agents/new')}
                 className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-white text-sm font-semibold hover:opacity-90 active:scale-95 transition-all cursor-pointer shrink-0"

@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { USERS } from '../data/users'
 import type { UserRowData } from '../components/users/UserTableRow'
+import { ROLE_PERMISSIONS, type Permission } from '../lib/permissions'
 
 export type CurrentUser = Omit<UserRowData, 'password'>
 
@@ -13,7 +14,7 @@ const DEFAULT_USER: CurrentUser = stripPassword(USERS[0])
 
 interface CurrentUserContextValue {
   user: CurrentUser
-  isViewer: boolean
+  hasPermission: (permission: Permission) => boolean
   loginAs: (email: string) => void
   logout: () => void
 }
@@ -46,8 +47,10 @@ export const CurrentUserProvider = ({ children }: { children: React.ReactNode })
 
   const logout = () => setUser(DEFAULT_USER)
 
+  const hasPermission = (permission: Permission) => ROLE_PERMISSIONS[user.role].includes(permission)
+
   return (
-    <CurrentUserContext.Provider value={{ user, isViewer: user.role === 'Viewer', loginAs, logout }}>
+    <CurrentUserContext.Provider value={{ user, hasPermission, loginAs, logout }}>
       {children}
     </CurrentUserContext.Provider>
   )
