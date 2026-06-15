@@ -7,13 +7,13 @@ import {
   FileText,
   MoreHorizontal,
   Redo2,
+  Rocket,
   Undo2,
   Upload,
 } from "lucide-react";
 import { useRef } from "react";
 
 import PipecatLogo from "@/components/icons/PipecatLogo";
-import { ThemeSwitch } from "@/components/ThemeSwitch";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -89,6 +89,23 @@ export default function Toolbar({
       a.click();
       URL.revokeObjectURL(a.href);
       showToast("Python code exported successfully", "success");
+    } catch (error) {
+      console.error("Failed to generate Python code:", error);
+      showToast("Failed to generate Python code", "error");
+    }
+  }
+
+  function onDeploy() {
+    const json = reactFlowToFlowJson(nodes, edges);
+    const r = validateFlowJson(json);
+    if (!r.valid) {
+      showToast("Flow must be valid before deploying", "error");
+      return;
+    }
+    try {
+      const pythonCode = generatePythonCode(json);
+      console.log(pythonCode);
+      showToast("Flow Python logged to console", "success");
     } catch (error) {
       console.error("Failed to generate Python code:", error);
       showToast("Failed to generate Python code", "error");
@@ -358,7 +375,12 @@ export default function Toolbar({
           </DropdownMenu>
         )}
         <div className="w-px bg-neutral-300 dark:bg-neutral-700" />
-        <ThemeSwitch />
+        {!readOnly && (
+          <Button variant="secondary" size="sm" onClick={onDeploy} className="gap-1.5">
+            <Rocket className="h-4 w-4" />
+            <span className="sr-only lg:not-sr-only">Deploy</span>
+          </Button>
+        )}
         <div className="hidden md:block w-px bg-neutral-300 dark:bg-neutral-700" />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
