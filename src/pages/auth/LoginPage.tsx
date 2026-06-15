@@ -8,6 +8,7 @@ import { MdOutlinePets } from 'react-icons/md'
 import { BsCheckCircleFill } from 'react-icons/bs'
 import { Sun, Moon } from 'lucide-react'
 import { useTheme } from '../../contexts/ThemeContext'
+import { useCurrentUser } from '../../contexts/CurrentUserContext'
 
 const FEATURES = [
   'Manage your creative projects in one place',
@@ -23,6 +24,7 @@ const LoginPage = () => {
   const [error, setError] = useState('')
   const navigate = useNavigate()
   const { theme, toggleTheme } = useTheme()
+  const { loginAs } = useCurrentUser()
 
   const handleLogin = async (e: { preventDefault(): void }) => {
     e.preventDefault()
@@ -41,6 +43,7 @@ const LoginPage = () => {
       )
       localStorage.setItem('access_token', data.access_token)
       localStorage.setItem('refresh_token', data.refresh_token)
+      loginAs(email)
       navigate('/dashboard')
     } catch (err: unknown) {
       if (axios.isAxiosError(err) && err.response?.status === 401) {

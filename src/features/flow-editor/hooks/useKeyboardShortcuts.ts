@@ -15,6 +15,7 @@ interface KeyboardShortcutsProps {
   setNodes: (updater: (nodes: FlowNode[]) => FlowNode[]) => void;
   clearSelection: () => void;
   selectNode: (nodeId: string | null, functionIndex?: number | null) => void;
+  readOnly?: boolean;
 }
 
 /**
@@ -28,8 +29,11 @@ export function useKeyboardShortcuts({
   setNodes,
   clearSelection,
   selectNode,
+  readOnly = false,
 }: KeyboardShortcutsProps) {
   useEffect(() => {
+    if (readOnly) return;
+
     const handleKeyDown = (e: KeyboardEvent) => {
       const isMac = navigator.platform.toUpperCase().indexOf("MAC") >= 0;
       const modKey = isMac ? e.metaKey : e.ctrlKey;
@@ -73,6 +77,6 @@ export function useKeyboardShortcuts({
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [nodes, selectedNodeId, selectedFunctionIndex, setNodes, clearSelection, selectNode]);
+  }, [nodes, selectedNodeId, selectedFunctionIndex, setNodes, clearSelection, selectNode, readOnly]);
 }
 

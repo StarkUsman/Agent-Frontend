@@ -4,6 +4,7 @@ import { MdAdd, MdOutlineWarningAmber, MdChevronLeft, MdChevronRight, MdSearch }
 import Sidebar from '../components/dashboard/Sidebar'
 import AgentTableRow from '../components/agents/AgentTableRow'
 import { AGENTS } from '../data/agents'
+import { useCurrentUser } from '../contexts/CurrentUserContext'
 
 // ── Config ─────────────────────────────────────────────────────────────────
 const ITEMS_PER_PAGE = 6
@@ -34,6 +35,7 @@ const COLUMNS = [
 // ── Page ───────────────────────────────────────────────────────────────────
 const AgentsPage = () => {
   const navigate = useNavigate()
+  const { isViewer } = useCurrentUser()
   const [currentPage, setCurrentPage] = useState(1)
   const [searchQuery, setSearchQuery] = useState('')
 
@@ -85,14 +87,16 @@ const AgentsPage = () => {
                 className="pl-9 pr-4 py-2 text-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all w-56"
               />
             </div>
-            <button
-              onClick={() => navigate('/agents/new')}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-white text-sm font-semibold hover:opacity-90 active:scale-95 transition-all cursor-pointer shrink-0"
-              style={{ backgroundColor: '#6366f1' }}
-            >
-              <MdAdd className="text-lg" />
-              Create agent
-            </button>
+            {!isViewer && (
+              <button
+                onClick={() => navigate('/agents/new')}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-white text-sm font-semibold hover:opacity-90 active:scale-95 transition-all cursor-pointer shrink-0"
+                style={{ backgroundColor: '#6366f1' }}
+              >
+                <MdAdd className="text-lg" />
+                Create agent
+              </button>
+            )}
           </div>
         </div>
 

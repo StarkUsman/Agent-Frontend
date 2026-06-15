@@ -3,6 +3,8 @@ import { MdOutlineDashboard, MdOutlineSmartToy, MdOutlineAddCircleOutline, MdOut
 import { HiOutlineLogout } from 'react-icons/hi'
 import { Sun, Moon } from 'lucide-react'
 import { useTheme } from '../../contexts/ThemeContext'
+import { useCurrentUser } from '../../contexts/CurrentUserContext'
+import UserAvatar from '../users/UserAvatar'
 
 // ── Nav item definition ────────────────────────────────────────────────────
 interface NavItem {
@@ -22,14 +24,23 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Users',         icon: MdOutlinePeopleAlt,         to: '/users' },
 ]
 
+// Nav items hidden from the Viewer role (create/edit-oriented links)
+const VIEWER_HIDDEN_LABELS = ['Create agent']
+
 // ── Sidebar ────────────────────────────────────────────────────────────────
 const Sidebar = () => {
   const navigate = useNavigate()
   const { theme, toggleTheme } = useTheme()
+  const { user, isViewer, logout } = useCurrentUser()
+
+  const navItems = isViewer
+    ? NAV_ITEMS.filter((item) => !VIEWER_HIDDEN_LABELS.includes(item.label))
+    : NAV_ITEMS
 
   const handleLogout = () => {
     localStorage.removeItem('access_token')
     localStorage.removeItem('refresh_token')
+    logout()
     navigate('/')
   }
 
@@ -52,7 +63,7 @@ const Sidebar = () => {
 
       {/* Navigation */}
       <nav className="flex-1 px-3 space-y-0.5 overflow-y-auto">
-        {NAV_ITEMS.map((item) => (
+        {navItems.map((item) => (
           <NavLink
             key={item.to}
             to={item.to}
@@ -95,17 +106,12 @@ const Sidebar = () => {
         <div className="flex items-center gap-3 px-2">
 
           {/* Avatar */}
-          <div
-            className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-white text-xs font-bold"
-            style={{ backgroundColor: '#6366f1' }}
-          >
-            SA
-          </div>
+          <UserAvatar id={user.id} firstName={user.first_name} lastName={user.last_name} profilePic={user.profile_pic} />
 
           {/* Name + role */}
           <div className="flex-1 min-w-0 leading-tight">
-            <p className="text-sm font-semibold text-slate-800 dark:text-slate-200 truncate">Sara Ahmed</p>
-            <p className="text-[11px] text-slate-400 dark:text-slate-500 truncate">Operations manager</p>
+            <p className="text-sm font-semibold text-slate-800 dark:text-slate-200 truncate">{user.first_name} {user.last_name}</p>
+            <p className="text-[11px] text-slate-400 dark:text-slate-500 truncate">{user.role}</p>
           </div>
 
           {/* Actions */}

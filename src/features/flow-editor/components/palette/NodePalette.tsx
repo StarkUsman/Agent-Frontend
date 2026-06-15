@@ -12,9 +12,10 @@ import { useTheme } from "../../../../contexts/ThemeContext";
 
 type Props = {
   nodes: Node[];
+  readOnly?: boolean;
 };
 
-export default function NodePalette({ nodes }: Props) {
+export default function NodePalette({ nodes, readOnly = false }: Props) {
   const setShowNodesPanel = useEditorStore((state) => state.setShowNodesPanel);
   const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
@@ -55,32 +56,38 @@ export default function NodePalette({ nodes }: Props) {
         </TooltipProvider>
       </div>
       <div className="flex flex-col gap-2 overflow-y-auto flex-1 min-h-0 pr-1">
-        {NODE_TEMPLATES.map((t) => {
-          const isInitial = t.type === "initial";
-          const isDisabled = isInitial && hasInitialNode;
-          return (
-            <Button
-              key={t.type}
-              variant="outline"
-              className="h-auto! w-full flex-col items-start px-2! py-2! text-left shadow-sm"
-              style={{ height: "auto" }}
-              disabled={isDisabled}
-              draggable={!isDisabled}
-              onDragStart={(e) => {
-                if (isDisabled) {
-                  e.preventDefault();
-                  return;
-                }
-                e.dataTransfer.setData("application/x-node-type", t.type);
-                e.dataTransfer.effectAllowed = "move";
-              }}
-              title={isDisabled ? "Only one initial node is allowed" : undefined}
-            >
-              <div className="text-[13px] font-medium leading-tight">{t.label}</div>
-              <div className="text-[11px] opacity-60 leading-tight">{t.type}</div>
-            </Button>
-          );
-        })}
+        {readOnly ? (
+          <p className="px-2 py-2 text-[12px] leading-snug text-slate-400 dark:text-slate-500">
+            View only — editing disabled
+          </p>
+        ) : (
+          NODE_TEMPLATES.map((t) => {
+            const isInitial = t.type === "initial";
+            const isDisabled = isInitial && hasInitialNode;
+            return (
+              <Button
+                key={t.type}
+                variant="outline"
+                className="h-auto! w-full flex-col items-start px-2! py-2! text-left shadow-sm"
+                style={{ height: "auto" }}
+                disabled={isDisabled}
+                draggable={!isDisabled}
+                onDragStart={(e) => {
+                  if (isDisabled) {
+                    e.preventDefault();
+                    return;
+                  }
+                  e.dataTransfer.setData("application/x-node-type", t.type);
+                  e.dataTransfer.effectAllowed = "move";
+                }}
+                title={isDisabled ? "Only one initial node is allowed" : undefined}
+              >
+                <div className="text-[13px] font-medium leading-tight">{t.label}</div>
+                <div className="text-[11px] opacity-60 leading-tight">{t.type}</div>
+              </Button>
+            );
+          })
+        )}
       </div>
 
       {/* User profile */}

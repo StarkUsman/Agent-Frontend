@@ -4,22 +4,26 @@ import { MdAdd, MdChevronLeft, MdChevronRight, MdSearch } from 'react-icons/md'
 import Sidebar from '../components/dashboard/Sidebar'
 import UserTableRow from '../components/users/UserTableRow'
 import { USERS } from '../data/users'
+import { useCurrentUser } from '../contexts/CurrentUserContext'
 
 // ── Config ─────────────────────────────────────────────────────────────────
 const ITEMS_PER_PAGE = 6
 
-const COLUMNS = [
+const BASE_COLUMNS = [
   { label: 'User',         width: 'w-[30%]' },
   { label: 'Username',     width: 'w-[15%]' },
   { label: 'Email',        width: 'w-[20%]' },
   { label: 'Role',         width: 'w-[12%]' },
   { label: 'Organisation', width: 'w-[13%]' },
-  { label: 'Actions',      width: 'w-[10%]' },
 ]
+
+const ACTIONS_COLUMN = { label: 'Actions', width: 'w-[10%]' }
 
 // ── Page ───────────────────────────────────────────────────────────────────
 const UsersPage = () => {
   const navigate = useNavigate()
+  const { isViewer } = useCurrentUser()
+  const COLUMNS = isViewer ? BASE_COLUMNS : [...BASE_COLUMNS, ACTIONS_COLUMN]
   const [users, setUsers] = useState(() => [...USERS])
   const [currentPage, setCurrentPage] = useState(1)
   const [searchQuery, setSearchQuery] = useState('')
@@ -89,14 +93,16 @@ const UsersPage = () => {
                 className="pl-9 pr-4 py-2 text-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all w-56"
               />
             </div>
-            <button
-              onClick={() => navigate('/users/new')}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-white text-sm font-semibold hover:opacity-90 active:scale-95 transition-all cursor-pointer shrink-0"
-              style={{ backgroundColor: '#6366f1' }}
-            >
-              <MdAdd className="text-lg" />
-              Create user
-            </button>
+            {!isViewer && (
+              <button
+                onClick={() => navigate('/users/new')}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-white text-sm font-semibold hover:opacity-90 active:scale-95 transition-all cursor-pointer shrink-0"
+                style={{ backgroundColor: '#6366f1' }}
+              >
+                <MdAdd className="text-lg" />
+                Create user
+              </button>
+            )}
           </div>
         </div>
 
@@ -126,7 +132,7 @@ const UsersPage = () => {
                   </tr>
                 ) : (
                   paginated.map((user) => (
-                    <UserTableRow key={user.id} {...user} onDelete={handleDelete} />
+                    <UserTableRow key={user.id} {...user} onDelete={handleDelete} showActions={!isViewer} />
                   ))
                 )}
               </tbody>

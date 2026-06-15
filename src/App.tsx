@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { ThemeProvider } from './contexts/ThemeContext'
+import { CurrentUserProvider } from './contexts/CurrentUserContext'
 import LoginPage from './pages/auth/LoginPage'
 import Dashboard from './pages/Dashboard'
 import AgentsPage from './pages/AgentsPage'
@@ -13,21 +14,23 @@ import CreateUserPage from './pages/CreateUserPage'
 const App = () => {
   return (
     <ThemeProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<LoginPage />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/agents" element={<AgentsPage />} />
-          <Route path="/agents/new" element={<CreateAgentPage />} />
-          <Route path="/calls" element={<CallHistoryPage />} />
-          <Route path="/reports" element={<ReportsPage />} />
-          <Route path="/agents/:id/flow" element={<FlowEditorPage />} />
-          <Route path="/users" element={<UsersPage />} />
-          <Route path="/users/new" element={<CreateUserPage />} />
-          <Route path="/users/:id/edit" element={<CreateUserPage />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </BrowserRouter>
+      <CurrentUserProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<LoginPage />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/agents" element={<AgentsPage />} />
+            <Route path="/agents/new" element={<CreateAgentPage />} />
+            <Route path="/calls" element={<CallHistoryPage />} />
+            <Route path="/reports" element={<ReportsPage />} />
+            <Route path="/agents/:id/flow" element={<FlowEditorPage />} />
+            <Route path="/users" element={<UsersPage />} />
+            <Route path="/users/new" element={<CreateUserPage />} />
+            <Route path="/users/:id/edit" element={<CreateUserPage />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </BrowserRouter>
+      </CurrentUserProvider>
     </ThemeProvider>
   )
 }

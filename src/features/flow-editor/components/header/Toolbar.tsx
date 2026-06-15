@@ -43,6 +43,7 @@ type Props = {
   onUndo: () => void;
   onRedo: () => void;
   onNewFlow: () => void;
+  readOnly?: boolean;
 };
 
 export default function Toolbar({
@@ -55,6 +56,7 @@ export default function Toolbar({
   onUndo,
   onRedo,
   onNewFlow,
+  readOnly = false,
 }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
   const rfInstance = useEditorStore((state) => state.rfInstance);
@@ -185,46 +187,55 @@ export default function Toolbar({
             </Tooltip>
           </TooltipProvider>
         )}
-        <Button variant="secondary" size="sm" onClick={onNewFlow} title="Create a new flow">
-          <FilePlusCorner className="h-4 w-4" />
-          <span className="sr-only lg:not-sr-only">New Flow</span>
-        </Button>
-        <div className="w-px bg-neutral-300 dark:bg-neutral-700" />
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={onUndo}
-              disabled={!canUndo}
-              className="px-2"
-            >
-              <Undo2 className="h-4 w-4" />
-              <span className="sr-only lg:not-sr-only">Undo</span>
+        {readOnly && (
+          <span className="flex items-center px-2 text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+            View only
+          </span>
+        )}
+        {!readOnly && (
+          <>
+            <Button variant="secondary" size="sm" onClick={onNewFlow} title="Create a new flow">
+              <FilePlusCorner className="h-4 w-4" />
+              <span className="sr-only lg:not-sr-only">New Flow</span>
             </Button>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>Undo (Cmd/Ctrl+Z)</p>
-          </TooltipContent>
-        </Tooltip>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={onRedo}
-              disabled={!canRedo}
-              className="px-2"
-            >
-              <Redo2 className="h-4 w-4" />
-              <span className="sr-only lg:not-sr-only">Redo</span>
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>Redo (Cmd/Ctrl+Shift+Z)</p>
-          </TooltipContent>
-        </Tooltip>
-        <div className="w-px bg-neutral-300 dark:bg-neutral-700" />
+            <div className="w-px bg-neutral-300 dark:bg-neutral-700" />
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={onUndo}
+                  disabled={!canUndo}
+                  className="px-2"
+                >
+                  <Undo2 className="h-4 w-4" />
+                  <span className="sr-only lg:not-sr-only">Undo</span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Undo (Cmd/Ctrl+Z)</p>
+              </TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={onRedo}
+                  disabled={!canRedo}
+                  className="px-2"
+                >
+                  <Redo2 className="h-4 w-4" />
+                  <span className="sr-only lg:not-sr-only">Redo</span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Redo (Cmd/Ctrl+Shift+Z)</p>
+              </TooltipContent>
+            </Tooltip>
+            <div className="w-px bg-neutral-300 dark:bg-neutral-700" />
+          </>
+        )}
         {/* Import button - hidden on mobile, shown on larger screens */}
         <Input
           ref={inputRef}
@@ -233,15 +244,17 @@ export default function Toolbar({
           className="hidden"
           onChange={(e) => e.target.files && onImport(e.target.files[0], e.target)}
         />
-        <Button
-          variant="secondary"
-          size="sm"
-          onClick={() => inputRef.current?.click()}
-          className="hidden md:flex"
-        >
-          <Upload className="h-4 w-4 md:mr-1.5" />
-          <span className="sr-only lg:not-sr-only">Import</span>
-        </Button>
+        {!readOnly && (
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => inputRef.current?.click()}
+            className="hidden md:flex"
+          >
+            <Upload className="h-4 w-4 md:mr-1.5" />
+            <span className="sr-only lg:not-sr-only">Import</span>
+          </Button>
+        )}
         {/* Export dropdown - hidden on mobile, shown on larger screens */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -264,10 +277,12 @@ export default function Toolbar({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => inputRef.current?.click()}>
-              <Upload className="mr-2 h-4 w-4" />
-              Import
-            </DropdownMenuItem>
+            {!readOnly && (
+              <DropdownMenuItem onClick={() => inputRef.current?.click()}>
+                <Upload className="mr-2 h-4 w-4" />
+                Import
+              </DropdownMenuItem>
+            )}
             <DropdownMenuItem onClick={onExport}>
               <Download className="mr-2 h-4 w-4" />
               Export JSON
@@ -276,66 +291,72 @@ export default function Toolbar({
               <Download className="mr-2 h-4 w-4" />
               Export Python
             </DropdownMenuItem>
-            <div className="my-1 h-px bg-neutral-200 dark:bg-neutral-700" />
-            <DropdownMenuItem
-              onClick={() => {
-                const rf = flowJsonToReactFlow(EXAMPLES[0].json as FlowJson);
-                setNodes(rf.nodes as FlowNode[]);
-                setEdges(rf.edges as FlowEdge[]);
-                setTimeout(() => {
-                  rfInstance?.fitView?.({ padding: 0.2, duration: 300 });
-                }, 100);
-              }}
-            >
-              <FileText className="mr-2 h-4 w-4" />
-              {EXAMPLES[0].name}
-            </DropdownMenuItem>
-            {EXAMPLES.slice(1).map((ex) => (
-              <DropdownMenuItem
-                key={ex.id}
-                onClick={() => {
-                  const rf = flowJsonToReactFlow(ex.json as FlowJson);
-                  setNodes(rf.nodes as FlowNode[]);
-                  setEdges(rf.edges as FlowEdge[]);
-                  setTimeout(() => {
-                    rfInstance?.fitView?.({ padding: 0.2, duration: 300 });
-                  }, 100);
-                }}
-              >
-                <FileText className="mr-2 h-4 w-4" />
-                {ex.name}
-              </DropdownMenuItem>
-            ))}
+            {!readOnly && (
+              <>
+                <div className="my-1 h-px bg-neutral-200 dark:bg-neutral-700" />
+                <DropdownMenuItem
+                  onClick={() => {
+                    const rf = flowJsonToReactFlow(EXAMPLES[0].json as FlowJson);
+                    setNodes(rf.nodes as FlowNode[]);
+                    setEdges(rf.edges as FlowEdge[]);
+                    setTimeout(() => {
+                      rfInstance?.fitView?.({ padding: 0.2, duration: 300 });
+                    }, 100);
+                  }}
+                >
+                  <FileText className="mr-2 h-4 w-4" />
+                  {EXAMPLES[0].name}
+                </DropdownMenuItem>
+                {EXAMPLES.slice(1).map((ex) => (
+                  <DropdownMenuItem
+                    key={ex.id}
+                    onClick={() => {
+                      const rf = flowJsonToReactFlow(ex.json as FlowJson);
+                      setNodes(rf.nodes as FlowNode[]);
+                      setEdges(rf.edges as FlowEdge[]);
+                      setTimeout(() => {
+                        rfInstance?.fitView?.({ padding: 0.2, duration: 300 });
+                      }, 100);
+                    }}
+                  >
+                    <FileText className="mr-2 h-4 w-4" />
+                    {ex.name}
+                  </DropdownMenuItem>
+                ))}
+              </>
+            )}
             <DropdownMenuSeparator />
             {moreLinks}
           </DropdownMenuContent>
         </DropdownMenu>
         {/* Load Examples dropdown - shown on larger screens only */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="secondary" size="sm" className="hidden md:flex gap-1.5">
-              <FileText className="h-4 w-4" />
-              <span className="hidden md:inline">Load Example</span>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            {EXAMPLES.map((ex) => (
-              <DropdownMenuItem
-                key={ex.id}
-                onClick={() => {
-                  const rf = flowJsonToReactFlow(ex.json as FlowJson);
-                  setNodes(rf.nodes as FlowNode[]);
-                  setEdges(rf.edges as FlowEdge[]);
-                  setTimeout(() => {
-                    rfInstance?.fitView?.({ padding: 0.2, duration: 300 });
-                  }, 100);
-                }}
-              >
-                {ex.name}
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
+        {!readOnly && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="secondary" size="sm" className="hidden md:flex gap-1.5">
+                <FileText className="h-4 w-4" />
+                <span className="hidden md:inline">Load Example</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {EXAMPLES.map((ex) => (
+                <DropdownMenuItem
+                  key={ex.id}
+                  onClick={() => {
+                    const rf = flowJsonToReactFlow(ex.json as FlowJson);
+                    setNodes(rf.nodes as FlowNode[]);
+                    setEdges(rf.edges as FlowEdge[]);
+                    setTimeout(() => {
+                      rfInstance?.fitView?.({ padding: 0.2, duration: 300 });
+                    }, 100);
+                  }}
+                >
+                  {ex.name}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
         <div className="w-px bg-neutral-300 dark:bg-neutral-700" />
         <ThemeSwitch />
         <div className="hidden md:block w-px bg-neutral-300 dark:bg-neutral-700" />

@@ -26,6 +26,7 @@ type Props = {
   onDelete: (id: string, kind: "node" | "edge") => void;
   onRenameNode?: (oldId: string, newId: string) => void;
   availableNodeIds?: string[];
+  readOnly?: boolean;
 };
 
 export default function InspectorPanel({
@@ -34,6 +35,7 @@ export default function InspectorPanel({
   onDelete,
   onRenameNode,
   availableNodeIds = [],
+  readOnly = false,
 }: Props) {
   const selectedNodeId = useEditorStore((state) => state.selectedNodeId);
   const selectedFunctionIndex = useEditorStore((state) => state.selectedFunctionIndex);
@@ -156,6 +158,7 @@ export default function InspectorPanel({
         <span className="truncate flex-1 min-w-0">
           Inspector: <code className="text-xs font-mono lowercase">{id}</code>
         </span>
+        <fieldset disabled={readOnly} className="contents">
         <div className="flex items-center gap-1 shrink-0">
           <TooltipProvider>
             <Tooltip>
@@ -198,6 +201,7 @@ export default function InspectorPanel({
             </Tooltip>
           </TooltipProvider>
         </div>
+        </fieldset>
       </div>
 
       <Tabs
@@ -220,6 +224,7 @@ export default function InspectorPanel({
           </TabsTrigger>
         </TabsList>
 
+        <fieldset disabled={readOnly} className="contents">
         <TabsContent
           value="general"
           className="flex-1 overflow-y-auto min-h-0 space-y-4 pr-1 mt-0 pb-4"
@@ -324,6 +329,7 @@ export default function InspectorPanel({
             />
           </div>
         </TabsContent>
+        </fieldset>
       </Tabs>
 
       <div className="border-t border-neutral-200 dark:border-neutral-700 px-3 py-2 shrink-0">

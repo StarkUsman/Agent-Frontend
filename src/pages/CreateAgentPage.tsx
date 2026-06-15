@@ -9,6 +9,7 @@ import Step3AISettings  from '../components/create-agent/Step3AISettings'
 import Step4Behaviour   from '../components/create-agent/Step4Behaviour'
 import Step5Review      from '../components/create-agent/Step5Review'
 import { AGENTS } from '../data/agents'
+import { useCurrentUser } from '../contexts/CurrentUserContext'
 
 // ── Shared draft type — imported by all step components ────────────────────
 export interface AgentDraft {
@@ -70,6 +71,7 @@ const canAdvance = (step: number, draft: AgentDraft): boolean => {
 // ── Page ───────────────────────────────────────────────────────────────────
 const CreateAgentPage = () => {
   const navigate = useNavigate()
+  const { isViewer } = useCurrentUser()
   const [step, setStep]   = useState(1)
   const [draft, setDraft] = useState<AgentDraft>(INITIAL_DRAFT)
 
@@ -77,6 +79,10 @@ const CreateAgentPage = () => {
     const token = localStorage.getItem('access_token')
     if (!token) navigate('/', { replace: true })
   }, [navigate])
+
+  useEffect(() => {
+    if (isViewer) navigate('/agents', { replace: true })
+  }, [isViewer, navigate])
 
   const updateDraft = (patch: Partial<AgentDraft>) =>
     setDraft((prev) => ({ ...prev, ...patch }))

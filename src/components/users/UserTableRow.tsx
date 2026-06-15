@@ -34,6 +34,7 @@ const RoleBadge = ({ role }: { role: UserRole }) => (
 // ── Row component ──────────────────────────────────────────────────────────
 interface UserTableRowProps extends UserRowData {
   onDelete: (id: number) => void
+  showActions?: boolean
 }
 
 const UserTableRow = ({
@@ -46,6 +47,7 @@ const UserTableRow = ({
   profile_pic,
   organisation_name,
   onDelete,
+  showActions = true,
 }: UserTableRowProps) => {
   const navigate = useNavigate()
 
@@ -83,26 +85,28 @@ const UserTableRow = ({
       </td>
 
       {/* Actions */}
-      <td className="py-4 pl-4 pr-6">
-        <div className="flex items-center gap-1">
-          <button
-            onClick={() => navigate(`/users/${id}/edit`)}
-            className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors cursor-pointer"
-            title="Edit user"
-            aria-label="Edit user"
-          >
-            <MdOutlineEdit className="text-lg" />
-          </button>
-          <button
-            onClick={() => onDelete(id)}
-            className="p-1.5 rounded-lg text-slate-400 hover:bg-red-50 dark:hover:bg-red-950 hover:text-red-500 transition-colors cursor-pointer"
-            title="Delete user"
-            aria-label="Delete user"
-          >
-            <MdOutlineDeleteOutline className="text-lg" />
-          </button>
-        </div>
-      </td>
+      {showActions && (
+        <td className="py-4 pl-4 pr-6">
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => navigate(`/users/${id}/edit`)}
+              className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors cursor-pointer"
+              title="Edit user"
+              aria-label="Edit user"
+            >
+              <MdOutlineEdit className="text-lg" />
+            </button>
+            <button
+              onClick={() => onDelete(id)}
+              className="p-1.5 rounded-lg text-slate-400 hover:bg-red-50 dark:hover:bg-red-950 hover:text-red-500 transition-colors cursor-pointer"
+              title="Delete user"
+              aria-label="Delete user"
+            >
+              <MdOutlineDeleteOutline className="text-lg" />
+            </button>
+          </div>
+        </td>
+      )}
 
     </tr>
   )

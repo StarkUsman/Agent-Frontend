@@ -5,6 +5,7 @@ import { HiEye, HiEyeOff } from 'react-icons/hi'
 import Sidebar from '../components/dashboard/Sidebar'
 import UserAvatar from '../components/users/UserAvatar'
 import { USERS } from '../data/users'
+import { useCurrentUser } from '../contexts/CurrentUserContext'
 import type { UserRole, UserRowData } from '../components/users/UserTableRow'
 
 const inputClass =
@@ -39,6 +40,7 @@ const INITIAL_DRAFT: UserDraft = {
 // ── Page ───────────────────────────────────────────────────────────────────
 const CreateUserPage = () => {
   const navigate = useNavigate()
+  const { isViewer } = useCurrentUser()
   const { id } = useParams<{ id: string }>()
   const isEdit = Boolean(id)
   const editingUser = isEdit ? USERS.find((u) => u.id === Number(id)) ?? null : null
@@ -50,6 +52,10 @@ const CreateUserPage = () => {
     const token = localStorage.getItem('access_token')
     if (!token) navigate('/', { replace: true })
   }, [navigate])
+
+  useEffect(() => {
+    if (isViewer) navigate('/users', { replace: true })
+  }, [isViewer, navigate])
 
   useEffect(() => {
     if (editingUser) {
