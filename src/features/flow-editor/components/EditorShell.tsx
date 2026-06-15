@@ -24,6 +24,8 @@ import NodePalette from "@/components/palette/NodePalette";
 import ToastContainer from "@/components/ui/Toast";
 import { extractDecisionNodeFromChange, useDecisionNodes } from "@/hooks/useDecisionNodes";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
+import { extractFlowJsonFromPython } from "@/lib/codegen/flowEmbed";
+import { flowJsonToReactFlow } from "@/lib/convert/flowAdapters";
 import { getTemplateByType } from "@/lib/nodes/templates";
 import type { FlowFunctionJson } from "@/lib/schema/flow.schema";
 import { loadCurrent, saveCurrent } from "@/lib/storage/localStore";
@@ -44,6 +46,7 @@ import {
   updateFunctionReferences,
   updateNodeData,
 } from "@/lib/utils/nodeUpdates";
+import { getAgentFlow } from "../../../api/manager";
 import { useCurrentUser } from "../../../contexts/CurrentUserContext";
 import { useTheme } from "../../../contexts/ThemeContext";
 
@@ -83,7 +86,7 @@ function useInitialGraph() {
   }, []);
 }
 
-export default function EditorShell() {
+export default function EditorShell({ agentId }: { agentId?: string }) {
   const initial = useInitialGraph();
   const [nodes, setNodes, onNodesChangeBase] = useNodesState(initial.nodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>(initial.edges);
@@ -209,15 +212,51 @@ export default function EditorShell() {
     [setNodes, validateFunctionIndexAfterUpdate]
   );
 
-  // load current on mount if present
+  // Load this agent's flow from the backend on mount. The flow JSON is carried
+  // inside the stored Python as an embedded marker; if it's missing or the
+  // fetch fails we fall back to the local draft / initial graph.
+  const [flowLoading, setFlowLoading] = useState(Boolean(agentId));
+
   useEffect(() => {
-    const saved = loadCurrent<{ nodes: FlowNode[]; edges: FlowEdge[] }>();
-    if (saved?.nodes && saved?.edges) {
-      setNodes(saved.nodes);
-      setEdges(saved.edges);
+    let cancelled = false;
+
+    if (!agentId) {
+      const saved = loadCurrent<{ nodes: FlowNode[]; edges: FlowEdge[] }>();
+      if (saved?.nodes && saved?.edges) {
+        setNodes(saved.nodes);
+        setEdges(saved.edges);
+      }
+      return;
     }
+
+    (async () => {
+      try {
+        const { flow_code } = await getAgentFlow(agentId);
+        const json = extractFlowJsonFromPython(flow_code);
+        if (!cancelled && json) {
+          const rf = flowJsonToReactFlow(json);
+          setNodes(rf.nodes as FlowNode[]);
+          setEdges(rf.edges);
+        }
+      } catch (err) {
+        console.error("Failed to load agent flow:", err);
+        if (!cancelled) {
+          const saved = loadCurrent<{ nodes: FlowNode[]; edges: FlowEdge[] }>();
+          if (saved?.nodes && saved?.edges) {
+            setNodes(saved.nodes);
+            setEdges(saved.edges);
+          }
+        }
+      } finally {
+        if (!cancelled) setFlowLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [agentId]);
 
   // Manage decision nodes lifecycle
   useDecisionNodes(nodes, setNodes);
@@ -344,6 +383,11 @@ export default function EditorShell() {
 
   return (
     <div className="h-screen w-screen flex overflow-hidden">
+      {flowLoading && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/70 backdrop-blur-sm text-sm text-muted-foreground">
+          Loading flow…
+        </div>
+      )}
       <div
         className={`flex flex-col overflow-hidden transition-all duration-300 ease-in-out ${
           showNodesPanel ? "w-56" : "w-0"
@@ -359,6 +403,7 @@ export default function EditorShell() {
         </div>
       </div>
       <Toolbar
+        agentId={agentId}
         nodes={nodes}
         edges={edges}
         setNodes={setNodes}

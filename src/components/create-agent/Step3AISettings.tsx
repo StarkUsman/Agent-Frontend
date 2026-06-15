@@ -28,6 +28,8 @@ const inputClass =
 
 const Step3AISettings = ({ draft, onChange }: Props) => {
   const [showKey, setShowKey] = useState(false)
+  const [showDeepgram, setShowDeepgram] = useState(false)
+  const [showCartesia, setShowCartesia] = useState(false)
 
   return (
     <div className="max-w-2xl space-y-5">
@@ -174,6 +176,79 @@ const Step3AISettings = ({ draft, onChange }: Props) => {
                       <option key={m.value} value={m.value}>{m.label}</option>
                     ))}
                   </select>
+                </div>
+
+                {/* DEEPGRAM_API_KEY */}
+                <div>
+                  <label className="block text-xs text-slate-600 dark:text-slate-400 mb-1.5">
+                    <span className="font-mono text-slate-500 dark:text-slate-400">DEEPGRAM_API_KEY</span>
+                    <span className="text-red-500 ml-0.5">*</span>
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showDeepgram ? 'text' : 'password'}
+                      value={draft.deepgramApiKey}
+                      onChange={(e) => onChange({ deepgramApiKey: e.target.value })}
+                      placeholder="••••••••••••••••"
+                      className={`${inputClass} pr-10`}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowDeepgram((v) => !v)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 cursor-pointer"
+                    >
+                      {showDeepgram
+                        ? <MdVisibilityOff className="text-base" />
+                        : <MdVisibility   className="text-base" />}
+                    </button>
+                  </div>
+                  <p className="text-xs text-slate-400 dark:text-slate-500 mt-1.5">
+                    Required for speech recognition (and fallback text-to-speech).
+                  </p>
+                </div>
+
+                {/* TTS_PROVIDER */}
+                <div>
+                  <label className="block text-xs text-slate-600 dark:text-slate-400 mb-1.5">
+                    <span className="font-mono text-slate-500 dark:text-slate-400">TTS_PROVIDER</span>
+                  </label>
+                  <select
+                    value={draft.ttsProvider}
+                    onChange={(e) => onChange({ ttsProvider: e.target.value as 'deepgram' | 'cartesia' })}
+                    className={`${inputClass} cursor-pointer`}
+                  >
+                    <option value="deepgram">Deepgram</option>
+                    <option value="cartesia">Cartesia</option>
+                  </select>
+                </div>
+
+                {/* CARTESIA_API_KEY */}
+                <div>
+                  <label className="block text-xs text-slate-600 dark:text-slate-400 mb-1.5">
+                    <span className="font-mono text-slate-500 dark:text-slate-400">CARTESIA_API_KEY</span>
+                    <span className="text-slate-400 ml-1">(optional)</span>
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showCartesia ? 'text' : 'password'}
+                      value={draft.cartesiaApiKey}
+                      onChange={(e) => onChange({ cartesiaApiKey: e.target.value })}
+                      placeholder="••••••••••••••••"
+                      className={`${inputClass} pr-10`}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowCartesia((v) => !v)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 cursor-pointer"
+                    >
+                      {showCartesia
+                        ? <MdVisibilityOff className="text-base" />
+                        : <MdVisibility   className="text-base" />}
+                    </button>
+                  </div>
+                  <p className="text-xs text-slate-400 dark:text-slate-500 mt-1.5">
+                    Needed only if TTS provider is set to Cartesia.
+                  </p>
                 </div>
 
               </div>

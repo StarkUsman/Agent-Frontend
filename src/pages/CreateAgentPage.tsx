@@ -8,7 +8,11 @@ import Step2ChooseVoice from '../components/create-agent/Step2ChooseVoice'
 import Step3AISettings  from '../components/create-agent/Step3AISettings'
 import Step4Behaviour   from '../components/create-agent/Step4Behaviour'
 import Step5Review      from '../components/create-agent/Step5Review'
-import { AGENTS } from '../data/agents'
+import { createAgent } from '../api/manager'
+import { generatePythonCode } from '../features/flow-editor/lib/codegen/pythonGenerator'
+import { embedFlowJsonInPython } from '../features/flow-editor/lib/codegen/flowEmbed'
+import { EXAMPLES } from '../features/flow-editor/lib/examples'
+import type { FlowJson } from '../features/flow-editor/lib/schema/flow.schema'
 
 // ── Shared draft type — imported by all step components ────────────────────
 export interface AgentDraft {
@@ -25,6 +29,9 @@ export interface AgentDraft {
   openaiApiKey: string
   openaiModel: string
   openaiBaseUrl: string
+  deepgramApiKey: string
+  cartesiaApiKey: string
+  ttsProvider: 'deepgram' | 'cartesia'
   // Step 4
   openingGreeting: string
   topicsHandled: string
@@ -42,6 +49,9 @@ const INITIAL_DRAFT: AgentDraft = {
   openaiApiKey: '',
   openaiModel: 'llama-3.3-70b-versatile',
   openaiBaseUrl: 'https://api.groq.com/openai/v1',
+  deepgramApiKey: '',
+  cartesiaApiKey: '',
+  ttsProvider: 'deepgram',
   openingGreeting: "Hello! Thank you for calling. My name is Clara and I'm here to help you today. What can I do for you?",
   topicsHandled: 'Billing questions and invoice queries\nAccount management and password resets\nOrder status and delivery enquiries\nProduct information',
   topicsToAvoid: '',
@@ -62,6 +72,7 @@ const canAdvance = (step: number, draft: AgentDraft): boolean => {
   switch (step) {
     case 1: return draft.name.trim().length > 0 && draft.purpose.trim().length > 0
     case 2: return draft.voiceId.length > 0
+    case 3: return draft.openaiApiKey.trim().length > 0 && draft.deepgramApiKey.trim().length > 0
     case 4: return draft.openingGreeting.trim().length > 0 && draft.topicsHandled.trim().length > 0
     default: return true
   }
@@ -72,46 +83,52 @@ const CreateAgentPage = () => {
   const navigate = useNavigate()
   const [step, setStep]   = useState(1)
   const [draft, setDraft] = useState<AgentDraft>(INITIAL_DRAFT)
+  const [submitting, setSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
 
   const updateDraft = (patch: Partial<AgentDraft>) =>
     setDraft((prev) => ({ ...prev, ...patch }))
+
+  // The backend rejects an empty flow, so new agents start with a minimal
+  // valid placeholder; the user builds the real flow afterwards in the editor.
+  const buildPlaceholderFlowCode = (): string => {
+    const minimal = EXAMPLES[0].json as FlowJson
+    return embedFlowJsonInPython(generatePythonCode(minimal), minimal)
+  }
+
+  const submitAgent = async () => {
+    const config: Record<string, string> = {
+      OPENAI_API_KEY: draft.openaiApiKey.trim(),
+      OPENAI_MODEL: draft.openaiModel,
+      OPENAI_BASE_URL: draft.openaiBaseUrl.trim(),
+      DEEPGRAM_API_KEY: draft.deepgramApiKey.trim(),
+      TTS_PROVIDER: draft.ttsProvider,
+    }
+    if (draft.cartesiaApiKey.trim()) {
+      config.CARTESIA_API_KEY = draft.cartesiaApiKey.trim()
+    }
+
+    setSubmitting(true)
+    setSubmitError(null)
+    try {
+      await createAgent({
+        name: draft.name.trim(),
+        flow_code: buildPlaceholderFlowCode(),
+        config,
+      })
+      navigate('/agents')
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : 'Failed to create agent')
+    } finally {
+      setSubmitting(false)
+    }
+  }
 
   const handleContinue = () => {
     if (step < TOTAL_STEPS) {
       setStep((s) => s + 1)
     } else {
-      const payload = {
-        agent_name:      draft.name,
-        purpose:         draft.purpose,
-        language:        draft.language,
-        voice_id:        draft.voiceId,
-        voice_name:      draft.voiceName,
-        voice_provider:  draft.voiceProvider,
-        opening_greeting: draft.openingGreeting,
-        topics_handled:  draft.topicsHandled.split('\n').filter(Boolean),
-        topics_to_avoid: draft.topicsToAvoid.split('\n').filter(Boolean),
-        OPENAI_API_KEY:  draft.openaiApiKey,
-        OPENAI_MODEL:    draft.openaiModel,
-        OPENAI_BASE_URL: draft.openaiBaseUrl,
-      }
-      console.log('[CreateAgent] payload:', payload)
-
-      AGENTS.push({
-        id: AGENTS.length + 1,
-        name: draft.name,
-        description: draft.purpose,
-        voice: {
-          initial: draft.voiceName.charAt(0).toUpperCase(),
-          name: draft.voiceName,
-          color: '#6366f1',
-        },
-        calls: 0,
-        avgTtfb: null,
-        interruptions: null,
-        flow: null,
-        status: 'Active',
-      })
-      navigate('/agents')
+      submitAgent()
     }
   }
 
@@ -155,14 +172,14 @@ const CreateAgentPage = () => {
             </button>
             <button
               onClick={handleContinue}
-              disabled={!continueReady}
+              disabled={!continueReady || submitting}
               className="flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-semibold text-white disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 transition-all cursor-pointer"
               style={{ backgroundColor: '#6366f1' }}
             >
               {isFinalStep ? (
                 <>
                   <MdCheck className="text-base" />
-                  Create agent
+                  {submitting ? 'Creating…' : 'Create agent'}
                 </>
               ) : (
                 <>
@@ -176,6 +193,12 @@ const CreateAgentPage = () => {
 
         {/* ── Step indicator ── */}
         <StepIndicator steps={STEPS} currentStep={step} onStepClick={setStep} />
+
+        {submitError && (
+          <div className="mx-8 mt-4 px-4 py-3 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-sm text-red-600 dark:text-red-400">
+            {submitError}
+          </div>
+        )}
 
         {/* ── Step content ── */}
         <div className="flex-1 overflow-y-auto px-8 py-10 bg-slate-50 dark:bg-slate-900">

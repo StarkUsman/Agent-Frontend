@@ -1,35 +1,49 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { MdAdd, MdOutlineWarningAmber, MdChevronLeft, MdChevronRight, MdSearch } from 'react-icons/md'
+import { MdAdd, MdChevronLeft, MdChevronRight, MdSearch } from 'react-icons/md'
 import Sidebar from '../components/dashboard/Sidebar'
-import AgentTableRow from '../components/agents/AgentTableRow'
-import { AGENTS } from '../data/agents'
+import AgentTableRow, { type AgentRowData } from '../components/agents/AgentTableRow'
+import {
+  listAgents,
+  activateAgent,
+  deactivateAgent,
+  agentClientUrl,
+  type ManagerAgent,
+} from '../api/manager'
 import { useCurrentUser } from '../contexts/CurrentUserContext'
 
 // ── Config ─────────────────────────────────────────────────────────────────
 const ITEMS_PER_PAGE = 6
 
-// ── Read live flow node count from localStorage ────────────────────────────
-const getStoredFlow = (agentId: number): { nodes: number } | null => {
-  try {
-    const raw = localStorage.getItem(`pipcat-flow-agent-${agentId}`)
-    if (!raw) return null
-    const parsed = JSON.parse(raw)
-    if (Array.isArray(parsed?.nodes) && parsed.nodes.length > 0) {
-      return { nodes: parsed.nodes.length }
-    }
-  } catch {}
-  return null
+const AVATAR_COLORS = ['#6366f1', '#0ea5e9', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6']
+
+// Backend agents have no voice/analytics yet — derive a stable avatar and show
+// placeholders for metrics the manager doesn't track.
+const toRow = (a: ManagerAgent): AgentRowData => {
+  const initial = (a.name.trim()[0] ?? '?').toUpperCase()
+  const color = AVATAR_COLORS[a.id.charCodeAt(0) % AVATAR_COLORS.length]
+  return {
+    id: a.id,
+    name: a.name,
+    description: `Agent on port ${a.port}`,
+    voice: { initial, name: '—', color },
+    calls: 0,
+    avgTtfb: null,
+    interruptions: null,
+    clientUrl: agentClientUrl(a.port),
+    status: a.status === 'running' ? 'Active' : 'Inactive',
+  }
 }
 
 const COLUMNS = [
-  { label: 'Agent name',        width: 'w-[35%]' },
-  { label: 'Voice',             width: 'w-[12%]' },
-  { label: 'Calls',             width: 'w-[8%]'  },
-  { label: 'Avg TTFB',          width: 'w-[10%]' },
-  { label: 'Interruptions',     width: 'w-[10%]' },
-  { label: 'Conversation flow', width: 'w-[15%]' },
-  { label: 'Status',            width: 'w-[10%]' },
+  { label: 'Agent name',        width: 'w-[26%]' },
+  { label: 'Voice',             width: 'w-[10%]' },
+  { label: 'URL',               width: 'w-[18%]' },
+  { label: 'Calls',             width: 'w-[7%]'  },
+  { label: 'Avg TTFB',          width: 'w-[9%]'  },
+  { label: 'Interruptions',     width: 'w-[9%]'  },
+  { label: 'Conversation flow', width: 'w-[12%]' },
+  { label: 'Status',            width: 'w-[9%]'  },
 ]
 
 // ── Page ───────────────────────────────────────────────────────────────────
@@ -39,19 +53,53 @@ const AgentsPage = () => {
   const canCreateAgents = hasPermission('agents:create')
   const [currentPage, setCurrentPage] = useState(1)
   const [searchQuery, setSearchQuery] = useState('')
+  const [rows, setRows] = useState<AgentRowData[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  const allAgents   = AGENTS.map((a) => ({ ...a, flow: getStoredFlow(a.id) ?? a.flow }))
+  const loadAgents = async () => {
+    try {
+      const data = await listAgents()
+      setRows(data.map(toRow))
+      setError(null)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load agents')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    loadAgents()
+  }, [])
+
+  const handleToggleStatus = async (id: string, status: AgentRowData['status']) => {
+    try {
+      if (status === 'Active') {
+        await deactivateAgent(id)
+      } else {
+        await activateAgent(id)
+      }
+      setRows((prev) =>
+        prev.map((r) =>
+          r.id === id ? { ...r, status: status === 'Active' ? 'Inactive' : 'Active' } : r
+        )
+      )
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update agent status')
+    }
+  }
+
   const q           = searchQuery.trim().toLowerCase()
   const agents      = q
-    ? allAgents.filter((a) => a.name.toLowerCase().includes(q) || a.description?.toLowerCase().includes(q))
-    : allAgents
+    ? rows.filter((a) => a.name.toLowerCase().includes(q) || a.description?.toLowerCase().includes(q))
+    : rows
   const totalPages  = Math.max(1, Math.ceil(agents.length / ITEMS_PER_PAGE))
   const safePage    = Math.min(currentPage, totalPages)
   const startIndex  = (safePage - 1) * ITEMS_PER_PAGE
   const paginated   = agents.slice(startIndex, startIndex + ITEMS_PER_PAGE)
   const startItem   = agents.length === 0 ? 0 : startIndex + 1
   const endItem     = Math.min(startIndex + ITEMS_PER_PAGE, agents.length)
-  const noFlowCount = agents.filter((a) => a.flow === null).length
 
   const handleSearch = (value: string) => {
     setSearchQuery(value)
@@ -114,32 +162,39 @@ const AgentsPage = () => {
                 </tr>
               </thead>
               <tbody>
-                {paginated.length === 0 ? (
+                {loading ? (
                   <tr>
                     <td colSpan={COLUMNS.length} className="py-16 text-center text-sm text-slate-400 dark:text-slate-500">
-                      No agents match <span className="font-semibold text-slate-600 dark:text-slate-300">"{searchQuery}"</span>
+                      Loading agents…
+                    </td>
+                  </tr>
+                ) : error ? (
+                  <tr>
+                    <td colSpan={COLUMNS.length} className="py-16 text-center text-sm text-red-500">
+                      {error}{' '}
+                      <button
+                        onClick={() => { setLoading(true); loadAgents() }}
+                        className="font-semibold underline underline-offset-2 hover:text-red-600 cursor-pointer"
+                      >
+                        Retry
+                      </button>
+                    </td>
+                  </tr>
+                ) : paginated.length === 0 ? (
+                  <tr>
+                    <td colSpan={COLUMNS.length} className="py-16 text-center text-sm text-slate-400 dark:text-slate-500">
+                      {q
+                        ? <>No agents match <span className="font-semibold text-slate-600 dark:text-slate-300">"{searchQuery}"</span></>
+                        : 'No agents yet — create one to get started.'}
                     </td>
                   </tr>
                 ) : (
                   paginated.map((agent) => (
-                    <AgentTableRow key={agent.id} {...agent} />
+                    <AgentTableRow key={agent.id} {...agent} onToggleStatus={handleToggleStatus} />
                   ))
                 )}
               </tbody>
             </table>
-
-            {noFlowCount > 0 && (
-              <div className="flex items-center gap-3 mx-6 mt-2 mb-3 px-4 py-3 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800/40">
-                <MdOutlineWarningAmber className="text-amber-500 text-lg shrink-0" />
-                <p className="text-sm text-slate-600 dark:text-slate-300">
-                  {noFlowCount} agent{noFlowCount > 1 ? 's have' : ' has'} no conversation flow
-                  and cannot handle calls.{' '}
-                  <a href="#" className="font-semibold text-amber-600 dark:text-amber-400 underline underline-offset-2 hover:text-amber-700 dark:hover:text-amber-300">
-                    Add a flow →
-                  </a>
-                </p>
-              </div>
-            )}
 
             <div className="flex items-center justify-between px-6 py-3 border-t border-slate-100 dark:border-slate-700">
               <p className="text-xs text-slate-400 dark:text-slate-500">

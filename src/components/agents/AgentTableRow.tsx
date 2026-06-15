@@ -1,18 +1,23 @@
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { TbGitFork } from 'react-icons/tb'
-import { MdOutlineWarningAmber } from 'react-icons/md'
+import { MdOpenInNew, MdContentCopy, MdCheck } from 'react-icons/md'
 
 // ── Types ──────────────────────────────────────────────────────────────────
 export interface AgentRowData {
-  id: number
+  id: string
   name: string
   description: string
   voice: { initial: string; name: string; color: string }
   calls: number
   avgTtfb: string | null       // null = no data yet ("—")
   interruptions: string | null // null = no data yet ("—")
-  flow: { nodes: number } | null // null = no flow configured
+  clientUrl: string
   status: 'Active' | 'Inactive'
+}
+
+interface AgentRowProps extends AgentRowData {
+  onToggleStatus: (id: string, status: AgentRowData['status']) => Promise<void> | void
 }
 
 // ── Sub-components ─────────────────────────────────────────────────────────
@@ -28,47 +33,90 @@ const VoiceCell = ({ initial, name, color }: AgentRowData['voice']) => (
   </div>
 )
 
-const FlowCell = ({ id, flow }: { id: number; flow: AgentRowData['flow'] }) => {
-  const navigate = useNavigate()
-  const goToEditor = () => navigate(`/agents/${id}/flow`)
+const UrlCell = ({ url }: { url: string }) => {
+  const [copied, setCopied] = useState(false)
 
-  if (flow) {
-    return (
-      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 text-xs font-medium whitespace-nowrap">
-        <TbGitFork className="text-sm" />
-        {flow.nodes} nodes ·{' '}
-        <span
-          className="underline cursor-pointer hover:text-indigo-800 dark:hover:text-indigo-300"
-          onClick={goToEditor}
-        >
-          edit
-        </span>
-      </span>
-    )
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(url)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1500)
+    } catch {
+      // clipboard unavailable — ignore
+    }
   }
+
+  return (
+    <div className="flex items-center gap-1.5 max-w-[200px]">
+      <a
+        href={url}
+        target="_blank"
+        rel="noreferrer"
+        title={url}
+        className="inline-flex items-center gap-1 text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:underline truncate"
+      >
+        <MdOpenInNew className="text-sm shrink-0" />
+        <span className="truncate">{url.replace(/^https?:\/\//, '')}</span>
+      </a>
+      <button
+        onClick={copy}
+        title="Copy URL"
+        className="shrink-0 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 cursor-pointer"
+      >
+        {copied ? <MdCheck className="text-sm text-emerald-500" /> : <MdContentCopy className="text-sm" />}
+      </button>
+    </div>
+  )
+}
+
+const FlowCell = ({ id }: { id: string }) => {
+  const navigate = useNavigate()
   return (
     <span
-      onClick={goToEditor}
-      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 text-xs font-medium whitespace-nowrap cursor-pointer hover:bg-amber-100 dark:hover:bg-amber-900/40 transition-colors"
+      onClick={() => navigate(`/agents/${id}/flow`)}
+      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 text-xs font-medium whitespace-nowrap cursor-pointer hover:bg-indigo-100 dark:hover:bg-indigo-900/40 transition-colors"
     >
-      <MdOutlineWarningAmber className="text-sm" />
-      No flow — add one
+      <TbGitFork className="text-sm" />
+      Edit flow
     </span>
   )
 }
 
-const StatusBadge = ({ status }: { status: AgentRowData['status'] }) => {
+const StatusToggle = ({
+  id,
+  status,
+  onToggle,
+}: {
+  id: string
+  status: AgentRowData['status']
+  onToggle: AgentRowProps['onToggleStatus']
+}) => {
+  const [pending, setPending] = useState(false)
   const isActive = status === 'Active'
+
+  const handleClick = async () => {
+    if (pending) return
+    setPending(true)
+    try {
+      await onToggle(id, status)
+    } finally {
+      setPending(false)
+    }
+  }
+
   return (
-    <span
-      className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border ${
+    <button
+      onClick={handleClick}
+      disabled={pending}
+      title={isActive ? 'Click to deactivate' : 'Click to activate'}
+      className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-wait ${
         isActive
-          ? 'border-emerald-200 dark:border-emerald-800 text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30'
-          : 'border-slate-200 dark:border-slate-700 text-slate-400 dark:text-slate-500 bg-white dark:bg-slate-800'
+          ? 'border-emerald-200 dark:border-emerald-800 text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 hover:bg-emerald-100 dark:hover:bg-emerald-900/50'
+          : 'border-slate-200 dark:border-slate-700 text-slate-400 dark:text-slate-500 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700'
       }`}
     >
-      {status}
-    </span>
+      {pending ? '…' : status}
+    </button>
   )
 }
 
@@ -81,9 +129,10 @@ const AgentTableRow = ({
   calls,
   avgTtfb,
   interruptions,
-  flow,
+  clientUrl,
   status,
-}: AgentRowData) => {
+  onToggleStatus,
+}: AgentRowProps) => {
   return (
     <tr className="border-b border-slate-100 dark:border-slate-700 hover:bg-slate-50/60 dark:hover:bg-slate-800/60 transition-colors group">
 
@@ -98,6 +147,11 @@ const AgentTableRow = ({
       {/* Voice */}
       <td className="py-4 px-4">
         <VoiceCell {...voice} />
+      </td>
+
+      {/* URL */}
+      <td className="py-4 px-4">
+        <UrlCell url={clientUrl} />
       </td>
 
       {/* Calls */}
@@ -123,12 +177,12 @@ const AgentTableRow = ({
 
       {/* Conversation flow */}
       <td className="py-4 px-4">
-        <FlowCell id={id} flow={flow} />
+        <FlowCell id={id} />
       </td>
 
       {/* Status */}
       <td className="py-4 pl-4 pr-6">
-        <StatusBadge status={status} />
+        <StatusToggle id={id} status={status} onToggle={onToggleStatus} />
       </td>
 
     </tr>

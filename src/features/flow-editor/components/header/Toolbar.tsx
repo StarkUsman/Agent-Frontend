@@ -25,7 +25,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { showToast } from "@/components/ui/Toast";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { updateAgentFlow } from "../../../../api/manager";
 import { generatePythonCode } from "@/lib/codegen/pythonGenerator";
+import { embedFlowJsonInPython } from "@/lib/codegen/flowEmbed";
 import { flowJsonToReactFlow, reactFlowToFlowJson } from "@/lib/convert/flowAdapters";
 import { EXAMPLES } from "@/lib/examples";
 import { FlowJson } from "@/lib/schema/flow.schema";
@@ -44,6 +46,7 @@ type Props = {
   onRedo: () => void;
   onNewFlow: () => void;
   readOnly?: boolean;
+  agentId?: string;
 };
 
 export default function Toolbar({
@@ -57,6 +60,7 @@ export default function Toolbar({
   onRedo,
   onNewFlow,
   readOnly = false,
+  agentId,
 }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
   const rfInstance = useEditorStore((state) => state.rfInstance);
@@ -95,20 +99,39 @@ export default function Toolbar({
     }
   }
 
-  function onDeploy() {
+  async function onDeploy() {
     const json = reactFlowToFlowJson(nodes, edges);
     const r = validateFlowJson(json);
     if (!r.valid) {
       showToast("Flow must be valid before deploying", "error");
       return;
     }
+    let pythonCode: string;
     try {
-      const pythonCode = generatePythonCode(json);
-      console.log(pythonCode);
-      showToast("Flow Python logged to console", "success");
+      pythonCode = generatePythonCode(json);
     } catch (error) {
       console.error("Failed to generate Python code:", error);
       showToast("Failed to generate Python code", "error");
+      return;
+    }
+
+    // No agent context (e.g. standalone editor) — fall back to logging.
+    if (!agentId) {
+      console.log(pythonCode);
+      showToast("No agent to deploy to — Python logged to console", "error");
+      return;
+    }
+
+    try {
+      const flowCode = embedFlowJsonInPython(pythonCode, json);
+      await updateAgentFlow(agentId, flowCode);
+      showToast("Flow deployed — takes effect on next call", "success");
+    } catch (error) {
+      console.error("Failed to deploy flow:", error);
+      showToast(
+        error instanceof Error ? `Deploy failed: ${error.message}` : "Failed to deploy flow",
+        "error"
+      );
     }
   }
 
