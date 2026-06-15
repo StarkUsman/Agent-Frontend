@@ -7,6 +7,8 @@ import CallHistoryPage from './pages/CallHistoryPage'
 import ReportsPage from './pages/ReportsPage'
 import FlowEditorPage from './pages/FlowEditorPage'
 import CreateAgentPage from './pages/CreateAgentPage'
+import UsersPage from './pages/UsersPage'
+import CreateUserPage from './pages/CreateUserPage'
 
 const App = () => {
   return (
@@ -20,6 +22,9 @@ const App = () => {
           <Route path="/calls" element={<CallHistoryPage />} />
           <Route path="/reports" element={<ReportsPage />} />
           <Route path="/agents/:id/flow" element={<FlowEditorPage />} />
+          <Route path="/users" element={<UsersPage />} />
+          <Route path="/users/new" element={<CreateUserPage />} />
+          <Route path="/users/:id/edit" element={<CreateUserPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>

@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom'
-import { MdOutlineDashboard, MdOutlineSmartToy, MdOutlineAddCircleOutline, MdOutlineHistory, MdOutlineBarChart, MdOutlineSettings, MdOutlinePets } from 'react-icons/md'
+import { MdOutlineDashboard, MdOutlineSmartToy, MdOutlineAddCircleOutline, MdOutlineHistory, MdOutlineBarChart, MdOutlineSettings, MdOutlinePets, MdOutlinePeopleAlt } from 'react-icons/md'
 import { HiOutlineLogout } from 'react-icons/hi'
 import { Sun, Moon } from 'lucide-react'
 import { useTheme } from '../../contexts/ThemeContext'
@@ -19,6 +19,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Create agent',  icon: MdOutlineAddCircleOutline,  to: '/agents/new' },
   { label: 'Call history',  icon: MdOutlineHistory,           to: '/calls',     badge: 3 },
   { label: 'Reports',       icon: MdOutlineBarChart,          to: '/reports' },
+  { label: 'Users',         icon: MdOutlinePeopleAlt,         to: '/users' },
 ]
 
 // ── Sidebar ────────────────────────────────────────────────────────────────
