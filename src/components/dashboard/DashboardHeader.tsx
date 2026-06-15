@@ -28,7 +28,7 @@ const DashboardHeader = () => {
       </div>
 
       {/* ── Right: CTA Button ── */}
-      {hasPermission('agents:create') && (
+      {/* {hasPermission('agents:create') && (
         <button
           className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-white text-sm font-semibold transition-opacity hover:opacity-90 active:scale-95 cursor-pointer shrink-0"
           style={{ backgroundColor: '#6366f1' }}
@@ -36,7 +36,7 @@ const DashboardHeader = () => {
           <MdAdd className="text-lg" />
           Create new agent
         </button>
-      )}
+      )} */}
 
     </div>
   )
