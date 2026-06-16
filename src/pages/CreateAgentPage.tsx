@@ -136,6 +136,18 @@ const CreateAgentPage = () => {
     if (step > 1) setStep((s) => s - 1)
   }
 
+  const isStepClickable = (target: number): boolean => {
+    if (target <= step) return true
+    for (let s = step; s < target; s++) {
+      if (!canAdvance(s, draft)) return false
+    }
+    return true
+  }
+
+  const handleStepClick = (target: number) => {
+    if (isStepClickable(target)) setStep(target)
+  }
+
   const isFinalStep   = step === TOTAL_STEPS
   const continueReady = canAdvance(step, draft)
 
@@ -192,7 +204,7 @@ const CreateAgentPage = () => {
         </div>
 
         {/* ── Step indicator ── */}
-        <StepIndicator steps={STEPS} currentStep={step} onStepClick={setStep} />
+        <StepIndicator steps={STEPS} currentStep={step} onStepClick={handleStepClick} isClickable={isStepClickable} />
 
         {submitError && (
           <div className="mx-8 mt-4 px-4 py-3 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-sm text-red-600 dark:text-red-400">

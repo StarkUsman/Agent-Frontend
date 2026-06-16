@@ -19,12 +19,12 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { label: 'Overview',      icon: MdOutlineDashboard,         to: '/dashboard', end: true },
-  { label: 'My agents',     icon: MdOutlineSmartToy,          to: '/agents',    badge: 6 },
-  { label: 'Create agent',  icon: MdOutlineAddCircleOutline,  to: '/agents/new', permission: 'agents:create' },
-  { label: 'Call history',  icon: MdOutlineHistory,           to: '/calls',     badge: 3 },
-  { label: 'Reports',       icon: MdOutlineBarChart,          to: '/reports' },
-  { label: 'Users',         icon: MdOutlinePeopleAlt,         to: '/users' },
+  { label: 'Overview', icon: MdOutlineDashboard, to: '/dashboard', end: true },
+  { label: 'My agents', icon: MdOutlineSmartToy, to: '/agents', badge: 6 },
+  { label: 'Create agent', icon: MdOutlineAddCircleOutline, to: '/agents/new', permission: 'agents:create' },
+  { label: 'Call history', icon: MdOutlineHistory, to: '/calls', badge: 3 },
+  { label: 'Reports', icon: MdOutlineBarChart, to: '/reports' },
+  { label: 'Users', icon: MdOutlinePeopleAlt, to: '/users' },
 ]
 
 // ── Sidebar ────────────────────────────────────────────────────────────────
@@ -67,17 +67,18 @@ const Sidebar = () => {
             to={item.to}
             end={item.end}
             className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                isActive
-                  ? 'bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400'
-                  : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-100'
+              `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${isActive
+                ? 'bg-[rgb(234,108,46)] text-white'
+                : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-100'
               }`
             }
           >
             {({ isActive }) => (
               <>
                 <item.icon
-                  className={`text-lg shrink-0 ${isActive ? 'text-indigo-500 dark:text-indigo-400' : 'text-slate-400 dark:text-slate-500'}`}
+                  className={`text-lg shrink-0 ${isActive
+      ? 'text-white'
+      : 'text-slate-400 dark:text-slate-500'}`}
                 />
                 <span className="flex-1">{item.label}</span>
 
@@ -86,9 +87,9 @@ const Sidebar = () => {
                   <span
                     className={`text-xs px-1.5 py-0.5 rounded-full font-semibold ${
                       isActive
-                        ? 'bg-indigo-100 dark:bg-indigo-900 text-indigo-600 dark:text-indigo-400'
+                        ? 'bg-indigo-100 text-indigo-600 dark:text-slate-700'
                         : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
-                    }`}
+                      }`}
                   >
                     {item.badge}
                   </span>

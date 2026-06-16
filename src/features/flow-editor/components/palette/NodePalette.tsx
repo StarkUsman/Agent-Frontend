@@ -30,7 +30,11 @@ export default function NodePalette({ nodes, readOnly = false }: Props) {
       {/* Exit back to My Agents */}
       <button
         onClick={() => navigate("/agents")}
-        className="mb-2 flex items-center gap-2 rounded-md px-2 py-2 text-[13px] font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white transition-colors shrink-0 cursor-pointer"
+        className="mb-2 flex items-center gap-2 rounded-md px-2 py-2 text-[13px] font-medium
+        bg-blue-600 text-white
+             hover:bg-blue-700
+             dark:bg-blue-500 dark:hover:bg-blue-600
+             transition-colors shrink-0 cursor-pointer"
         title="Back to My Agents"
       >
         <LogOut className="h-4 w-4 rotate-180" />
