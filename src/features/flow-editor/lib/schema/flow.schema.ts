@@ -6,6 +6,7 @@ export const NodeType = Type.Union([
   Type.Literal("initial"), // Entry point with role_messages and task_messages
   Type.Literal("node"), // Interactive node with task_messages and functions
   Type.Literal("end"), // End node with post_actions: end_conversation
+  Type.Literal("http_request"), // Node pre-configured to perform an HTTP/API call (serializes like a normal node)
 ]);
 
 export const Position = Type.Object({ x: Type.Number(), y: Type.Number() });
@@ -56,6 +57,33 @@ export const Decision = Type.Object({
   decision_node_position: Type.Optional(Type.Object({ x: Type.Number(), y: Type.Number() })), // Optional position for the decision node visualization
 });
 
+// HTTP key/value pair (used for headers and query params)
+export const HttpKeyValue = Type.Object({
+  key: Type.String(),
+  value: Type.String(), // May contain {{ property_name }} placeholders interpolated from the function args
+});
+
+// HTTP request configuration. When present on a FlowFunction, the generated
+// handler performs a real HTTP request (via aiohttp) instead of a TODO stub.
+export const HttpRequestConfig = Type.Object({
+  method: Type.Union([
+    Type.Literal("GET"),
+    Type.Literal("POST"),
+    Type.Literal("PUT"),
+    Type.Literal("PATCH"),
+    Type.Literal("DELETE"),
+  ]),
+  url: Type.String(), // Supports {{ property_name }} placeholders
+  headers: Type.Optional(Type.Array(HttpKeyValue)),
+  query_params: Type.Optional(Type.Array(HttpKeyValue)),
+  body_mode: Type.Optional(
+    Type.Union([Type.Literal("none"), Type.Literal("json"), Type.Literal("raw")])
+  ),
+  body: Type.Optional(Type.String()), // Request body template (json or raw); supports {{ placeholders }}
+  timeout_seconds: Type.Optional(Type.Number()),
+  response_var: Type.Optional(Type.String()), // flow_manager.state key the response is stored under
+});
+
 // FlowsFunctionSchema structure
 export const FlowFunction = Type.Object({
   name: Type.String({ minLength: 1 }),
@@ -64,6 +92,7 @@ export const FlowFunction = Type.Object({
   required: Type.Optional(Type.Array(Type.String())),
   next_node_id: Type.Optional(Type.String()), // Next node ID this function routes to (or default when decision exists)
   decision: Type.Optional(Decision), // Optional decision for conditional routing
+  http: Type.Optional(HttpRequestConfig), // Optional: turns this function into an HTTP/API call
 });
 
 // Pre/Post action structure
@@ -147,6 +176,8 @@ export type FlowJson = Static<typeof FlowSchema>;
 export type FlowNodeJson = Static<typeof FlowNode>;
 export type FlowEdgeJson = Static<typeof FlowEdge>;
 export type FlowFunctionJson = Static<typeof FlowFunction>;
+export type HttpRequestConfigJson = Static<typeof HttpRequestConfig>;
+export type HttpKeyValueJson = Static<typeof HttpKeyValue>;
 export type MessageJson = Static<typeof Message>;
 export type ActionJson = Static<typeof Action>;
 export type DecisionJson = Static<typeof Decision>;

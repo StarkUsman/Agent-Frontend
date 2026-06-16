@@ -18,6 +18,7 @@ import { useEditorStore } from "@/lib/store/editorStore";
 import { formatFunctionName, validateFunctionName } from "@/lib/utils/nameFormatting";
 
 import { DecisionSection } from "./DecisionSection";
+import { HttpRequestSection } from "./HttpRequestSection";
 import { type FunctionProperty, PropertyItem } from "./PropertyItem";
 
 interface FunctionItemProps {
@@ -302,6 +303,9 @@ export const FunctionItem = React.forwardRef<HTMLDivElement, FunctionItemProps>(
                 </div>
               )}
             </div>
+
+            {/* HTTP Request Section */}
+            <HttpRequestSection func={func} onChange={onChange} onFocus={handleFocus} />
 
             {/* Next Node Section */}
             <div className="pt-3 border-t border-neutral-200 dark:border-neutral-700">

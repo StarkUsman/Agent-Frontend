@@ -118,6 +118,20 @@ export default function InspectorPanel({
     setActiveTab(selectedFunctionIndex !== null ? "functions" : "general");
   }, [selectedFunctionIndex]);
 
+  // When a different node becomes selected, open HTTP request nodes straight on
+  // the Functions tab (where their request is configured). Keyed on the node id
+  // so it only fires on selection change, never overriding manual tab switches.
+  const lastSelectedNodeIdRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (selectedNodeId !== lastSelectedNodeIdRef.current) {
+      lastSelectedNodeIdRef.current = selectedNodeId;
+      if (displayedType === "http_request") {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setActiveTab("functions");
+      }
+    }
+  }, [selectedNodeId, displayedType]);
+
   // Early return after all hooks
   if (!selected) {
     return (

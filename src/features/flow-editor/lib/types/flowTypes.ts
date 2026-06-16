@@ -10,7 +10,8 @@ import type {
 // Node data type that extends CommonNodeData
 export interface FlowNodeData {
   label?: string;
-  type?: "initial" | "node" | "end" | "decision";
+  type?: "initial" | "node" | "end" | "decision" | "http_request";
+  node_kind?: "http_request"; // Editor-only marker that selects the dedicated HTTP node UI
   role_messages?: MessageJson[];
   task_messages?: MessageJson[];
   functions?: FlowFunctionJson[];
@@ -37,7 +38,7 @@ export interface DecisionNodeData extends FlowNodeData {
 }
 
 // React Flow node type with our data
-export type FlowNode = Node<FlowNodeData, "initial" | "node" | "end" | "decision">;
+export type FlowNode = Node<FlowNodeData, "initial" | "node" | "end" | "decision" | "http_request">;
 
 // React Flow edge type
 export type FlowEdge = Edge;
