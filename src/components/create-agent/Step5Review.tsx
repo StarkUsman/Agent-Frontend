@@ -70,8 +70,8 @@ const Step5Review = ({ draft, onEdit }: Props) => {
           <Row label="AI pipeline"      value="Speech-to-speech — Voice-native AI" />
           <Row label="Model"            value={draft.openaiModel} />
           <Row label="Base URL"         value={draft.openaiBaseUrl} />
-          <Row label="Opening greeting" value={truncate(draft.openingGreeting, 70) || '—'} />
-          <Row label="Topics handled"   value={topicsValue || '—'} />
+          {/* <Row label="Opening greeting" value={truncate(draft.openingGreeting, 70) || '—'} />
+          <Row label="Topics handled"   value={topicsValue || '—'} /> */}
           {draft.topicsToAvoid.trim() && (
             <Row
               label="Topics to avoid"

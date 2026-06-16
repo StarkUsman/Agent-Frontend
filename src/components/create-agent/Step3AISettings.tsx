@@ -45,7 +45,7 @@ const Step3AISettings = ({ draft, onChange }: Props) => {
       </div>
 
       {/* ── Pipeline mode ── */}
-      <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5">
+      {/* <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5">
         <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Pipeline mode</h3>
         <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 mb-4">
           Choose how your agent processes voice. This affects latency, cost, and which providers you can use.
@@ -76,13 +76,13 @@ const Step3AISettings = ({ draft, onChange }: Props) => {
             </div>
           </div>
         </div>
-      </div>
+      </div> */}
 
       {/* ── Provider ── */}
       <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5">
-        <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Speech-to-speech provider</h3>
+        <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Voice Agent Configurations</h3>
         <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 mb-4">
-          One model handles voice recognition, understanding, and speaking — all at once.
+          Set up the AI services your agent will use. You can use any OpenAI-compatible provider, but we recommend Groq for the best voice experience.
         </p>
 
         <div className="border-2 border-indigo-500 dark:border-indigo-400 rounded-xl p-4">

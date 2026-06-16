@@ -61,8 +61,8 @@ const STEPS = [
   { number: 1, label: 'Basic info' },
   { number: 2, label: 'Choose voice' },
   { number: 3, label: 'AI settings' },
-  { number: 4, label: 'Behaviour' },
-  { number: 5, label: 'Review' },
+  // { number: 4, label: 'Behaviour' },
+  { number: 4, label: 'Review' },
 ]
 
 const TOTAL_STEPS = STEPS.length
@@ -205,8 +205,8 @@ const CreateAgentPage = () => {
           {step === 1 && <Step1BasicInfo   draft={draft} onChange={updateDraft} />}
           {step === 2 && <Step2ChooseVoice draft={draft} onChange={updateDraft} />}
           {step === 3 && <Step3AISettings  draft={draft} onChange={updateDraft} />}
-          {step === 4 && <Step4Behaviour draft={draft} onChange={updateDraft} />}
-          {step === 5 && <Step5Review    draft={draft} onEdit={() => setStep(1)} />}
+          {/* {step === 4 && <Step4Behaviour draft={draft} onChange={updateDraft} />} */}
+          {step === 4 && <Step5Review    draft={draft} onEdit={() => setStep(1)} />}
         </div>
 
       </main>

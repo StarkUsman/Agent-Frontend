@@ -1,11 +1,12 @@
 import { NavLink, useNavigate } from 'react-router-dom'
-import { MdOutlineDashboard, MdOutlineSmartToy, MdOutlineAddCircleOutline, MdOutlineHistory, MdOutlineBarChart, MdOutlineSettings, MdOutlinePets, MdOutlinePeopleAlt } from 'react-icons/md'
+import { MdOutlineDashboard, MdOutlineSmartToy, MdOutlineAddCircleOutline, MdOutlineHistory, MdOutlineBarChart, MdOutlineSettings, MdOutlinePeopleAlt } from 'react-icons/md'
 import { HiOutlineLogout } from 'react-icons/hi'
 import { Sun, Moon } from 'lucide-react'
 import { useTheme } from '../../contexts/ThemeContext'
 import { useCurrentUser } from '../../contexts/CurrentUserContext'
 import type { Permission } from '../../lib/permissions'
 import UserAvatar from '../users/UserAvatar'
+import favIcon from '../../assets/favIcon.png'
 
 // ── Nav item definition ────────────────────────────────────────────────────
 interface NavItem {
@@ -48,12 +49,12 @@ const Sidebar = () => {
       <div className="px-5 py-6 flex items-center gap-3">
         <div
           className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
-          style={{ backgroundColor: '#6366f1' }}
+          style={{ backgroundColor: '#ea6c2e' }}
         >
-          <MdOutlinePets className="text-white text-lg" />
+          <img src={favIcon} alt="Octavebytes logo" className="w-5 h-5" />
         </div>
         <div className="leading-tight">
-          <p className="text-sm font-bold text-slate-900 dark:text-slate-100 tracking-tight">PipCat Studio</p>
+          <p className="text-sm font-bold text-slate-900 dark:text-slate-100 tracking-tight">Octavebytes Voice Studio</p>
           <p className="text-[11px] text-slate-400 dark:text-slate-500">Voice AI Platform</p>
         </div>
       </div>

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { MdEmail } from 'react-icons/md'
 import { HiLockClosed, HiEye, HiEyeOff } from 'react-icons/hi'
 import { FaGoogle, FaFacebook, FaApple } from 'react-icons/fa'
-import { MdOutlinePets } from 'react-icons/md'
+import favIcon from '../../assets/favIcon.png'
 import { BsCheckCircleFill } from 'react-icons/bs'
 import { Sun, Moon } from 'lucide-react'
 import { useTheme } from '../../contexts/ThemeContext'
@@ -81,10 +81,10 @@ const LoginPage = () => {
             className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
             style={{ backgroundColor: '#ea6c2e' }}
           >
-            <MdOutlinePets className="text-white text-xl" />
+            <img src={favIcon} alt="Octavebytes logo" className="w-5 h-5" />
           </div>
           <span className="text-white font-bold text-xl tracking-tight">
-            PipCat Studio
+            Octavebytes Voice Studio
           </span>
         </div>
 
@@ -112,7 +112,7 @@ const LoginPage = () => {
 
         {/* Footer */}
         <p className="relative z-10 text-slate-600 text-xs">
-          © {new Date().getFullYear()} PipCat Studio. All rights reserved.
+          © {new Date().getFullYear()} Octavebytes Voice Studio. All rights reserved.
         </p>
       </div>
 
@@ -136,10 +136,10 @@ const LoginPage = () => {
               className="w-9 h-9 rounded-xl flex items-center justify-center"
               style={{ backgroundColor: '#ea6c2e' }}
             >
-              <MdOutlinePets className="text-white text-lg" />
+              <img src={favIcon} alt="Octavebytes logo" className="w-5 h-5" />
             </div>
             <span className="font-bold text-gray-900 dark:text-slate-100 text-lg tracking-tight">
-              PipCat Studio
+              Octavebytes Voice Studio
             </span>
           </div>
 

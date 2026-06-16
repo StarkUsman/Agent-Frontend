@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import favIcon from '../../assets/favIcon.png'
 import {
-  MdOutlinePets,
   MdArrowBack,
   MdOutlineNoteAdd,
   MdOutlineUndo,
@@ -162,10 +162,10 @@ const FlowToolbar = ({
           className="w-7 h-7 rounded-lg flex items-center justify-center"
           style={{ backgroundColor: '#6366f1' }}
         >
-          <MdOutlinePets className="text-white text-sm" />
+          <img src={favIcon} alt="Octavebytes logo" className="w-5 h-5" />
         </div>
         <div className="leading-tight">
-          <p className="text-xs font-bold text-slate-800 tracking-tight">PipCat Studio</p>
+          <p className="text-xs font-bold text-slate-800 tracking-tight">Octavebytes Voice Studio</p>
           <p className="text-[10px] text-slate-400">Voice AI Platform</p>
         </div>
       </div>
