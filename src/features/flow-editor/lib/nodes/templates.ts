@@ -59,6 +59,39 @@ export const NODE_TEMPLATES: NodeTemplate[] = [
       post_actions: [{ type: "end_conversation" }],
     },
   },
+  {
+    type: "http_request",
+    label: "HTTP Request",
+    data: {
+      label: "HTTP Request",
+      // Editor-only marker — this still serializes to a normal Pipecat node.
+      node_kind: "http_request",
+      task_messages: [
+        {
+          role: "system",
+          content:
+            "Call the available function to perform the API request, then continue based on the response.",
+        } as MessageJson,
+      ],
+      // Pre-seeded HTTP-enabled function (see HttpRequestSection / Phase 1 codegen).
+      functions: [
+        {
+          name: "http_request",
+          description: "Performs the configured HTTP request and returns the response.",
+          http: {
+            method: "GET",
+            url: "",
+            headers: [],
+            query_params: [],
+            body_mode: "none",
+            body: "",
+            timeout_seconds: 30,
+            response_var: "",
+          },
+        },
+      ] as FlowFunctionJson[],
+    },
+  },
 ];
 
 export function getTemplateByType(type: string): NodeTemplate | undefined {

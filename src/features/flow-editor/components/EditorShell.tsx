@@ -19,6 +19,7 @@ import InspectorPanel from "@/components/inspector/InspectorPanel";
 import CodePanel from "@/components/json/CodePanel";
 import BaseNode from "@/components/nodes/BaseNode";
 import DecisionNode from "@/components/nodes/DecisionNode";
+import HttpRequestNode from "@/components/nodes/HttpRequestNode";
 import NodeContextMenu from "@/components/nodes/NodeContextMenu";
 import NodePalette from "@/components/palette/NodePalette";
 import ToastContainer from "@/components/ui/Toast";
@@ -186,6 +187,7 @@ export default function EditorShell({ agentId }: { agentId?: string }) {
       node: BaseNode,
       end: BaseNode,
       decision: DecisionNode,
+      http_request: HttpRequestNode,
     }),
     []
   );

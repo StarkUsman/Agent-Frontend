@@ -9,6 +9,204 @@ function escapePythonString(str: string): string {
   return str.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/\n/g, "\\n");
 }
 
+// Placeholder regex: captures the inner expression of any {{ ... }} marker.
+const PLACEHOLDER_RE = /\{\{\s*([^}]*?)\s*\}\}/g;
+
+// Map a placeholder's inner text to the Python expression used inside an
+// f-string field. Two supported forms:
+//   {{ name }}        → this function's own argument variable (a property)
+//   {{ state.name }}  → a value saved to flow_manager.state by an earlier node
+// Returns null for anything unrecognized (left as literal text).
+function placeholderToField(inner: string): string | null {
+  const stateMatch = /^state\.([a-zA-Z_][a-zA-Z0-9_]*)$/.exec(inner);
+  if (stateMatch) {
+    return `flow_manager.state.get('${stateMatch[1]}', '')`;
+  }
+  if (/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(inner)) {
+    return inner;
+  }
+  return null;
+}
+
+// Convert a user-supplied template into a Python string-literal expression.
+// If the template contains recognized {{ placeholders }}, an f-string is
+// emitted whose fields reference args or flow_manager.state; otherwise a plain
+// double-quoted literal is emitted.
+function toPyStringExpr(template: string): string {
+  const SENT_OPEN = String.fromCharCode(0);
+  const SENT_CLOSE = String.fromCharCode(1);
+  let hasField = false;
+  let s = template.replace(PLACEHOLDER_RE, (whole, inner) => {
+    const field = placeholderToField((inner as string).trim());
+    if (field === null) return whole as string; // not a recognized placeholder
+    hasField = true;
+    // The field expression contains no braces or double quotes, so it survives
+    // the escaping pass below untouched.
+    return `${SENT_OPEN}${field}${SENT_CLOSE}`;
+  });
+  if (!hasField) {
+    // No placeholders: a JSON string is a valid Python double-quoted literal.
+    return JSON.stringify(template);
+  }
+  // Escape for a double-quoted string.
+  s = s.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/\n/g, "\\n");
+  // Escape literal braces so the f-string parser ignores them.
+  s = s.replace(/\{/g, "{{").replace(/\}/g, "}}");
+  // Restore placeholders as real f-string fields.
+  s = s.split(SENT_OPEN).join("{").split(SENT_CLOSE).join("}");
+  return `f"${s}"`;
+}
+
+// Resolve a placeholder's inner text to a Python expression that yields the
+// underlying *value* (object-preserving), for use inside a JSON body. Unlike
+// placeholderToField (which targets f-string interpolation and stringifies the
+// value), this keeps dicts/lists intact so they serialize as real JSON:
+//   {{ flow_manager.state }} / {{ state }}              → the whole state dict
+//   {{ state.a.b.c }} / {{ flow_manager.state.a.b.c }}  → nested lookup (dot notation)
+//   {{ name }}                                          → this function's own argument
+// Returns null for anything unrecognized (left as literal text by the caller).
+function placeholderToValueExpr(inner: string): { expr: string; needsHelper: boolean } | null {
+  const trimmed = inner.trim();
+  if (trimmed === "state" || trimmed === "flow_manager.state") {
+    return { expr: "flow_manager.state", needsHelper: false };
+  }
+  const statePath = /^(?:flow_manager\.)?state((?:\.[a-zA-Z_][a-zA-Z0-9_]*)+)$/.exec(trimmed);
+  if (statePath) {
+    const keys = statePath[1].split(".").filter(Boolean);
+    if (keys.length === 1) {
+      return { expr: `flow_manager.state.get(${JSON.stringify(keys[0])})`, needsHelper: false };
+    }
+    const args = keys.map((k) => JSON.stringify(k)).join(", ");
+    return { expr: `_get_state(flow_manager.state, ${args})`, needsHelper: true };
+  }
+  if (/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(trimmed)) {
+    return { expr: trimmed, needsHelper: false };
+  }
+  return null;
+}
+
+// Convert a JSON body template (which may contain {{ placeholders }}) into a
+// Python expression that evaluates to a JSON-serializable object. A placeholder
+// in value position injects the live object; placeholders embedded inside a
+// string are interpolated via an f-string. Returns null if the template isn't
+// valid JSON, so the caller can fall back to a plain string body.
+function jsonBodyToPyExpr(body: string): { expr: string; needsHelper: boolean } | null {
+  // Private-use char: valid unescaped inside a JSON string (unlike control
+  // chars) and effectively never present in a user-typed body.
+  const SENT = String.fromCharCode(0xe000);
+  const placeholders: {
+    original: string;
+    resolved: { expr: string; needsHelper: boolean } | null;
+  }[] = [];
+
+  // True if character `offset` in `s` lies inside a JSON string literal.
+  const insideString = (s: string, offset: number): boolean => {
+    let inStr = false;
+    for (let i = 0; i < offset; i++) {
+      const ch = s[i];
+      if (ch === "\\") {
+        i++; // skip the escaped character
+        continue;
+      }
+      if (ch === '"') inStr = !inStr;
+    }
+    return inStr;
+  };
+
+  // Swap each {{...}} for a sentinel so the template parses as valid JSON. A
+  // placeholder in value position becomes a quoted sentinel string; one already
+  // inside a string literal is inserted bare so we don't create nested quotes.
+  const substituted = body.replace(PLACEHOLDER_RE, (whole, inner, offset: number) => {
+    const idx = placeholders.length;
+    placeholders.push({
+      original: whole as string,
+      resolved: placeholderToValueExpr((inner as string).trim()),
+    });
+    const token = `${SENT}${idx}${SENT}`;
+    return insideString(body, offset) ? token : JSON.stringify(token);
+  });
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(substituted);
+  } catch {
+    return null;
+  }
+
+  let needsHelper = false;
+  const tokenRe = () => new RegExp(`${SENT}(\\d+)${SENT}`, "g");
+  const escapeF = (str: string) =>
+    str
+      .replace(/\\/g, "\\\\")
+      .replace(/"/g, '\\"')
+      .replace(/\n/g, "\\n")
+      .replace(/\{/g, "{{")
+      .replace(/\}/g, "}}");
+
+  const emitString = (str: string): string => {
+    const matches = [...str.matchAll(tokenRe())];
+    if (matches.length === 0) return JSON.stringify(str);
+
+    // Whole string is exactly one placeholder → inject the value object.
+    if (matches.length === 1 && matches[0][0] === str) {
+      const ph = placeholders[Number(matches[0][1])];
+      if (ph.resolved) {
+        if (ph.resolved.needsHelper) needsHelper = true;
+        return ph.resolved.expr;
+      }
+      return JSON.stringify(ph.original);
+    }
+
+    // No recognized fields → restore the literal placeholder text.
+    if (!matches.some((m) => placeholders[Number(m[1])].resolved)) {
+      return JSON.stringify(str.replace(tokenRe(), (_t, i) => placeholders[Number(i)].original));
+    }
+
+    // Mixed text + placeholders → f-string interpolation.
+    let out = "";
+    let last = 0;
+    for (const m of matches) {
+      const idx = m.index ?? 0;
+      out += escapeF(str.slice(last, idx));
+      const ph = placeholders[Number(m[1])];
+      if (ph.resolved) {
+        if (ph.resolved.needsHelper) needsHelper = true;
+        out += `{${ph.resolved.expr}}`;
+      } else {
+        out += escapeF(ph.original);
+      }
+      last = idx + m[0].length;
+    }
+    out += escapeF(str.slice(last));
+    return `f"${out}"`;
+  };
+
+  const emit = (value: unknown): string => {
+    if (value === null) return "None";
+    if (typeof value === "boolean") return value ? "True" : "False";
+    if (typeof value === "number") return String(value);
+    if (typeof value === "string") return emitString(value);
+    if (Array.isArray(value)) return `[${value.map(emit).join(", ")}]`;
+    if (typeof value === "object") {
+      const entries = Object.entries(value as Record<string, unknown>).map(
+        ([k, v]) => `${emitString(k)}: ${emit(v)}`
+      );
+      return `{${entries.join(", ")}}`;
+    }
+    return "None";
+  };
+
+  return { expr: emit(parsed), needsHelper };
+}
+
+// (A) Emit lines that persist this function's properties to flow_manager.state
+// so later nodes can read them via {{ state.<name> }} or flow_manager.state.get.
+function generateStateSaves(props: Record<string, unknown>): string {
+  const keys = Object.keys(props);
+  if (keys.length === 0) return "";
+  return keys.map((key) => `        flow_manager.state["${key}"] = ${key}`).join("\n") + "\n";
+}
+
 function generateTypeName(funcName: string): string {
   // Convert snake_case to PascalCase
   return (
@@ -127,8 +325,126 @@ function generateFunction(func: FlowFunctionJson): {
           .join("\n") + "\n"
       : "";
 
+  // (A) Persist this function's properties to flow_manager.state so later nodes
+  // can read them (e.g. an HTTP node referencing {{ state.<name> }}).
+  const stateSaves = generateStateSaves(props);
+
   let nextNodeRouting: string;
   let decisionCode = "";
+
+  // Handle HTTP request functions: emit a real aiohttp call. The function's
+  // properties become the request inputs (interpolated via {{ placeholder }}),
+  // and the parsed response is stored in flow_manager.state and returned.
+  if (func.http) {
+    const http = func.http;
+    const method = http.method || "GET";
+    const bodyMode = http.body_mode ?? "none";
+    const timeout = http.timeout_seconds && http.timeout_seconds > 0 ? http.timeout_seconds : 30;
+    const responseVar =
+      http.response_var && http.response_var.trim() ? http.response_var.trim() : `${funcName}_response`;
+
+    const headerPairs = [...(http.headers ?? [])];
+    // Auto-add JSON content type when sending a JSON body without an explicit one.
+    if (
+      bodyMode === "json" &&
+      http.body &&
+      !headerPairs.some((h) => h.key.toLowerCase() === "content-type")
+    ) {
+      headerPairs.push({ key: "Content-Type", value: "application/json" });
+    }
+    const queryPairs = http.query_params ?? [];
+    const sendBody = bodyMode !== "none" && !!http.body;
+
+    // Resolve the request body to a Python expression. A JSON body is built as a
+    // real object — placeholders inject live values from args / flow_manager.state
+    // — and serialized with json.dumps, so objects go out as proper JSON instead
+    // of the Python repr of a dict embedded in a string. Raw bodies stay (f-)strings.
+    let bodyExpr: string | null = null;
+    let needsJsonImport = false;
+    let needsStateHelper = false;
+    if (sendBody) {
+      if (bodyMode === "json") {
+        const jsonBody = jsonBodyToPyExpr(http.body as string);
+        if (jsonBody) {
+          bodyExpr = `json.dumps(${jsonBody.expr}, default=str)`;
+          needsJsonImport = true;
+          needsStateHelper = jsonBody.needsHelper;
+        } else {
+          // Body isn't valid JSON (even after placeholder substitution); fall
+          // back to sending it as a plain interpolated string.
+          bodyExpr = toPyStringExpr(http.body as string);
+        }
+      } else {
+        bodyExpr = toPyStringExpr(http.body as string);
+      }
+    }
+
+    let body = "        import aiohttp\n";
+    if (needsJsonImport) body += "        import json\n";
+    body += "\n";
+    if (needsStateHelper) {
+      body +=
+        "        def _get_state(_state, *_keys):\n" +
+        "            _cur = _state\n" +
+        "            for _k in _keys:\n" +
+        "                _cur = _cur.get(_k) if isinstance(_cur, dict) else None\n" +
+        "                if _cur is None:\n" +
+        "                    break\n" +
+        "            return _cur\n\n";
+    }
+    body += `        _url = ${toPyStringExpr(http.url || "")}\n`;
+
+    if (headerPairs.length > 0) {
+      body += "        _headers = {\n";
+      headerPairs.forEach((h) => {
+        body += `            ${toPyStringExpr(h.key)}: ${toPyStringExpr(h.value)},\n`;
+      });
+      body += "        }\n";
+    } else {
+      body += "        _headers = {}\n";
+    }
+
+    if (queryPairs.length > 0) {
+      body += "        _params = {\n";
+      queryPairs.forEach((p) => {
+        body += `            ${toPyStringExpr(p.key)}: ${toPyStringExpr(p.value)},\n`;
+      });
+      body += "        }\n";
+    } else {
+      body += "        _params = {}\n";
+    }
+
+    if (sendBody && bodyExpr) {
+      body += `        _data = ${bodyExpr}\n`;
+    }
+
+    const dataArg = sendBody ? ", data=_data" : "";
+    body += `        _timeout = aiohttp.ClientTimeout(total=${timeout})\n`;
+    body += "        async with aiohttp.ClientSession(timeout=_timeout) as _session:\n";
+    body += `            async with _session.request("${method}", _url, headers=_headers, params=_params${dataArg}) as _response:\n`;
+    body += "                _status = _response.status\n";
+    body += "                try:\n";
+    body += "                    result = await _response.json()\n";
+    body += "                except Exception:\n";
+    body += "                    result = await _response.text()\n";
+    body += `        flow_manager.state["${responseVar}"] = result\n`;
+    body += `        flow_manager.state["${responseVar}_status"] = _status\n`;
+
+    const routing = func.next_node_id
+      ? `        return result, create_${func.next_node_id}_node()\n`
+      : "        return result, None\n";
+
+    const handlerCode = `
+    async def ${handlerName}(args: FlowArgs, flow_manager: FlowManager) -> tuple[Any, NodeConfig | None]:
+        """Handler for ${funcName} function (HTTP ${method} request)"""
+${argExtraction}${stateSaves}${body}${routing}`;
+
+    return {
+      handler: handlerCode,
+      schema: schemaCode,
+      typeDef: undefined,
+    };
+  }
 
   // Handle decision logic
   if (func.decision) {
@@ -170,7 +486,7 @@ function generateFunction(func: FlowFunctionJson): {
     const handlerCode = `
     async def ${handlerName}(args: FlowArgs, flow_manager: FlowManager) -> ${returnTypeAnnotation}:
         """Handler for ${funcName} function"""
-${argExtraction}${decisionCode}
+${argExtraction}${stateSaves}${decisionCode}
 `;
 
     return {
@@ -210,8 +526,7 @@ ${argExtraction}${decisionCode}
   const handlerCode = `
     async def ${handlerName}(args: FlowArgs, flow_manager: FlowManager) -> ${returnTypeAnnotation}:
         """Handler for ${funcName} function"""
-${argExtraction}        # TODO: Implement function logic
-        # Update flow_manager.state as needed
+${argExtraction}${stateSaves}        # TODO: Implement additional logic if needed
 ${nextNodeRouting}
 `;
 
@@ -413,10 +728,10 @@ export function generatePythonCode(flow: FlowJson): string {
     (node) => node.data?.context_strategy && node.data.context_strategy.strategy !== "APPEND"
   );
 
-  // Check if any function has a decision (needs Any type)
+  // Check if any function has a decision or HTTP request (both need the Any type)
   const hasDecision = flow.nodes.some((node) => {
     const functions = (node.data?.functions as FlowFunctionJson[] | undefined) || [];
-    return functions.some((func) => func.decision !== undefined);
+    return functions.some((func) => func.decision !== undefined || func.http !== undefined);
   });
 
   const nodes = flow.nodes || [];
