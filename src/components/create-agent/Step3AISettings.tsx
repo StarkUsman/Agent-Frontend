@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { MdInfoOutline, MdVisibility, MdVisibilityOff } from 'react-icons/md'
 import type { AgentDraft } from '../../pages/CreateAgentPage'
+import StepNav, { type StepNavProps } from './StepNav'
 
-interface Props {
+interface Props extends StepNavProps {
   draft:    AgentDraft
   onChange: (patch: Partial<AgentDraft>) => void
 }
@@ -26,7 +27,7 @@ const inputClass =
   'text-slate-800 dark:text-slate-200 bg-white dark:bg-slate-800 placeholder-slate-300 dark:placeholder-slate-500 ' +
   'focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400 transition'
 
-const Step3AISettings = ({ draft, onChange }: Props) => {
+const Step3AISettings = ({ draft, onChange, ...navProps }: Props) => {
   const [showKey, setShowKey] = useState(false)
   const [showDeepgram, setShowDeepgram] = useState(false)
   const [showCartesia, setShowCartesia] = useState(false)
@@ -257,6 +258,7 @@ const Step3AISettings = ({ draft, onChange }: Props) => {
         </div>
       </div>
 
+      <StepNav {...navProps} />
     </div>
   )
 }

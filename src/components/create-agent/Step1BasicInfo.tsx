@@ -1,4 +1,5 @@
 import type { AgentDraft } from '../../pages/CreateAgentPage'
+import StepNav, { type StepNavProps } from './StepNav'
 
 const inputClass =
   'w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 text-sm ' +
@@ -20,12 +21,12 @@ const LANGUAGES = [
   { value: 'zh-CN', label: 'Chinese (Simplified)' },
 ]
 
-interface Props {
+interface Props extends StepNavProps {
   draft: AgentDraft
   onChange: (patch: Partial<AgentDraft>) => void
 }
 
-const Step1BasicInfo = ({ draft, onChange }: Props) => (
+const Step1BasicInfo = ({ draft, onChange, ...navProps }: Props) => (
   <div className="max-w-xl">
     <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm p-8">
       <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">What will this agent do?</h2>
@@ -79,6 +80,7 @@ const Step1BasicInfo = ({ draft, onChange }: Props) => (
         </select>
       </div>
     </div>
+    <StepNav {...navProps} />
   </div>
 )
 

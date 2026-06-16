@@ -1,4 +1,5 @@
 import type { AgentDraft } from '../../pages/CreateAgentPage'
+import StepNav, { type StepNavProps } from './StepNav'
 
 const LANGUAGE_LABELS: Record<string, string> = {
   'en-GB': 'English (UK)',
@@ -29,12 +30,12 @@ const Row = ({ label, value }: { label: string; value: string }) => (
 )
 
 // ── Step component ─────────────────────────────────────────────────────────
-interface Props {
+interface Props extends StepNavProps {
   draft:  AgentDraft
   onEdit: () => void
 }
 
-const Step5Review = ({ draft, onEdit }: Props) => {
+const Step5Review = ({ draft, onEdit, ...navProps }: Props) => {
   const voiceValue = [
     draft.voiceName,
     draft.voiceProvider,
@@ -81,6 +82,7 @@ const Step5Review = ({ draft, onEdit }: Props) => {
         </div>
 
       </div>
+      <StepNav {...navProps} />
     </div>
   )
 }

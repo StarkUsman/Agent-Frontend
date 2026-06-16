@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { MdArrowForward, MdArrowBack, MdCheck } from 'react-icons/md'
 import Sidebar from '../components/dashboard/Sidebar'
 import StepIndicator    from '../components/create-agent/StepIndicator'
 import Step1BasicInfo   from '../components/create-agent/Step1BasicInfo'
@@ -167,38 +166,11 @@ const CreateAgentPage = () => {
           </div>
 
           <div className="flex items-center gap-3">
-            {step > 1 && (
-              <button
-                onClick={handleBack}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-95 transition-all cursor-pointer"
-              >
-                <MdArrowBack className="text-base" />
-                Back
-              </button>
-            )}
             <button
               onClick={() => navigate('/agents')}
               className="px-4 py-2 rounded-xl text-sm font-semibold text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-95 transition-all cursor-pointer"
             >
               Cancel
-            </button>
-            <button
-              onClick={handleContinue}
-              disabled={!continueReady || submitting}
-              className="flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-semibold text-white disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 transition-all cursor-pointer"
-              style={{ backgroundColor: '#6366f1' }}
-            >
-              {isFinalStep ? (
-                <>
-                  <MdCheck className="text-base" />
-                  {submitting ? 'Creating…' : 'Create agent'}
-                </>
-              ) : (
-                <>
-                  Continue
-                  <MdArrowForward className="text-base" />
-                </>
-              )}
             </button>
           </div>
         </div>
@@ -214,11 +186,31 @@ const CreateAgentPage = () => {
 
         {/* ── Step content ── */}
         <div className="flex-1 overflow-y-auto px-8 py-10 bg-slate-50 dark:bg-slate-900">
-          {step === 1 && <Step1BasicInfo   draft={draft} onChange={updateDraft} />}
-          {step === 2 && <Step2ChooseVoice draft={draft} onChange={updateDraft} />}
-          {step === 3 && <Step3AISettings  draft={draft} onChange={updateDraft} />}
+          {step === 1 && (
+            <Step1BasicInfo
+              draft={draft} onChange={updateDraft}
+              onContinue={handleContinue} canContinue={continueReady} isFinalStep={isFinalStep}
+            />
+          )}
+          {step === 2 && (
+            <Step2ChooseVoice
+              draft={draft} onChange={updateDraft}
+              onBack={handleBack} onContinue={handleContinue} canContinue={continueReady} isFinalStep={isFinalStep}
+            />
+          )}
+          {step === 3 && (
+            <Step3AISettings
+              draft={draft} onChange={updateDraft}
+              onBack={handleBack} onContinue={handleContinue} canContinue={continueReady} isFinalStep={isFinalStep}
+            />
+          )}
           {/* {step === 4 && <Step4Behaviour draft={draft} onChange={updateDraft} />} */}
-          {step === 4 && <Step5Review    draft={draft} onEdit={() => setStep(1)} />}
+          {step === 4 && (
+            <Step5Review
+              draft={draft} onEdit={() => setStep(1)}
+              onBack={handleBack} onContinue={handleContinue} canContinue={continueReady} isFinalStep={isFinalStep} submitting={submitting}
+            />
+          )}
         </div>
 
       </main>

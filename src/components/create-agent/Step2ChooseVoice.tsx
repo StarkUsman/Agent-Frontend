@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { MdPlayArrow } from 'react-icons/md'
 import type { AgentDraft } from '../../pages/CreateAgentPage'
+import StepNav, { type StepNavProps } from './StepNav'
 
 // ── Voice catalogue (extend when more providers are added) ─────────────────
 const VOICES = [
@@ -73,12 +74,12 @@ const VoiceCard = ({ voice, isSelected, onSelect }: CardProps) => (
 )
 
 // ── Step component ─────────────────────────────────────────────────────────
-interface Props {
+interface Props extends StepNavProps {
   draft:    AgentDraft
   onChange: (patch: Partial<AgentDraft>) => void
 }
 
-const Step2ChooseVoice = ({ draft, onChange }: Props) => {
+const Step2ChooseVoice = ({ draft, onChange, ...navProps }: Props) => {
   // Auto-select the only available voice on mount
   useEffect(() => {
     if (!draft.voiceId) {
@@ -109,6 +110,7 @@ const Step2ChooseVoice = ({ draft, onChange }: Props) => {
           />
         ))}
       </div>
+      <StepNav {...navProps} />
     </div>
   )
 }
