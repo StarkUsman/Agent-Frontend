@@ -404,7 +404,7 @@ export default function Toolbar({
             <span className="sr-only lg:not-sr-only">Deploy</span>
           </Button>
         )}
-        <div className="hidden md:block w-px bg-neutral-300 dark:bg-neutral-700" />
+        {/* <div className="hidden md:block w-px bg-neutral-300 dark:bg-neutral-700" />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="secondary" size="sm" className="hidden md:flex gap-1.5">
@@ -413,7 +413,7 @@ export default function Toolbar({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">{moreLinks}</DropdownMenuContent>
-        </DropdownMenu>
+        </DropdownMenu> */}
       </div>
     </TooltipProvider>
   );
