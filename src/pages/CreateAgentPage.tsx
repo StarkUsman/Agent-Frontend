@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Sidebar from '../components/dashboard/Sidebar'
 import StepIndicator    from '../components/create-agent/StepIndicator'
+import AgentPreview     from '../components/create-agent/AgentPreview'
 import Step1BasicInfo   from '../components/create-agent/Step1BasicInfo'
 import Step2ChooseVoice from '../components/create-agent/Step2ChooseVoice'
 import Step3AISettings  from '../components/create-agent/Step3AISettings'
@@ -185,32 +186,42 @@ const CreateAgentPage = () => {
         )}
 
         {/* ── Step content ── */}
-        <div className="flex-1 overflow-y-auto px-8 py-10 bg-slate-50 dark:bg-slate-900">
-          {step === 1 && (
-            <Step1BasicInfo
-              draft={draft} onChange={updateDraft}
-              onContinue={handleContinue} canContinue={continueReady} isFinalStep={isFinalStep}
-            />
-          )}
-          {step === 2 && (
-            <Step2ChooseVoice
-              draft={draft} onChange={updateDraft}
-              onBack={handleBack} onContinue={handleContinue} canContinue={continueReady} isFinalStep={isFinalStep}
-            />
-          )}
-          {step === 3 && (
-            <Step3AISettings
-              draft={draft} onChange={updateDraft}
-              onBack={handleBack} onContinue={handleContinue} canContinue={continueReady} isFinalStep={isFinalStep}
-            />
-          )}
-          {/* {step === 4 && <Step4Behaviour draft={draft} onChange={updateDraft} />} */}
-          {step === 4 && (
-            <Step5Review
-              draft={draft} onEdit={() => setStep(1)}
-              onBack={handleBack} onContinue={handleContinue} canContinue={continueReady} isFinalStep={isFinalStep} submitting={submitting}
-            />
-          )}
+        <div className="flex-1 flex overflow-hidden bg-slate-50 dark:bg-slate-900">
+
+          {/* Left: form */}
+          <div className="flex-1 overflow-y-auto px-8 py-5">
+            {step === 1 && (
+              <Step1BasicInfo
+                draft={draft} onChange={updateDraft}
+                onContinue={handleContinue} canContinue={continueReady} isFinalStep={isFinalStep}
+              />
+            )}
+            {step === 2 && (
+              <Step2ChooseVoice
+                draft={draft} onChange={updateDraft}
+                onBack={handleBack} onContinue={handleContinue} canContinue={continueReady} isFinalStep={isFinalStep}
+              />
+            )}
+            {step === 3 && (
+              <Step3AISettings
+                draft={draft} onChange={updateDraft}
+                onBack={handleBack} onContinue={handleContinue} canContinue={continueReady} isFinalStep={isFinalStep}
+              />
+            )}
+            {/* {step === 4 && <Step4Behaviour draft={draft} onChange={updateDraft} />} */}
+            {step === 4 && (
+              <Step5Review
+                draft={draft} onEdit={() => setStep(1)}
+                onBack={handleBack} onContinue={handleContinue} canContinue={continueReady} isFinalStep={isFinalStep} submitting={submitting}
+              />
+            )}
+          </div>
+
+          {/* Right: live preview */}
+          <div className="w-72 shrink-0 border-l border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800 overflow-y-auto">
+            <AgentPreview draft={draft} currentStep={step} totalSteps={TOTAL_STEPS} />
+          </div>
+
         </div>
 
       </main>

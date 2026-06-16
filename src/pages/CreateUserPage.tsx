@@ -150,7 +150,7 @@ const CreateUserPage = () => {
         </div>
 
         {/* Form */}
-        <div className="flex-1 overflow-y-auto px-8 py-10 bg-slate-50 dark:bg-slate-900">
+        <div className="flex-1 overflow-y-auto px-8 py-5 bg-slate-50 dark:bg-slate-900">
           <div className="max-w-xl">
             <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm p-8">
               <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">Account details</h2>
