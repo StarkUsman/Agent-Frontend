@@ -95,7 +95,7 @@ const Step2ChooseVoice = ({ draft, onChange, ...navProps }: Props) => {
     onChange({ voiceId: v.id, voiceName: v.name, voiceProvider: v.provider, voiceGender: v.gender })
 
   return (
-    <div>
+    <div className="max-w-2xl">
       <p className="text-sm text-slate-600 dark:text-slate-400 mb-6">
         Choose a voice for your agent. Callers will hear this voice throughout the conversation.
       </p>
