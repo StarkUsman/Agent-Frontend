@@ -24,6 +24,7 @@ export interface AgentDraft {
   voiceId: string
   voiceName: string
   voiceProvider: string
+  age: string
   voiceGender: 'male' | 'female' | 'neutral'
   // Step 3
   openaiApiKey: string
@@ -45,6 +46,7 @@ const INITIAL_DRAFT: AgentDraft = {
   voiceId: '',
   voiceName: '',
   voiceProvider: '',
+  age: '',
   voiceGender: 'neutral',
   openaiApiKey: '',
   openaiModel: 'llama-3.3-70b-versatile',
@@ -218,7 +220,7 @@ const CreateAgentPage = () => {
           </div>
 
           {/* Right: live preview */}
-          <div className="w-72 shrink-0 border-l border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800 overflow-y-auto">
+          <div className="w-90 rounded-2xl  shrink-0 border-l border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800 overflow-y-auto">
             <AgentPreview draft={draft} currentStep={step} totalSteps={TOTAL_STEPS} />
           </div>
 

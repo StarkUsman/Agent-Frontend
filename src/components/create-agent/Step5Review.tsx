@@ -39,6 +39,7 @@ const Step5Review = ({ draft, onEdit, ...navProps }: Props) => {
   const voiceValue = [
     draft.voiceName,
     draft.voiceProvider,
+    draft.age,
     draft.voiceGender ? cap(draft.voiceGender) : '',
   ].filter(Boolean).join(' — ')
 

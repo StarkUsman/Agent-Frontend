@@ -9,7 +9,7 @@ export interface StepNavProps {
 }
 
 const StepNav = ({ onBack, onContinue, canContinue, isFinalStep, submitting }: StepNavProps) => (
-  <div className="flex items-center justify-between mt-4">
+  <div className="flex items-center justify-end gap-3 rounded-2xl pt-2 mt-2">
     {onBack ? (
       <button
         onClick={onBack}

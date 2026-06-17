@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { ThemeProvider } from './contexts/ThemeContext'
 import { CurrentUserProvider } from './contexts/CurrentUserContext'
+import { AgentsProvider } from './contexts/AgentsContext'
 import ProtectedRoute from './components/ProtectedRoute'
 import LoginPage from './pages/auth/LoginPage'
 import Dashboard from './pages/Dashboard'
@@ -17,6 +18,7 @@ const App = () => {
     <ThemeProvider>
       <CurrentUserProvider>
         <BrowserRouter>
+          <AgentsProvider>
           <Routes>
             <Route path="/" element={<LoginPage />} />
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
@@ -30,6 +32,7 @@ const App = () => {
             <Route path="/users/:id/edit" element={<ProtectedRoute permission="users:manage" fallback="/users"><CreateUserPage /></ProtectedRoute>} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
+          </AgentsProvider>
         </BrowserRouter>
       </CurrentUserProvider>
     </ThemeProvider>

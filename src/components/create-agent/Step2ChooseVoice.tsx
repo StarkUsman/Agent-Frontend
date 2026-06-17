@@ -14,6 +14,95 @@ const VOICES = [
     accent:      'American',
     genderLabel: 'Female',
     gender:      'female' as const,
+    Age:         'Adult',
+  },
+  {
+    id: "aura-2-hyperion-en",
+    name: "Hyperion",
+    provider: "Deepgram",
+    initial: "H",
+    description: "Interview. Australian accent.",
+    accent: "Australian",
+    genderLabel: "Male",
+    gender: "male" as const,
+    Age: "Adult",
+  },
+   {
+    id: "aura-2-amalthea-en",
+    name: "Amalthea",
+    provider: "Deepgram",
+    initial: "A",
+    description: "Casual chat. Filipino accent.",
+    accent: "Filipino",
+    genderLabel: "Female",
+    gender: "female" as const,
+    Age: "Young Adult",
+  },
+  {
+    id: "aura-2-draco-en",
+    name: "Draco",
+    provider: "Deepgram",
+    initial: "D",
+    description: "Storytelling. British accent.",
+    accent: "British",
+    genderLabel: "Male",
+    gender: "male" as const,
+    Age: "Adult",
+  },
+  {
+    id: "aura-2-electra-en",
+    name: "Electra",
+    provider: "Deepgram",
+    initial: "E",
+    description: "IVR, advertising, customer service. American accent.",
+    accent: "American",
+    genderLabel: "Female",
+    gender: "female" as const,
+    Age: "Adult",
+  },
+  {
+    id: "aura-2-pandora-en",
+    name: "Pandora",
+    provider: "Deepgram",
+    initial: "P",
+    description: "IVR, informative. British accent.",
+    accent: "British",
+    genderLabel: "Female",
+    gender: "female" as const,
+    Age: "Adult",
+  },
+  {
+    id: "aura-2-zeus-en",
+    name: "Zeus",
+    provider: "Deepgram",
+    initial: "Z",
+    description: "IVR. American accent.",
+    accent: "American",
+    genderLabel: "Male",
+    gender: "male" as const,
+    Age: "Adult",
+  },
+  {
+    id: "aura-2-helena-en",
+    name: "Helena",
+    provider: "Deepgram",
+    initial: "H",
+    description: "IVR, casual chat. American accent.",
+    accent: "American",
+    genderLabel: "Female",
+    gender: 'female' as const,
+    Age:         'Adult',
+  },
+   {
+    id: "aura-2-athena-en",
+    name: "Athena",
+    provider: "Deepgram",
+    initial: "A",
+    description: "Storytelling. American accent.",
+    accent: "American",
+    genderLabel: "Female",
+    gender: "female" as const,
+    Age: "Mature",
   },
 ]
 
@@ -84,7 +173,7 @@ const Step2ChooseVoice = ({ draft, onChange, ...navProps }: Props) => {
   useEffect(() => {
     if (!draft.voiceId) {
       const v = VOICES[0]
-      onChange({ voiceId: v.id, voiceName: v.name, voiceProvider: v.provider, voiceGender: v.gender })
+      onChange({ voiceId: v.id, voiceName: v.name, age: v.Age, voiceProvider: v.provider, voiceGender: v.gender })
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -92,7 +181,7 @@ const Step2ChooseVoice = ({ draft, onChange, ...navProps }: Props) => {
   const selectedId = draft.voiceId || VOICES[0].id
 
   const select = (v: typeof VOICES[0]) =>
-    onChange({ voiceId: v.id, voiceName: v.name, voiceProvider: v.provider, voiceGender: v.gender })
+    onChange({ voiceId: v.id, voiceName: v.name, age: v.Age, voiceProvider: v.provider, voiceGender: v.gender })
 
   return (
     <div className="max-w-2xl">

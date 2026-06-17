@@ -1,16 +1,16 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { MdAdd, MdChevronLeft, MdChevronRight, MdSearch } from 'react-icons/md'
 import Sidebar from '../components/dashboard/Sidebar'
 import AgentTableRow, { type AgentRowData } from '../components/agents/AgentTableRow'
 import {
-  listAgents,
   activateAgent,
   deactivateAgent,
   agentClientUrl,
   type ManagerAgent,
 } from '../api/manager'
 import { useCurrentUser } from '../contexts/CurrentUserContext'
+import { useAgents } from '../contexts/AgentsContext'
 
 // ── Config ─────────────────────────────────────────────────────────────────
 const ITEMS_PER_PAGE = 6
@@ -53,25 +53,8 @@ const AgentsPage = () => {
   const canCreateAgents = hasPermission('agents:create')
   const [currentPage, setCurrentPage] = useState(1)
   const [searchQuery, setSearchQuery] = useState('')
-  const [rows, setRows] = useState<AgentRowData[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-
-  const loadAgents = async () => {
-    try {
-      const data = await listAgents()
-      setRows(data.map(toRow))
-      setError(null)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load agents')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    loadAgents()
-  }, [])
+  const { agents: rawAgents, loading, error, refresh } = useAgents()
+  const rows = rawAgents.map(toRow)
 
   const handleToggleStatus = async (id: string, status: AgentRowData['status']) => {
     try {
@@ -80,13 +63,9 @@ const AgentsPage = () => {
       } else {
         await activateAgent(id)
       }
-      setRows((prev) =>
-        prev.map((r) =>
-          r.id === id ? { ...r, status: status === 'Active' ? 'Inactive' : 'Active' } : r
-        )
-      )
+      refresh()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update agent status')
+      console.error('Failed to update agent status', err)
     }
   }
 
@@ -173,7 +152,7 @@ const AgentsPage = () => {
                     <td colSpan={COLUMNS.length} className="py-16 text-center text-sm text-red-500">
                       {error}{' '}
                       <button
-                        onClick={() => { setLoading(true); loadAgents() }}
+                        onClick={refresh}
                         className="font-semibold underline underline-offset-2 hover:text-red-600 cursor-pointer"
                       >
                         Retry

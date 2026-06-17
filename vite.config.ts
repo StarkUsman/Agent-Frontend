@@ -11,4 +11,9 @@ export default defineConfig({
       '@': path.resolve(__dirname, 'src/features/flow-editor'),
     },
   },
+  server: {
+    allowedHosts: [
+      'ed79-2407-aa80-126-ebcd-642f-756b-df95-b7d6.ngrok-free.app'
+    ]
+  }
 })

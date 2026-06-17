@@ -58,11 +58,24 @@ const Section = ({ title, state, children }: SectionProps) => (
         : 'border-slate-100 dark:border-slate-700 bg-white/60 dark:bg-slate-800/50 opacity-40 pointer-events-none'
   }`}>
     <div className="flex items-center justify-between mb-3">
-      <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500">
+      <p className="text-[13px] font-semibold uppercase tracking-widest text-black dark:text-white">
         {title}
       </p>
       {state === 'current' && (
-        <span className="text-[10px] font-semibold text-indigo-500 bg-indigo-100 dark:bg-indigo-900/50 px-2 py-0.5 rounded-full">
+        <span className="
+        text-[11px]
+        tracking-[0.09375em]
+        font-semibold 
+        text-indigo-500 
+        dark:text-slate-100 
+        bg-indigo-100 
+        dark:bg-indigo-900/50 
+        border 
+      border-indigo-200
+      dark:border-slate-400
+        px-2 
+        py-0.5 
+        rounded-full">
           Filling now
         </span>
       )}
@@ -91,13 +104,23 @@ const AgentPreview = ({ draft, currentStep, totalSteps }: Props) => {
     <div className="h-full flex flex-col">
 
       {/* Panel header */}
-      <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-700 shrink-0">
-        <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+      {/* <div className="px-5 py-2 border-b border-slate-400 dark:border-slate-400 shrink-0">
+        <p className="text-md font-semibold text-black dark:text-white uppercase tracking-widest">
           Live preview
         </p>
-      </div>
+      </div> */}
 
-      <div className="flex-1 overflow-y-auto px-4 py-5 space-y-3">
+<div className="px-5 py-2 shrink-0">
+  <div className="w-full border-b  border-slate-400 dark:border-slate-400">
+    <p className="text-md font-semibold text-black dark:text-white uppercase tracking-widest pb-2">
+      Live preview
+    </p>
+  </div>
+</div>
+
+
+
+      <div className="flex-1 overflow-y-auto px-4 py-2 space-y-6">
 
         {/* ── Step 1: Basic info ──────────────────── */}
         <Section title="Basic info" state={identityState}>
@@ -111,18 +134,31 @@ const AgentPreview = ({ draft, currentStep, totalSteps }: Props) => {
               }
             </div>
             <div className="min-w-0">
-              <p className={`text-sm font-semibold truncate ${
+              <p className={`text-sm font-semibold truncate capitalize ${
                 draft.name ? 'text-slate-900 dark:text-slate-100' : 'text-slate-300 dark:text-slate-600'
               }`}>
                 {draft.name || 'Agent name'}
               </p>
-              <span className="text-[10px] bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 px-2 py-0.5 rounded-full">
+              <span className="
+                 text-[10px]
+               bg-slate-200 
+               text-slate-600 
+               font-semibold
+               dark:bg-slate-500  
+               dark:text-white 
+               border border-slate-300
+              dark:border-slate-600
+               px-2 
+               py-0.5 
+               rounded-full">
                 {LANGUAGE_LABELS[draft.language] ?? draft.language}
               </span>
             </div>
           </div>
-          <p className={`text-xs leading-relaxed line-clamp-3 ${
-            draft.purpose ? 'text-slate-500 dark:text-slate-400' : 'text-slate-300 dark:text-slate-600 italic'
+          <p className=
+          {`text-xs leading-relaxed line-clamp-3 
+            ${
+            draft.purpose ? 'text-slate-700 dark:text-slate-200' : 'text-slate-300 dark:text-slate-600 italic'
           }`}>
             {draft.purpose || 'No purpose set yet…'}
           </p>
@@ -132,15 +168,15 @@ const AgentPreview = ({ draft, currentStep, totalSteps }: Props) => {
         <Section title="Voice" state={voiceState}>
           {draft.voiceId ? (
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-violet-100 dark:bg-violet-900/40 flex items-center justify-center shrink-0">
-                <span className="text-xs font-bold text-violet-600 dark:text-violet-400">
+              <div className="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center shrink-0">
+                <span className="text-base font-bold text-indigo-600 dark:text-indigo-400">
                   {draft.voiceName.charAt(0)}
                 </span>
               </div>
               <div>
                 <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">{draft.voiceName}</p>
-                <p className="text-xs text-slate-400 dark:text-slate-500">
-                  {draft.voiceProvider} · {cap(draft.voiceGender)}
+                <p className="text-xs text-slate-400 dark:text-slate-100">
+                  {draft.voiceProvider} -  {draft.age} -  {cap(draft.voiceGender)}
                 </p>
               </div>
             </div>
@@ -155,10 +191,14 @@ const AgentPreview = ({ draft, currentStep, totalSteps }: Props) => {
             <div>
               <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate">
                 {draft.openaiModel}
+                
+                    <span className="text-xs font-semibold mx-1 text-slate-400 dark:text-slate-500">via</span>
+                    <span className="text-xs font-bold text-slate-600 dark:text-slate-300">Grop</span>
+                
               </p>
-              <p className="text-xs text-slate-400 dark:text-slate-500">via Groq · OpenAI-compatible</p>
+              <p className="text-xs text-slate-400 dark:text-slate-300">OpenAI-compatible</p>
             </div>
-            <div className="space-y-1.5 pt-0.5">
+            <div className="space-y-1.5 pt-0.5 dark:text-slate-300">
               <KeyRow label="Groq API key"    set={!!draft.openaiApiKey.trim()} />
               <KeyRow label="Deepgram API key" set={!!draft.deepgramApiKey.trim()} />
             </div>
@@ -166,7 +206,7 @@ const AgentPreview = ({ draft, currentStep, totalSteps }: Props) => {
         </Section>
 
         {/* ── Progress bar ────────────────────────── */}
-        <div className="pt-1">
+        <div className="pt-2">
           <div className="flex gap-1.5">
             {Array.from({ length: totalSteps }, (_, i) => i + 1).map((n) => (
               <div
@@ -179,7 +219,7 @@ const AgentPreview = ({ draft, currentStep, totalSteps }: Props) => {
               />
             ))}
           </div>
-          <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1.5 text-right">
+          <p className="text-[12px] text-black font-semibold dark:text-white mt-1.5 text-right">
             Step {currentStep} of {totalSteps}
           </p>
         </div>

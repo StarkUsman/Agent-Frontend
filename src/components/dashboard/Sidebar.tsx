@@ -4,6 +4,7 @@ import { HiOutlineLogout } from 'react-icons/hi'
 import { Sun, Moon } from 'lucide-react'
 import { useTheme } from '../../contexts/ThemeContext'
 import { useCurrentUser } from '../../contexts/CurrentUserContext'
+import { useAgents } from '../../contexts/AgentsContext'
 import type { Permission } from '../../lib/permissions'
 import UserAvatar from '../users/UserAvatar'
 import favIcon from '../../assets/favIcon.png'
@@ -20,8 +21,8 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
   { label: 'Overview', icon: MdOutlineDashboard, to: '/dashboard', end: true },
-  { label: 'My agents', icon: MdOutlineSmartToy, to: '/agents', badge: 6 },
-  { label: 'Create agent', icon: MdOutlineAddCircleOutline, to: '/agents/new', permission: 'agents:create' },
+  { label: 'My agents', icon: MdOutlineSmartToy, to: '/agents' },
+  // { label: 'Create agent', icon: MdOutlineAddCircleOutline, to: '/agents/new', permission: 'agents:create' },
   { label: 'Call history', icon: MdOutlineHistory, to: '/calls', badge: 3 },
   { label: 'Reports', icon: MdOutlineBarChart, to: '/reports' },
   { label: 'Users', icon: MdOutlinePeopleAlt, to: '/users' },
@@ -32,6 +33,7 @@ const Sidebar = () => {
   const navigate = useNavigate()
   const { theme, toggleTheme } = useTheme()
   const { user, hasPermission, logout } = useCurrentUser()
+  const { runningCount } = useAgents()
 
   const navItems = NAV_ITEMS.filter((item) => !item.permission || hasPermission(item.permission))
 
@@ -83,17 +85,20 @@ const Sidebar = () => {
                 <span className="flex-1">{item.label}</span>
 
                 {/* Badge */}
-                {item.badge !== undefined && (
-                  <span
-                    className={`text-xs px-1.5 py-0.5 rounded-full font-semibold ${
-                      isActive
-                        ? 'bg-indigo-100 text-indigo-600 dark:text-slate-700'
-                        : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
+                {(() => {
+                  const badge = item.to === '/agents' ? runningCount : item.badge
+                  return badge !== undefined && badge > 0 ? (
+                    <span
+                      className={`text-xs px-1.5 py-0.5 rounded-full font-semibold ${
+                        isActive
+                          ? 'bg-indigo-100 text-indigo-600 dark:text-slate-700'
+                          : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
                       }`}
-                  >
-                    {item.badge}
-                  </span>
-                )}
+                    >
+                      {badge}
+                    </span>
+                  ) : null
+                })()}
               </>
             )}
           </NavLink>
