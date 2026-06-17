@@ -86,7 +86,30 @@ const UsersPage = () => {
                 value={searchQuery}
                 onChange={(e) => handleSearch(e.target.value)}
                 placeholder="Search users..."
-                className="pl-9 pr-4 py-2 text-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all w-56"
+                 className="
+                   w-56
+                  pl-9 pr-4 py-2
+                  text-sm
+
+                    rounded-xl
+
+                 bg-slate-50 dark:bg-slate-900
+                 text-slate-900 dark:text-slate-100
+
+                   border border-slate-200 dark:border-slate-700
+
+                   placeholder-slate-400 dark:placeholder-slate-500
+
+                    shadow-sm
+                    dark:shadow-md dark:shadow-black/40
+
+                    focus:outline-none
+                     focus:ring-2 focus:ring-indigo-500/40
+                     focus:border-indigo-500
+
+                     hover:border-slate-300 dark:hover:border-slate-600
+
+                       transition-colors duration-200"
               />
             </div>
             {canManageUsers && (
