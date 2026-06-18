@@ -188,7 +188,7 @@ const CreateAgentPage = () => {
         )}
 
         {/* ── Step content ── */}
-        <div className="flex-1 flex overflow-hidden bg-slate-50 dark:bg-slate-900">
+        <div className="flex-1 w-full flex overflow-hidden bg-slate-50 dark:bg-slate-900">
 
           {/* Left: form */}
           <div className="flex-1 overflow-y-auto px-8 py-5">
@@ -220,7 +220,7 @@ const CreateAgentPage = () => {
           </div>
 
           {/* Right: live preview */}
-          <div className="w-90 rounded-2xl  shrink-0 border-l border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800 overflow-y-auto">
+          <div className="w-90 rounded-2xl mr-8 mt-4  shrink-0 border-l border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800 overflow-y-auto">
             <AgentPreview draft={draft} currentStep={step} totalSteps={TOTAL_STEPS} />
           </div>
 

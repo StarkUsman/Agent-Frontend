@@ -27,7 +27,7 @@ interface Props extends StepNavProps {
 }
 
 const Step1BasicInfo = ({ draft, onChange, ...navProps }: Props) => (
-  <div className="max-w-xl">
+  <div className="max-w-xxl">
     <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm p-8">
       <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">What will this agent do?</h2>
       <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 mb-6">

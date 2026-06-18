@@ -120,7 +120,7 @@ const AgentPreview = ({ draft, currentStep, totalSteps }: Props) => {
 
 
 
-      <div className="flex-1 overflow-y-auto px-4 py-2 space-y-6">
+      <div className="flex-1 overflow-y-auto px-4 py-2 space-y-5">
 
         {/* ── Step 1: Basic info ──────────────────── */}
         <Section title="Basic info" state={identityState}>
@@ -206,7 +206,7 @@ const AgentPreview = ({ draft, currentStep, totalSteps }: Props) => {
         </Section>
 
         {/* ── Progress bar ────────────────────────── */}
-        <div className="pt-2">
+        <div className="pt-1">
           <div className="flex gap-1.5">
             {Array.from({ length: totalSteps }, (_, i) => i + 1).map((n) => (
               <div

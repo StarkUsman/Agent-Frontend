@@ -33,7 +33,7 @@ const Step3AISettings = ({ draft, onChange, ...navProps }: Props) => {
   const [showCartesia, setShowCartesia] = useState(false)
 
   return (
-    <div className="max-w-2xl space-y-5">
+    <div className="max-w-xxl space-y-5">
 
       {/* ── Info banner ── */}
       <div className="flex items-start gap-3 px-4 py-3.5 bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-100 dark:border-indigo-800 rounded-xl">

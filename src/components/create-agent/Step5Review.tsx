@@ -49,7 +49,7 @@ const Step5Review = ({ draft, onEdit, ...navProps }: Props) => {
     (topicsLines.length > 2 ? `, +${topicsLines.length - 2} more` : '')
 
   return (
-    <div className="max-w-2xl">
+    <div className="max-w-xxl">
       <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
 
         {/* Card header */}

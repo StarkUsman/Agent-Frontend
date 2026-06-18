@@ -1,7 +1,17 @@
-import { useEffect } from 'react'
-import { MdPlayArrow } from 'react-icons/md'
+import { useEffect, useRef, useState } from 'react'
+import { MdPlayArrow, MdStop } from 'react-icons/md'
 import type { AgentDraft } from '../../pages/CreateAgentPage'
 import StepNav, { type StepNavProps } from './StepNav'
+
+import amaltheaAudio  from '../../assets/deepgram-voices/Aura-2-amalthea.wav'
+import asteriaAudio   from '../../assets/deepgram-voices/Aura-2-asteria.wav'
+import athenaAudio    from '../../assets/deepgram-voices/Aura-2-athena.wav'
+import dracoAudio     from '../../assets/deepgram-voices/Aura-2-draco.wav'
+import electraAudio   from '../../assets/deepgram-voices/Aura-2-electra.wav'
+import helenaAudio    from '../../assets/deepgram-voices/Aura-2-helena.wav'
+import hyperionAudio  from '../../assets/deepgram-voices/Aura-2-hyperion.wav'
+import pandoraAudio   from '../../assets/deepgram-voices/Aura-2-pandora.wav'
+import zeusAudio      from '../../assets/deepgram-voices/Aura-2-zeus.wav'
 
 // ── Voice catalogue (extend when more providers are added) ─────────────────
 const VOICES = [
@@ -15,94 +25,103 @@ const VOICES = [
     genderLabel: 'Female',
     gender:      'female' as const,
     Age:         'Adult',
+    previewFile: asteriaAudio,
   },
   {
-    id: "aura-2-hyperion-en",
-    name: "Hyperion",
-    provider: "Deepgram",
-    initial: "H",
-    description: "Interview. Australian accent.",
-    accent: "Australian",
-    genderLabel: "Male",
-    gender: "male" as const,
-    Age: "Adult",
-  },
-   {
-    id: "aura-2-amalthea-en",
-    name: "Amalthea",
-    provider: "Deepgram",
-    initial: "A",
-    description: "Casual chat. Filipino accent.",
-    accent: "Filipino",
-    genderLabel: "Female",
-    gender: "female" as const,
-    Age: "Young Adult",
-  },
-  {
-    id: "aura-2-draco-en",
-    name: "Draco",
-    provider: "Deepgram",
-    initial: "D",
-    description: "Storytelling. British accent.",
-    accent: "British",
-    genderLabel: "Male",
-    gender: "male" as const,
-    Age: "Adult",
-  },
-  {
-    id: "aura-2-electra-en",
-    name: "Electra",
-    provider: "Deepgram",
-    initial: "E",
-    description: "IVR, advertising, customer service. American accent.",
-    accent: "American",
-    genderLabel: "Female",
-    gender: "female" as const,
-    Age: "Adult",
-  },
-  {
-    id: "aura-2-pandora-en",
-    name: "Pandora",
-    provider: "Deepgram",
-    initial: "P",
-    description: "IVR, informative. British accent.",
-    accent: "British",
-    genderLabel: "Female",
-    gender: "female" as const,
-    Age: "Adult",
-  },
-  {
-    id: "aura-2-zeus-en",
-    name: "Zeus",
-    provider: "Deepgram",
-    initial: "Z",
-    description: "IVR. American accent.",
-    accent: "American",
-    genderLabel: "Male",
-    gender: "male" as const,
-    Age: "Adult",
-  },
-  {
-    id: "aura-2-helena-en",
-    name: "Helena",
-    provider: "Deepgram",
-    initial: "H",
-    description: "IVR, casual chat. American accent.",
-    accent: "American",
-    genderLabel: "Female",
-    gender: 'female' as const,
+    id:          'aura-2-hyperion-en',
+    name:        'Hyperion',
+    provider:    'Deepgram',
+    initial:     'H',
+    description: 'Interview. Australian accent.',
+    accent:      'Australian',
+    genderLabel: 'Male',
+    gender:      'male' as const,
     Age:         'Adult',
+    previewFile: hyperionAudio,
   },
-   {
-    id: "aura-2-athena-en",
-    name: "Athena",
-    provider: "Deepgram",
-    initial: "A",
-    description: "Storytelling. American accent.",
-    accent: "American",
-    genderLabel: "Female",
-    gender: "female" as const,
-    Age: "Mature",
+  {
+    id:          'aura-2-amalthea-en',
+    name:        'Amalthea',
+    provider:    'Deepgram',
+    initial:     'A',
+    description: 'Casual chat. Filipino accent.',
+    accent:      'Filipino',
+    genderLabel: 'Female',
+    gender:      'female' as const,
+    Age:         'Young Adult',
+    previewFile: amaltheaAudio,
+  },
+  {
+    id:          'aura-2-draco-en',
+    name:        'Draco',
+    provider:    'Deepgram',
+    initial:     'D',
+    description: 'Storytelling. British accent.',
+    accent:      'British',
+    genderLabel: 'Male',
+    gender:      'male' as const,
+    Age:         'Adult',
+    previewFile: dracoAudio,
+  },
+  {
+    id:          'aura-2-electra-en',
+    name:        'Electra',
+    provider:    'Deepgram',
+    initial:     'E',
+    description: 'IVR, advertising, customer service. American accent.',
+    accent:      'American',
+    genderLabel: 'Female',
+    gender:      'female' as const,
+    Age:         'Adult',
+    previewFile: electraAudio,
+  },
+  {
+    id:          'aura-2-pandora-en',
+    name:        'Pandora',
+    provider:    'Deepgram',
+    initial:     'P',
+    description: 'IVR, informative. British accent.',
+    accent:      'British',
+    genderLabel: 'Female',
+    gender:      'female' as const,
+    Age:         'Adult',
+    previewFile: pandoraAudio,
+  },
+  {
+    id:          'aura-2-zeus-en',
+    name:        'Zeus',
+    provider:    'Deepgram',
+    initial:     'Z',
+    description: 'IVR. American accent.',
+    accent:      'American',
+    genderLabel: 'Male',
+    gender:      'male' as const,
+    Age:         'Adult',
+    previewFile: zeusAudio,
+  },
+  {
+    id:          'aura-2-helena-en',
+    name:        'Helena',
+    provider:    'Deepgram',
+    initial:     'H',
+    description: 'IVR, casual chat. American accent.',
+    accent:      'American',
+    genderLabel: 'Female',
+    gender:      'female' as const,
+    Age:         'Adult',
+    previewFile: helenaAudio,
+  },
+  {
+    id:          'aura-2-athena-en',
+    name:        'Athena',
+    provider:    'Deepgram',
+    initial:     'A',
+    description: 'Storytelling. American accent.',
+    accent:      'American',
+    genderLabel: 'Female',
+    gender:      'female' as const,
+    Age:         'Mature',
+    previewFile: athenaAudio,
   },
 ]
 
@@ -110,10 +129,12 @@ const VOICES = [
 interface CardProps {
   voice:      typeof VOICES[0]
   isSelected: boolean
+  isPlaying:  boolean
   onSelect:   () => void
+  onPreview:  () => void
 }
 
-const VoiceCard = ({ voice, isSelected, onSelect }: CardProps) => (
+const VoiceCard = ({ voice, isSelected, isPlaying, onSelect, onPreview }: CardProps) => (
   <div
     onClick={onSelect}
     className={`
@@ -151,13 +172,17 @@ const VoiceCard = ({ voice, isSelected, onSelect }: CardProps) => (
       </span>
     </div>
 
-    {/* Preview button — stops click propagating to card select */}
+    {/* Preview button */}
     <button
-      onClick={(e) => e.stopPropagation()}
-      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-600 text-xs text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors cursor-pointer"
+      onClick={(e) => { e.stopPropagation(); onPreview() }}
+      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs transition-colors cursor-pointer
+        ${isPlaying
+          ? 'border-indigo-400 bg-indigo-50 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400'
+          : 'border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700'}
+      `}
     >
-      <MdPlayArrow className="text-sm" />
-      Preview voice
+      {isPlaying ? <MdStop className="text-sm" /> : <MdPlayArrow className="text-sm" />}
+      {isPlaying ? 'Stop' : 'Preview voice'}
     </button>
   </div>
 )
@@ -169,12 +194,35 @@ interface Props extends StepNavProps {
 }
 
 const Step2ChooseVoice = ({ draft, onChange, ...navProps }: Props) => {
-  // Auto-select the only available voice on mount
+  const [playingId, setPlayingId] = useState<string | null>(null)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+
+  const stopAudio = () => {
+    audioRef.current?.pause()
+    audioRef.current = null
+    setPlayingId(null)
+  }
+
+  const handlePreview = (voice: typeof VOICES[0]) => {
+    if (playingId === voice.id) {
+      stopAudio()
+      return
+    }
+    stopAudio()
+    const audio = new Audio(voice.previewFile)
+    audio.onended = () => setPlayingId(null)
+    audio.play()
+    audioRef.current = audio
+    setPlayingId(voice.id)
+  }
+
+  // Auto-select the first voice on mount
   useEffect(() => {
     if (!draft.voiceId) {
       const v = VOICES[0]
       onChange({ voiceId: v.id, voiceName: v.name, age: v.Age, voiceProvider: v.provider, voiceGender: v.gender })
     }
+    return () => { audioRef.current?.pause() }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -184,7 +232,7 @@ const Step2ChooseVoice = ({ draft, onChange, ...navProps }: Props) => {
     onChange({ voiceId: v.id, voiceName: v.name, age: v.Age, voiceProvider: v.provider, voiceGender: v.gender })
 
   return (
-    <div className="max-w-2xl">
+    <div className="max-w-xxl">
       <p className="text-sm text-slate-600 dark:text-slate-400 mb-6">
         Choose a voice for your agent. Callers will hear this voice throughout the conversation.
       </p>
@@ -195,7 +243,9 @@ const Step2ChooseVoice = ({ draft, onChange, ...navProps }: Props) => {
             key={v.id}
             voice={v}
             isSelected={selectedId === v.id}
+            isPlaying={playingId === v.id}
             onSelect={() => select(v)}
+            onPreview={() => handlePreview(v)}
           />
         ))}
       </div>

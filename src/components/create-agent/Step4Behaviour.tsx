@@ -44,7 +44,7 @@ const textareaClass =
 
 // ── Step component ─────────────────────────────────────────────────────────
 const Step4Behaviour = ({ draft, onChange }: Props) => (
-  <div className="max-w-2xl space-y-4">
+  <div className="max-w-xxl space-y-4">
 
     {/* Card 1 — Opening greeting */}
     <Card
