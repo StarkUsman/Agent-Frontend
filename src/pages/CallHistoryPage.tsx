@@ -67,7 +67,7 @@ const CallHistoryPage = () => {
       }
       if (resultFilter !== 'All results') params.result     = resultFilter.toLowerCase().replace(' ', '_')
       if (agentFilter  !== 'All agents')  params.agent_name = agentFilter
-      if (searchQuery.trim())             params.agent_name = searchQuery.trim()
+      if (searchQuery.trim())             params.call_id    = searchQuery.trim()
 
       const data = await fetchCalls(params)
       setResponse(data)
@@ -131,7 +131,7 @@ const CallHistoryPage = () => {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => handleSearch(e.target.value)}
-                placeholder="Search by agent…"
+                placeholder="Paste call ID…"
                 className="w-56 pl-9 pr-4 py-2 text-sm rounded-xl bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-slate-700 placeholder-slate-400 dark:placeholder-slate-500 shadow-sm dark:shadow-md dark:shadow-black/40 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 hover:border-slate-300 dark:hover:border-slate-600 transition-colors duration-200"
               />
             </div>

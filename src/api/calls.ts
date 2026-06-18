@@ -27,6 +27,7 @@ export interface CallsParams {
   limit:       number
   result?:     string
   agent_name?: string
+  call_id?:    string
 }
 
 export async function fetchCalls(params: CallsParams): Promise<CallsResponse> {
@@ -35,6 +36,7 @@ export async function fetchCalls(params: CallsParams): Promise<CallsResponse> {
   qs.set('limit', String(params.limit))
   if (params.result)     qs.set('result',     params.result)
   if (params.agent_name) qs.set('agent_name', params.agent_name)
+  if (params.call_id)    qs.set('call_id',    params.call_id)
 
   const res = await fetch(`${BASE_URL}/api/call?${qs}`)
   if (!res.ok) {

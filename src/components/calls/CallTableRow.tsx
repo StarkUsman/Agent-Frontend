@@ -1,3 +1,6 @@
+import { useState } from 'react'
+import { MdContentCopy, MdCheck } from 'react-icons/md'
+
 export interface CallRecord {
   id:       string
   agent:    string
@@ -19,9 +22,9 @@ export function formatTime(iso: string): string {
 
 // ── Result cell ────────────────────────────────────────────────────────────
 const RESULT_STYLES: Record<string, string> = {
-  completed:  'text-emerald-600 dark:text-emerald-400',
-  escalated:  'text-amber-500',
-  failed:     'text-red-500',
+  completed: 'text-emerald-600 dark:text-emerald-400',
+  escalated: 'text-amber-500',
+  failed:    'text-red-500',
 }
 
 const ResultCell = ({ result }: { result: string }) => {
@@ -38,8 +41,33 @@ const ResultCell = ({ result }: { result: string }) => {
   const colour = RESULT_STYLES[key] ?? 'text-slate-500'
   const label  = result.charAt(0).toUpperCase() + result.slice(1).toLowerCase()
 
+  return <span className={`text-sm font-semibold ${colour}`}>{label}</span>
+}
+
+// ── ID cell with copy-on-click ─────────────────────────────────────────────
+const IdCell = ({ id }: { id: string }) => {
+  const [copied, setCopied] = useState(false)
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(id)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 1500)
+  }
+
   return (
-    <span className={`text-sm font-semibold ${colour}`}>{label}</span>
+    <button
+      onClick={handleCopy}
+      title={copied ? 'Copied!' : `Click to copy: ${id}`}
+      className="group flex items-center gap-1.5 cursor-pointer"
+    >
+      <span className="text-xs font-mono font-medium text-slate-400 dark:text-slate-500">
+        {id.slice(0, 8)}…
+      </span>
+      {copied
+        ? <MdCheck className="text-emerald-500 text-sm shrink-0" />
+        : <MdContentCopy className="text-slate-300 dark:text-slate-600 text-sm shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
+      }
+    </button>
   )
 }
 
@@ -48,9 +76,7 @@ const CallTableRow = ({ id, agent, result, duration, time }: CallRecord) => (
   <tr className="border-b border-slate-100 dark:border-slate-700 hover:bg-slate-50/60 dark:hover:bg-slate-800/60 transition-colors">
 
     <td className="py-4 pl-6 pr-4">
-      <span className="text-xs font-mono font-medium text-slate-400 dark:text-slate-500 truncate max-w-30 block" title={id}>
-        {id.slice(0, 8)}…
-      </span>
+      <IdCell id={id} />
     </td>
 
     <td className="py-4 px-4">
