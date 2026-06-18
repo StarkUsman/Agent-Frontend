@@ -2,42 +2,40 @@ import { useState } from 'react'
 import { MdContentCopy, MdCheck } from 'react-icons/md'
 
 export interface CallRecord {
-  id:       string
-  agent:    string
-  result:   string // lowercase from API: 'completed' | 'failed' | 'escalated' | 'on_a_call'
-  duration: number // seconds
-  time:     string // ISO 8601
+  id:               string
+  agent:            string
+  status:           string
+  duration_seconds: number
+  started_at:       string // ISO 8601
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 export function formatDuration(seconds: number): string {
   const m = Math.floor(seconds / 60)
-  const s = seconds % 60
+  const s = Math.floor(seconds % 60)
   return `${m}m ${s}s`
 }
 
-export function formatTime(iso: string): string {
+export function formatDateTime(iso: string): string {
   const d = new Date(iso)
   const date = d.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })
   const time = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
   return `${date}, ${time}`
 }
 
-// ── Result cell ────────────────────────────────────────────────────────────
+// ── Status chip ────────────────────────────────────────────────────────────
 const CHIP_STYLES: Record<string, { chip: string; label: string }> = {
-  completed:  { chip: 'border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400', label: 'Completed' },
-  escalated:  { chip: 'border-amber-200  dark:border-amber-800  bg-amber-50  dark:bg-amber-900/30  text-amber-600  dark:text-amber-400',       label: 'Escalated'  },
-  failed:     { chip: 'border-red-200    dark:border-red-800    bg-red-50    dark:bg-red-900/30    text-red-600    dark:text-red-400',          label: 'Failed'     },
-  oncall:     { chip: 'border-blue-200   dark:border-blue-800   bg-blue-50   dark:bg-blue-900/30   text-blue-600   dark:text-blue-400',         label: 'On a call'  },
+  completed: { chip: 'border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400', label: 'Completed' },
+  escalated: { chip: 'border-amber-200  dark:border-amber-800  bg-amber-50  dark:bg-amber-900/30  text-amber-600  dark:text-amber-400',       label: 'Escalated'  },
+  failed:    { chip: 'border-red-200    dark:border-red-800    bg-red-50    dark:bg-red-900/30    text-red-600    dark:text-red-400',          label: 'Failed'     },
+  oncall:    { chip: 'border-blue-200   dark:border-blue-800   bg-blue-50   dark:bg-blue-900/30   text-blue-600   dark:text-blue-400',         label: 'On a call'  },
 }
 
-const normalise = (r: string) =>
-  r.toLowerCase().replace(/[^a-z]/g, '')
+const normalise = (s: string) => s.toLowerCase().replace(/[^a-z]/g, '')
 
-const ResultCell = ({ result }: { result: string }) => {
-  const key    = normalise(result)
-  const styles = CHIP_STYLES[key] ?? CHIP_STYLES['failed']
-
+export const StatusChip = ({ status }: { status: string }) => {
+  const key    = normalise(status)
+  const styles = CHIP_STYLES[key] ?? { chip: 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-500', label: status }
   return (
     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border ${styles.chip}`}>
       {styles.label}
@@ -49,7 +47,8 @@ const ResultCell = ({ result }: { result: string }) => {
 const IdCell = ({ id }: { id: string }) => {
   const [copied, setCopied] = useState(false)
 
-  const handleCopy = () => {
+  const handleCopy = (e: React.MouseEvent) => {
+    e.stopPropagation()
     navigator.clipboard.writeText(id)
     setCopied(true)
     setTimeout(() => setCopied(false), 1500)
@@ -73,9 +72,15 @@ const IdCell = ({ id }: { id: string }) => {
 }
 
 // ── Row ────────────────────────────────────────────────────────────────────
-const CallTableRow = ({ id, agent, result, duration, time }: CallRecord) => (
-  <tr className="border-b border-slate-100 dark:border-slate-700 hover:bg-slate-50/60 dark:hover:bg-slate-800/60 transition-colors">
+interface RowProps extends CallRecord {
+  onClick: () => void
+}
 
+const CallTableRow = ({ id, agent, status, duration_seconds, started_at, onClick }: RowProps) => (
+  <tr
+    onClick={onClick}
+    className="border-b border-slate-100 dark:border-slate-700 hover:bg-slate-50/60 dark:hover:bg-slate-800/60 transition-colors cursor-pointer"
+  >
     <td className="py-4 pl-6 pr-4">
       <IdCell id={id} />
     </td>
@@ -85,17 +90,16 @@ const CallTableRow = ({ id, agent, result, duration, time }: CallRecord) => (
     </td>
 
     <td className="py-4 px-4">
-      <ResultCell result={result} />
+      <StatusChip status={status} />
     </td>
 
     <td className="py-4 px-4">
-      <span className="text-sm text-slate-600 dark:text-slate-400">{formatDuration(duration)}</span>
+      <span className="text-sm text-slate-600 dark:text-slate-400">{formatDuration(duration_seconds)}</span>
     </td>
 
     <td className="py-4 pl-4 pr-6">
-      <span className="text-sm text-slate-400 dark:text-slate-500">{formatTime(time)}</span>
+      <span className="text-sm text-slate-400 dark:text-slate-500">{formatDateTime(started_at)}</span>
     </td>
-
   </tr>
 )
 

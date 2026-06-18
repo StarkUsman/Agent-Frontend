@@ -3,11 +3,24 @@ const BASE_URL = (
 ).replace(/\/+$/, '')
 
 export interface ApiCallRecord {
-  call_id:    string
-  agent_name: string
-  result:     string
-  duration:   number // seconds
-  call_time:  string // ISO 8601
+  call_id:           string
+  session_id:        string
+  agent_id:          string
+  agent_name:        string
+  started_at:        string // ISO 8601
+  ended_at:          string // ISO 8601
+  duration_seconds:  number
+  status:            string
+  last_node:         string
+  turns:             number
+  prompt_tokens:     string
+  completion_tokens: string
+  total_tokens:      string
+  tts_characters:    string
+  avg_llm_ttfb_ms:   number
+  avg_tts_ttfb_ms:   number
+  error:             string | null
+  created_at:        string // ISO 8601
 }
 
 export interface CallsPagination {
@@ -25,7 +38,7 @@ export interface CallsResponse {
 export interface CallsParams {
   page:         number
   limit:        number
-  result?:      string
+  status?:      string
   agent_name?:  string
   call_id?:     string
   date_filter?: string
@@ -35,7 +48,7 @@ export async function fetchCalls(params: CallsParams): Promise<CallsResponse> {
   const qs = new URLSearchParams()
   qs.set('page',  String(params.page))
   qs.set('limit', String(params.limit))
-  if (params.result)      qs.set('result',      params.result)
+  if (params.status)      qs.set('status',      params.status)
   if (params.agent_name)  qs.set('agent_name',  params.agent_name)
   if (params.call_id)     qs.set('call_id',     params.call_id)
   if (params.date_filter) qs.set('date_filter', params.date_filter)

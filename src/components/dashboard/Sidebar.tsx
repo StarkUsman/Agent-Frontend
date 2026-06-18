@@ -47,7 +47,7 @@ const Sidebar = () => {
   const [onCallCount, setOnCallCount] = useState(0)
   useEffect(() => {
     const load = () =>
-      fetchCalls({ page: 1, limit: 1, result: 'onCall' })
+      fetchCalls({ page: 1, limit: 1, status: 'onCall' })
         .then((r) => setOnCallCount(r.pagination.total))
         .catch(() => {})
     load()

@@ -2,13 +2,28 @@ import { useState, useEffect, useCallback } from 'react'
 import { MdKeyboardArrowDown, MdSearch, MdChevronLeft, MdChevronRight } from 'react-icons/md'
 import Sidebar from '../components/dashboard/Sidebar'
 import CallTableRow from '../components/calls/CallTableRow'
+import CallDetailModal from '../components/calls/CallDetailModal'
 import { useAgents } from '../contexts/AgentsContext'
-import { fetchCalls, type CallsResponse } from '../api/calls'
+import { fetchCalls, type CallsResponse, type ApiCallRecord } from '../api/calls'
 
-const DEFAULT_LIMIT  = 25
-const RESULT_OPTIONS = ['All results', 'Completed', 'Escalated', 'On a call', 'Failed']
-const DATE_OPTIONS   = ['Today', 'Yesterday', 'Last 7 days', 'Last 30 days']
-const COLUMNS        = ['Call ID', 'Agent', 'Result', 'Duration', 'Date & Time']
+const DEFAULT_LIMIT    = 25
+const STATUS_OPTIONS   = ['All results', 'Completed', 'Escalated', 'On a call', 'Failed']
+const DATE_OPTIONS     = ['Today', 'Yesterday', 'Last 7 days', 'Last 30 days']
+const COLUMNS          = ['Call ID', 'Agent', 'Status', 'Duration', 'Date & Time']
+
+const STATUS_MAP: Record<string, string> = {
+  'Completed': 'completed',
+  'Escalated': 'escalated',
+  'On a call': 'onCall',
+  'Failed':    'failed',
+}
+
+const DATE_MAP: Record<string, string> = {
+  'Today':        'today',
+  'Yesterday':    'yesterday',
+  'Last 7 days':  'last_7_days',
+  'Last 30 days': 'last_30_days',
+}
 
 // ── Filter dropdown ────────────────────────────────────────────────────────
 interface FilterSelectProps {
@@ -48,14 +63,15 @@ const CallHistoryPage = () => {
   const agentFilterPlaceholder = agentsLoading ? 'Loading agents…' : agentsError ? 'Failed to load agents' : 'No agents found'
 
   const [agentFilter,  setAgentFilter]  = useState('All agents')
-  const [resultFilter, setResultFilter] = useState('All results')
+  const [statusFilter, setStatusFilter] = useState('All results')
   const [dateFilter,   setDateFilter]   = useState('Today')
   const [searchQuery,  setSearchQuery]  = useState('')
   const [currentPage,  setCurrentPage]  = useState(1)
 
-  const [response, setResponse] = useState<CallsResponse | null>(null)
-  const [loading,  setLoading]  = useState(true)
-  const [error,    setError]    = useState<string | null>(null)
+  const [response,      setResponse]      = useState<CallsResponse | null>(null)
+  const [loading,       setLoading]       = useState(true)
+  const [error,         setError]         = useState<string | null>(null)
+  const [selectedCall,  setSelectedCall]  = useState<ApiCallRecord | null>(null)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -65,19 +81,7 @@ const CallHistoryPage = () => {
         page:  currentPage,
         limit: DEFAULT_LIMIT,
       }
-      const RESULT_MAP: Record<string, string> = {
-        'Completed': 'completed',
-        'Escalated': 'escalated',
-        'On a call': 'onCall',
-        'Failed':    'failed',
-      }
-      const DATE_MAP: Record<string, string> = {
-        'Today':       'today',
-        'Yesterday':   'yesterday',
-        'Last 7 days': 'last_7_days',
-        'Last 30 days':'last_30_days',
-      }
-      if (resultFilter !== 'All results') params.result      = RESULT_MAP[resultFilter] ?? resultFilter.toLowerCase()
+      if (statusFilter !== 'All results') params.status      = STATUS_MAP[statusFilter] ?? statusFilter.toLowerCase()
       if (agentFilter  !== 'All agents')  params.agent_name  = agentFilter
       if (searchQuery.trim())             params.call_id     = searchQuery.trim()
       if (DATE_MAP[dateFilter])           params.date_filter = DATE_MAP[dateFilter]
@@ -89,7 +93,7 @@ const CallHistoryPage = () => {
     } finally {
       setLoading(false)
     }
-  }, [currentPage, resultFilter, agentFilter, searchQuery, dateFilter])
+  }, [currentPage, statusFilter, agentFilter, searchQuery, dateFilter])
 
   useEffect(() => { load() }, [load])
 
@@ -132,7 +136,7 @@ const CallHistoryPage = () => {
               disabled={agentFilterDisabled}
               placeholder={agentFilterPlaceholder}
             />
-            <FilterSelect value={resultFilter} options={RESULT_OPTIONS} onChange={handleFilter(setResultFilter)} />
+            <FilterSelect value={statusFilter} options={STATUS_OPTIONS} onChange={handleFilter(setStatusFilter)} />
             <FilterSelect value={dateFilter}   options={DATE_OPTIONS}   onChange={handleFilter(setDateFilter)} />
           </div>
           <div className="relative">
@@ -149,8 +153,6 @@ const CallHistoryPage = () => {
 
         {/* Scrollable table area */}
         <div className="flex-1 overflow-y-auto px-8 pt-5 pb-8">
-
-          {/* Table card */}
           <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden">
             <table className="w-full">
               <thead>
@@ -181,9 +183,10 @@ const CallHistoryPage = () => {
                       key={call.call_id}
                       id={call.call_id}
                       agent={call.agent_name}
-                      result={call.result}
-                      duration={call.duration}
-                      time={call.call_time}
+                      status={call.status}
+                      duration_seconds={call.duration_seconds}
+                      started_at={call.started_at}
+                      onClick={() => setSelectedCall(call)}
                     />
                   ))
                 ) : (
@@ -234,9 +237,16 @@ const CallHistoryPage = () => {
               </div>
             </div>
           </div>
-
         </div>
       </main>
+
+      {/* Detail modal */}
+      {selectedCall && (
+        <CallDetailModal
+          call={selectedCall}
+          onClose={() => setSelectedCall(null)}
+        />
+      )}
     </div>
   )
 }
