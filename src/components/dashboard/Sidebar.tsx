@@ -47,8 +47,11 @@ const Sidebar = () => {
   const [onCallCount, setOnCallCount] = useState(0)
   useEffect(() => {
     const load = () =>
-      fetchCalls({ page: 1, limit: 1, status: 'onCall' })
-        .then((r) => setOnCallCount(r.pagination.total))
+      fetchCalls({ page: 1, limit: 100, status: 'onCall' })
+        .then((r) => {
+          const norm = (s: string) => s.toLowerCase().replace(/[^a-z]/g, '')
+          setOnCallCount(r.data.filter((c) => norm(c.status) === 'oncall').length)
+        })
         .catch(() => {})
     load()
     const t = setInterval(load, 30_000)
