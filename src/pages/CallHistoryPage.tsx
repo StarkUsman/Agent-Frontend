@@ -151,56 +151,60 @@ const CallHistoryPage = () => {
           </div>
         </div>
 
-        {/* Scrollable table area */}
-        <div className="flex-1 overflow-y-auto px-8 pt-5 pb-8">
-          <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-slate-100 dark:border-slate-700">
-                  {COLUMNS.map((col) => (
-                    <th key={col} className="py-3 text-left text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wide first:pl-6 last:pr-6 px-4">
-                      {col}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {loading ? (
-                  <tr>
-                    <td colSpan={COLUMNS.length} className="py-16 text-center text-sm text-slate-400 dark:text-slate-500">
-                      Loading calls…
-                    </td>
-                  </tr>
-                ) : error ? (
-                  <tr>
-                    <td colSpan={COLUMNS.length} className="py-16 text-center text-sm text-red-500">
-                      {error}
-                    </td>
-                  </tr>
-                ) : calls.length > 0 ? (
-                  calls.map((call) => (
-                    <CallTableRow
-                      key={call.call_id}
-                      id={call.call_id}
-                      agent={call.agent_name}
-                      status={call.status}
-                      duration_seconds={call.duration_seconds}
-                      started_at={call.started_at}
-                      onClick={() => setSelectedCall(call)}
-                    />
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={COLUMNS.length} className="py-16 text-center text-sm text-slate-400 dark:text-slate-500">
-                      No calls match the selected filters.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+        {/* Table area — fills remaining height, table card is a flex column */}
+        <div className="flex-1 flex flex-col min-h-0 px-8 pt-5 pb-5">
+          <div className="flex-1 flex flex-col min-h-0 bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-clip">
 
-            {/* Pagination */}
-            <div className="flex items-center justify-between px-6 py-3 border-t border-slate-100 dark:border-slate-700">
+            {/* Scrollable body — only this div scrolls */}
+            <div className="flex-1 overflow-y-auto min-h-0">
+              <table className="w-full">
+                <thead className="sticky top-0 z-10 bg-white dark:bg-slate-800">
+                  <tr className="border-b border-slate-100 dark:border-slate-700">
+                    {COLUMNS.map((col) => (
+                      <th key={col} className="py-3 text-left text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wide first:pl-6 last:pr-6 px-4">
+                        {col}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {loading ? (
+                    <tr>
+                      <td colSpan={COLUMNS.length} className="py-16 text-center text-sm text-slate-400 dark:text-slate-500">
+                        Loading calls…
+                      </td>
+                    </tr>
+                  ) : error ? (
+                    <tr>
+                      <td colSpan={COLUMNS.length} className="py-16 text-center text-sm text-red-500">
+                        {error}
+                      </td>
+                    </tr>
+                  ) : calls.length > 0 ? (
+                    calls.map((call) => (
+                      <CallTableRow
+                        key={call.call_id}
+                        id={call.call_id}
+                        agent={call.agent_name}
+                        status={call.status}
+                        duration_seconds={call.duration_seconds}
+                        started_at={call.started_at}
+                        onClick={() => setSelectedCall(call)}
+                      />
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={COLUMNS.length} className="py-16 text-center text-sm text-slate-400 dark:text-slate-500">
+                        No calls match the selected filters.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Pagination — always pinned at the bottom of the card */}
+            <div className="shrink-0 flex items-center justify-between px-6 py-3 border-t border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800">
               <p className="text-xs text-slate-400 dark:text-slate-500">
                 Showing{' '}
                 <span className="font-semibold text-slate-600 dark:text-slate-300">{startItem}–{endItem}</span>
