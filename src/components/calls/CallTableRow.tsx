@@ -21,27 +21,25 @@ export function formatTime(iso: string): string {
 }
 
 // ── Result cell ────────────────────────────────────────────────────────────
-const RESULT_STYLES: Record<string, string> = {
-  completed: 'text-emerald-600 dark:text-emerald-400',
-  escalated: 'text-amber-500',
-  failed:    'text-red-500',
+const CHIP_STYLES: Record<string, { chip: string; label: string }> = {
+  completed:  { chip: 'border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400', label: 'Completed' },
+  escalated:  { chip: 'border-amber-200  dark:border-amber-800  bg-amber-50  dark:bg-amber-900/30  text-amber-600  dark:text-amber-400',       label: 'Escalated'  },
+  failed:     { chip: 'border-red-200    dark:border-red-800    bg-red-50    dark:bg-red-900/30    text-red-600    dark:text-red-400',          label: 'Failed'     },
+  oncall:     { chip: 'border-blue-200   dark:border-blue-800   bg-blue-50   dark:bg-blue-900/30   text-blue-600   dark:text-blue-400',         label: 'On a call'  },
 }
 
+const normalise = (r: string) =>
+  r.toLowerCase().replace(/[^a-z]/g, '')
+
 const ResultCell = ({ result }: { result: string }) => {
-  const key = result.toLowerCase()
+  const key    = normalise(result)
+  const styles = CHIP_STYLES[key] ?? CHIP_STYLES['failed']
 
-  if (key === 'on_a_call' || key === 'on a call') {
-    return (
-      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400">
-        On a call
-      </span>
-    )
-  }
-
-  const colour = RESULT_STYLES[key] ?? 'text-slate-500'
-  const label  = result.charAt(0).toUpperCase() + result.slice(1).toLowerCase()
-
-  return <span className={`text-sm font-semibold ${colour}`}>{label}</span>
+  return (
+    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border ${styles.chip}`}>
+      {styles.label}
+    </span>
+  )
 }
 
 // ── ID cell with copy-on-click ─────────────────────────────────────────────
