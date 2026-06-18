@@ -122,33 +122,33 @@ const CallHistoryPage = () => {
           </p>
         </div>
 
-        {/* Scrollable area */}
-        <div className="flex-1 overflow-y-auto px-8 pt-5 pb-8 space-y-4">
-
-          {/* Filters */}
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <FilterSelect
-                value={agentFilter}
-                options={agentOptions}
-                onChange={handleFilter(setAgentFilter)}
-                disabled={agentFilterDisabled}
-                placeholder={agentFilterPlaceholder}
-              />
-              <FilterSelect value={resultFilter} options={RESULT_OPTIONS} onChange={handleFilter(setResultFilter)} />
-              <FilterSelect value={dateFilter}   options={DATE_OPTIONS}   onChange={handleFilter(setDateFilter)} />
-            </div>
-            <div className="relative">
-              <MdSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 text-lg pointer-events-none" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => handleSearch(e.target.value)}
-                placeholder="Paste call ID…"
-                className="w-56 pl-9 pr-4 py-2 text-sm rounded-xl bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-slate-700 placeholder-slate-400 dark:placeholder-slate-500 shadow-sm dark:shadow-md dark:shadow-black/40 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 hover:border-slate-300 dark:hover:border-slate-600 transition-colors duration-200"
-              />
-            </div>
+        {/* Filters — static, never scrolls */}
+        <div className="px-8 py-4 bg-slate-50 dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 shrink-0 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <FilterSelect
+              value={agentFilter}
+              options={agentOptions}
+              onChange={handleFilter(setAgentFilter)}
+              disabled={agentFilterDisabled}
+              placeholder={agentFilterPlaceholder}
+            />
+            <FilterSelect value={resultFilter} options={RESULT_OPTIONS} onChange={handleFilter(setResultFilter)} />
+            <FilterSelect value={dateFilter}   options={DATE_OPTIONS}   onChange={handleFilter(setDateFilter)} />
           </div>
+          <div className="relative">
+            <MdSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 text-lg pointer-events-none" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => handleSearch(e.target.value)}
+              placeholder="Paste call ID…"
+              className="w-56 pl-9 pr-4 py-2 text-sm rounded-xl bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-slate-700 placeholder-slate-400 dark:placeholder-slate-500 shadow-sm dark:shadow-md dark:shadow-black/40 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 hover:border-slate-300 dark:hover:border-slate-600 transition-colors duration-200"
+            />
+          </div>
+        </div>
+
+        {/* Scrollable table area */}
+        <div className="flex-1 overflow-y-auto px-8 pt-5 pb-8">
 
           {/* Table card */}
           <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden">
