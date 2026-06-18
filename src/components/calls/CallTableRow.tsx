@@ -17,7 +17,10 @@ export function formatDuration(seconds: number): string {
 }
 
 export function formatTime(iso: string): string {
-  return new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  const d = new Date(iso)
+  const date = d.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })
+  const time = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  return `${date}, ${time}`
 }
 
 // ── Result cell ────────────────────────────────────────────────────────────

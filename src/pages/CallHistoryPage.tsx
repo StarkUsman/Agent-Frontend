@@ -8,7 +8,7 @@ import { fetchCalls, type CallsResponse } from '../api/calls'
 const DEFAULT_LIMIT  = 25
 const RESULT_OPTIONS = ['All results', 'Completed', 'Escalated', 'On a call', 'Failed']
 const DATE_OPTIONS   = ['Today', 'Yesterday', 'Last 7 days', 'Last 30 days']
-const COLUMNS        = ['Call ID', 'Agent', 'Result', 'Duration', 'Time']
+const COLUMNS        = ['Call ID', 'Agent', 'Result', 'Duration', 'Date & Time']
 
 // ── Filter dropdown ────────────────────────────────────────────────────────
 interface FilterSelectProps {
