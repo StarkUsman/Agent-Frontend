@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react'
 import { MdKeyboardArrowDown, MdSearch, MdChevronLeft, MdChevronRight } from 'react-icons/md'
 import Sidebar from '../components/dashboard/Sidebar'
 import CallTableRow, { type CallRecord, type CallResult } from '../components/calls/CallTableRow'
+import { useAgents } from '../contexts/AgentsContext'
 
 // ── Mock data ──────────────────────────────────────────────────────────────
 const CALLS: CallRecord[] = [
@@ -24,7 +25,6 @@ const CALLS: CallRecord[] = [
 
 const ITEMS_PER_PAGE = 8
 
-const AGENT_OPTIONS  = ['All agents',  ...Array.from(new Set(CALLS.map((c) => c.agent)))]
 const RESULT_OPTIONS = ['All results', 'Completed', 'Escalated', 'On a call', 'Failed']
 const DATE_OPTIONS   = ['Today', 'Yesterday', 'Last 7 days', 'Last 30 days']
 
@@ -36,20 +36,28 @@ interface FilterSelectProps {
   value: string
   options: string[]
   onChange: (val: string) => void
+  disabled?: boolean
+  placeholder?: string
 }
 
-const FilterSelect = ({ value, options, onChange }: FilterSelectProps) => (
+const FilterSelect = ({ value, options, onChange, disabled, placeholder }: FilterSelectProps) => (
   <div className="relative">
     <select
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="appearance-none text-sm border border-slate-200 dark:border-slate-700 rounded-lg pl-3 pr-8 py-2 text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 cursor-pointer transition-colors"
+      disabled={disabled}
+      className={`appearance-none text-sm border rounded-lg pl-3 pr-8 py-2 transition-colors
+        ${disabled
+          ? 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-slate-400 dark:text-slate-500 cursor-not-allowed'
+          : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 cursor-pointer'}
+      `}
     >
-      {options.map((opt) => (
-        <option key={opt} value={opt}>
-          {opt}
-        </option>
-      ))}
+      {disabled && placeholder
+        ? <option>{placeholder}</option>
+        : options.map((opt) => (
+            <option key={opt} value={opt}>{opt}</option>
+          ))
+      }
     </select>
     <MdKeyboardArrowDown className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 pointer-events-none text-lg" />
   </div>
@@ -57,6 +65,16 @@ const FilterSelect = ({ value, options, onChange }: FilterSelectProps) => (
 
 // ── Page ───────────────────────────────────────────────────────────────────
 const CallHistoryPage = () => {
+  const { agents, loading: agentsLoading, error: agentsError } = useAgents()
+  const agentOptions = ['All agents', ...agents.map((a) => a.name)]
+
+  const agentFilterDisabled    = agentsLoading || !!agentsError || agents.length === 0
+  const agentFilterPlaceholder = agentsLoading
+    ? 'Loading agents…'
+    : agentsError
+      ? 'Failed to load agents'
+      : 'No agents found'
+
   const [agentFilter,  setAgentFilter]  = useState('All agents')
   const [resultFilter, setResultFilter] = useState('All results')
   const [dateFilter,   setDateFilter]   = useState('Today')
@@ -113,7 +131,7 @@ const CallHistoryPage = () => {
 
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-3">
-              <FilterSelect value={agentFilter}  options={AGENT_OPTIONS}  onChange={handleFilter(setAgentFilter)} />
+              <FilterSelect value={agentFilter} options={agentOptions} onChange={handleFilter(setAgentFilter)} disabled={agentFilterDisabled} placeholder={agentFilterPlaceholder} />
               <FilterSelect value={resultFilter} options={RESULT_OPTIONS} onChange={handleFilter(setResultFilter)} />
               <FilterSelect value={dateFilter}   options={DATE_OPTIONS}   onChange={handleFilter(setDateFilter)} />
             </div>
