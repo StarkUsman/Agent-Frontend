@@ -65,7 +65,13 @@ const CallHistoryPage = () => {
         page:  currentPage,
         limit: DEFAULT_LIMIT,
       }
-      if (resultFilter !== 'All results') params.result     = resultFilter.toLowerCase().replace(' ', '_')
+      const RESULT_MAP: Record<string, string> = {
+        'Completed': 'completed',
+        'Escalated': 'escalated',
+        'On a call': 'onCall',
+        'Failed':    'failed',
+      }
+      if (resultFilter !== 'All results') params.result = RESULT_MAP[resultFilter] ?? resultFilter.toLowerCase()
       if (agentFilter  !== 'All agents')  params.agent_name = agentFilter
       if (searchQuery.trim())             params.call_id    = searchQuery.trim()
 

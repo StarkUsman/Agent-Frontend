@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import {
   MdOutlineDashboard, MdOutlineSmartToy, MdOutlineHistory,
@@ -11,6 +11,7 @@ import { useTheme } from '../../contexts/ThemeContext'
 import { useCurrentUser } from '../../contexts/CurrentUserContext'
 import { useAgents } from '../../contexts/AgentsContext'
 import type { Permission } from '../../lib/permissions'
+import { fetchCalls } from '../../api/calls'
 import UserAvatar from '../users/UserAvatar'
 import favIcon from '../../assets/favIcon.png'
 
@@ -27,7 +28,7 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { label: 'Overview',     icon: MdOutlineDashboard,  to: '/dashboard', end: true },
   { label: 'My agents',    icon: MdOutlineSmartToy,   to: '/agents' },
-  { label: 'Call history', icon: MdOutlineHistory,    to: '/calls', badge: 3 },
+  { label: 'Call history', icon: MdOutlineHistory,    to: '/calls' },
   { label: 'Reports',      icon: MdOutlineBarChart,   to: '/reports' },
   { label: 'Users',        icon: MdOutlinePeopleAlt,  to: '/users' },
 ]
@@ -42,6 +43,17 @@ const Sidebar = () => {
   const [collapsed, setCollapsed] = useState(() =>
     localStorage.getItem('sidebar-collapsed') === 'true'
   )
+
+  const [onCallCount, setOnCallCount] = useState(0)
+  useEffect(() => {
+    const load = () =>
+      fetchCalls({ page: 1, limit: 1, result: 'onCall' })
+        .then((r) => setOnCallCount(r.pagination.total))
+        .catch(() => {})
+    load()
+    const t = setInterval(load, 30_000)
+    return () => clearInterval(t)
+  }, [])
 
   const toggle = () =>
     setCollapsed((prev) => {
@@ -107,7 +119,7 @@ const Sidebar = () => {
                   <>
                     <span className="flex-1 whitespace-nowrap">{item.label}</span>
                     {(() => {
-                      const badge = item.to === '/agents' ? runningCount : item.badge
+                      const badge = item.to === '/agents' ? runningCount : item.to === '/calls' ? onCallCount : item.badge
                       return badge !== undefined && badge > 0 ? (
                         <span
                           className={`text-xs px-1.5 py-0.5 rounded-full font-semibold ${
