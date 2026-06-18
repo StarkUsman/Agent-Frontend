@@ -125,39 +125,43 @@ const UsersPage = () => {
           </div>
         </div>
 
-        {/* Scrollable content */}
-        <div className="flex-1 overflow-y-auto px-8 pt-5 pb-8">
-          <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden">
+        {/* Table area */}
+        <div className="flex-1 flex flex-col min-h-0 px-8 pt-5 pb-5">
+          <div className="flex-1 flex flex-col min-h-0 bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-clip">
 
-            <table className="w-full">
-              <thead className="sticky top-0 z-10">
-                <tr className="bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700">
-                  {COLUMNS.map((col) => (
-                    <th
-                      key={col.label}
-                      className={`${col.width} py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider first:pl-6 last:pr-6 px-4`}
-                    >
-                      {col.label}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {paginated.length === 0 ? (
-                  <tr>
-                    <td colSpan={COLUMNS.length} className="py-16 text-center text-sm text-slate-400 dark:text-slate-500">
-                      No users match <span className="font-semibold text-slate-600 dark:text-slate-300">"{searchQuery}"</span>
-                    </td>
+            {/* Scrollable body */}
+            <div className="flex-1 overflow-y-auto min-h-0">
+              <table className="w-full">
+                <thead className="sticky top-0 z-10 bg-slate-50 dark:bg-slate-900">
+                  <tr className="border-b border-slate-200 dark:border-slate-700">
+                    {COLUMNS.map((col) => (
+                      <th
+                        key={col.label}
+                        className={`${col.width} py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider first:pl-6 last:pr-6 px-4`}
+                      >
+                        {col.label}
+                      </th>
+                    ))}
                   </tr>
-                ) : (
-                  paginated.map((user) => (
-                    <UserTableRow key={user.id} {...user} onDelete={handleDelete} showActions={canManageUsers} />
-                  ))
-                )}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {paginated.length === 0 ? (
+                    <tr>
+                      <td colSpan={COLUMNS.length} className="py-16 text-center text-sm text-slate-400 dark:text-slate-500">
+                        No users match <span className="font-semibold text-slate-600 dark:text-slate-300">"{searchQuery}"</span>
+                      </td>
+                    </tr>
+                  ) : (
+                    paginated.map((user) => (
+                      <UserTableRow key={user.id} {...user} onDelete={handleDelete} showActions={canManageUsers} />
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
 
-            <div className="flex items-center justify-between px-6 py-3 border-t border-slate-100 dark:border-slate-700">
+            {/* Pagination */}
+            <div className="shrink-0 flex items-center justify-between px-6 py-3 border-t border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800">
               <p className="text-xs text-slate-400 dark:text-slate-500">
                 Showing <span className="font-semibold text-slate-600 dark:text-slate-300">{startItem}–{endItem}</span> of{' '}
                 <span className="font-semibold text-slate-600 dark:text-slate-300">{filtered.length}</span> users
