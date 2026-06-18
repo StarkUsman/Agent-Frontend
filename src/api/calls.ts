@@ -23,20 +23,22 @@ export interface CallsResponse {
 }
 
 export interface CallsParams {
-  page:        number
-  limit:       number
-  result?:     string
-  agent_name?: string
-  call_id?:    string
+  page:         number
+  limit:        number
+  result?:      string
+  agent_name?:  string
+  call_id?:     string
+  date_filter?: string
 }
 
 export async function fetchCalls(params: CallsParams): Promise<CallsResponse> {
   const qs = new URLSearchParams()
   qs.set('page',  String(params.page))
   qs.set('limit', String(params.limit))
-  if (params.result)     qs.set('result',     params.result)
-  if (params.agent_name) qs.set('agent_name', params.agent_name)
-  if (params.call_id)    qs.set('call_id',    params.call_id)
+  if (params.result)      qs.set('result',      params.result)
+  if (params.agent_name)  qs.set('agent_name',  params.agent_name)
+  if (params.call_id)     qs.set('call_id',     params.call_id)
+  if (params.date_filter) qs.set('date_filter', params.date_filter)
 
   const res = await fetch(`${BASE_URL}/api/call?${qs}`)
   if (!res.ok) {

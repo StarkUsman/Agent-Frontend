@@ -71,9 +71,16 @@ const CallHistoryPage = () => {
         'On a call': 'onCall',
         'Failed':    'failed',
       }
-      if (resultFilter !== 'All results') params.result = RESULT_MAP[resultFilter] ?? resultFilter.toLowerCase()
-      if (agentFilter  !== 'All agents')  params.agent_name = agentFilter
-      if (searchQuery.trim())             params.call_id    = searchQuery.trim()
+      const DATE_MAP: Record<string, string> = {
+        'Today':       'today',
+        'Yesterday':   'yesterday',
+        'Last 7 days': 'last_7_days',
+        'Last 30 days':'last_30_days',
+      }
+      if (resultFilter !== 'All results') params.result      = RESULT_MAP[resultFilter] ?? resultFilter.toLowerCase()
+      if (agentFilter  !== 'All agents')  params.agent_name  = agentFilter
+      if (searchQuery.trim())             params.call_id     = searchQuery.trim()
+      if (DATE_MAP[dateFilter])           params.date_filter = DATE_MAP[dateFilter]
 
       const data = await fetchCalls(params)
       setResponse(data)
@@ -82,7 +89,7 @@ const CallHistoryPage = () => {
     } finally {
       setLoading(false)
     }
-  }, [currentPage, resultFilter, agentFilter, searchQuery])
+  }, [currentPage, resultFilter, agentFilter, searchQuery, dateFilter])
 
   useEffect(() => { load() }, [load])
 
