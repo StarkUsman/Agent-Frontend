@@ -7,6 +7,7 @@ import type { UserRowData } from '../components/users/UserTableRow'
 import { fetchUsers, deleteUser, toUserRole } from '../api/users'
 import type { UsersPagination } from '../api/users'
 import { useCurrentUser } from '../contexts/CurrentUserContext'
+import DeleteConfirmModal from '../components/ui/DeleteConfirmModal'
 
 // ── Config ─────────────────────────────────────────────────────────────────
 const ITEMS_PER_PAGE = 25
@@ -35,8 +36,10 @@ const UsersPage = () => {
   // appliedSearch: what was last submitted (Enter / search button) — drives the API
   const [searchInput, setSearchInput]     = useState('')
   const [appliedSearch, setAppliedSearch] = useState('')
-  const [loading, setLoading] = useState(true)
-  const [error, setError]     = useState<string | null>(null)
+  const [loading, setLoading]       = useState(true)
+  const [error, setError]           = useState<string | null>(null)
+  const [pendingDelete, setPendingDelete] = useState<UserRowData | null>(null)
+  const [deleting, setDeleting]     = useState(false)
 
   const load = useCallback(async (page: number, search: string) => {
     setLoading(true)
@@ -81,15 +84,22 @@ const UsersPage = () => {
     load(currentPage, appliedSearch)
   }
 
-  const handleDelete = async (id: number) => {
+  const handleDeleteRequest = (id: number) => {
     const user = users.find((u) => u.id === id)
-    if (!user) return
-    if (!window.confirm(`Delete ${user.first_name} ${user.last_name}? This cannot be undone.`)) return
+    if (user) setPendingDelete(user)
+  }
+
+  const handleDeleteConfirm = async () => {
+    if (!pendingDelete) return
+    setDeleting(true)
     try {
-      await deleteUser(String(id))
+      await deleteUser(String(pendingDelete.id))
+      setPendingDelete(null)
       load(currentPage, appliedSearch)
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Failed to delete user')
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -210,7 +220,7 @@ const UsersPage = () => {
                     </tr>
                   ) : (
                     users.map((user) => (
-                      <UserTableRow key={user.id} {...user} onDelete={handleDelete} showActions={canManageUsers} />
+                      <UserTableRow key={user.id} {...user} onDelete={handleDeleteRequest} showActions={canManageUsers} />
                     ))
                   )}
                 </tbody>
@@ -258,6 +268,16 @@ const UsersPage = () => {
           </div>
         </div>
       </main>
+
+      {pendingDelete && (
+        <DeleteConfirmModal
+          title="Confirm Delete"
+          description={`Are you sure you want to delete ${pendingDelete.first_name} ${pendingDelete.last_name}? This action cannot be undone.`}
+          loading={deleting}
+          onConfirm={handleDeleteConfirm}
+          onCancel={() => setPendingDelete(null)}
+        />
+      )}
     </div>
   )
 }
