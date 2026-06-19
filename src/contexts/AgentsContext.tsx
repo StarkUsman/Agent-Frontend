@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useRef, useState } from 'react'
+import { createContext, useContext, useEffect, useState } from 'react'
 import { listAgents, type ManagerAgent } from '../api/manager'
 
 interface AgentsContextValue {
@@ -11,15 +11,13 @@ interface AgentsContextValue {
 
 const AgentsContext = createContext<AgentsContextValue | null>(null)
 
-const POLL_MS = 30_000
-
 export const AgentsProvider = ({ children }: { children: React.ReactNode }) => {
   const [agents,  setAgents]  = useState<ManagerAgent[]>([])
   const [loading, setLoading] = useState(true)
   const [error,   setError]   = useState<string | null>(null)
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const load = async () => {
+    setLoading(true)
     try {
       const data = await listAgents()
       setAgents(data)
@@ -33,8 +31,6 @@ export const AgentsProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     load()
-    timerRef.current = setInterval(load, POLL_MS)
-    return () => { if (timerRef.current) clearInterval(timerRef.current) }
   }, [])
 
   const runningCount = agents.filter((a) => a.status === 'running').length

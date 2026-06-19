@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { MdAdd, MdChevronLeft, MdChevronRight, MdSearch } from 'react-icons/md'
+import { MdAdd, MdChevronLeft, MdChevronRight, MdSearch, MdRefresh } from 'react-icons/md'
 import Sidebar from '../components/dashboard/Sidebar'
 import UserTableRow from '../components/users/UserTableRow'
 import type { UserRowData } from '../components/users/UserTableRow'
@@ -9,7 +9,7 @@ import type { UsersPagination } from '../api/users'
 import { useCurrentUser } from '../contexts/CurrentUserContext'
 
 // ── Config ─────────────────────────────────────────────────────────────────
-const ITEMS_PER_PAGE = 6
+const ITEMS_PER_PAGE = 25
 
 const BASE_COLUMNS = [
   { label: 'User',         width: 'w-[30%]' },
@@ -28,12 +28,15 @@ const UsersPage = () => {
   const canManageUsers = hasPermission('users:manage')
   const COLUMNS = canManageUsers ? [...BASE_COLUMNS, ACTIONS_COLUMN] : BASE_COLUMNS
 
-  const [users, setUsers]           = useState<UserRowData[]>([])
-  const [pagination, setPagination] = useState<UsersPagination>({ total: 0, limit: ITEMS_PER_PAGE, page: 1, totalPages: 1 })
+  const [users, setUsers]             = useState<UserRowData[]>([])
+  const [pagination, setPagination]   = useState<UsersPagination>({ total: 0, limit: ITEMS_PER_PAGE, page: 1, totalPages: 1 })
   const [currentPage, setCurrentPage] = useState(1)
-  const [searchQuery, setSearchQuery] = useState('')
-  const [loading, setLoading]       = useState(true)
-  const [error, setError]           = useState<string | null>(null)
+  // searchInput: what the user is typing — does NOT trigger API calls
+  // appliedSearch: what was last submitted (Enter / search button) — drives the API
+  const [searchInput, setSearchInput]     = useState('')
+  const [appliedSearch, setAppliedSearch] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [error, setError]     = useState<string | null>(null)
 
   const load = useCallback(async (page: number, search: string) => {
     setLoading(true)
@@ -60,13 +63,22 @@ const UsersPage = () => {
     }
   }, [])
 
-  useEffect(() => {
-    load(currentPage, searchQuery)
-  }, [load, currentPage, searchQuery])
+  // Single fetch on mount
+  useEffect(() => { load(1, '') }, [load])
 
-  const handleSearch = (value: string) => {
-    setSearchQuery(value)
+  const submitSearch = () => {
+    setAppliedSearch(searchInput)
     setCurrentPage(1)
+    load(1, searchInput)
+  }
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page)
+    load(page, appliedSearch)
+  }
+
+  const handleRefresh = () => {
+    load(currentPage, appliedSearch)
   }
 
   const handleDelete = async (id: number) => {
@@ -75,7 +87,7 @@ const UsersPage = () => {
     if (!window.confirm(`Delete ${user.first_name} ${user.last_name}? This cannot be undone.`)) return
     try {
       await deleteUser(String(id))
-      load(currentPage, searchQuery)
+      load(currentPage, appliedSearch)
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Failed to delete user')
     }
@@ -101,31 +113,45 @@ const UsersPage = () => {
             </p>
           </div>
           <div className="flex items-center gap-3">
+            {/* Search — fires only on Enter or clicking the icon */}
             <div className="relative">
-              <MdSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 text-lg pointer-events-none" />
+              <button
+                onClick={submitSearch}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 text-lg hover:text-indigo-500 transition-colors cursor-pointer"
+                tabIndex={-1}
+                aria-label="Search"
+              >
+                <MdSearch />
+              </button>
               <input
                 type="text"
-                value={searchQuery}
-                onChange={(e) => handleSearch(e.target.value)}
-                placeholder="Search users..."
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && submitSearch()}
+                placeholder="Search users…"
                 className="
-                  w-56
-                  pl-9 pr-4 py-2
-                  text-sm
-                  rounded-xl
+                  w-56 pl-9 pr-4 py-2 text-sm rounded-xl
                   bg-slate-50 dark:bg-slate-900
                   text-slate-900 dark:text-slate-100
                   border border-slate-200 dark:border-slate-700
                   placeholder-slate-400 dark:placeholder-slate-500
-                  shadow-sm
-                  dark:shadow-md dark:shadow-black/40
-                  focus:outline-none
-                  focus:ring-2 focus:ring-indigo-500/40
-                  focus:border-indigo-500
+                  shadow-sm dark:shadow-md dark:shadow-black/40
+                  focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500
                   hover:border-slate-300 dark:hover:border-slate-600
                   transition-colors duration-200"
               />
             </div>
+
+            {/* Refresh */}
+            <button
+              onClick={handleRefresh}
+              disabled={loading}
+              title="Reload users"
+              className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
+            >
+              <MdRefresh className={`text-lg ${loading ? 'animate-spin' : ''}`} />
+            </button>
+
             {canManageUsers && (
               <button
                 onClick={() => navigate('/users/new')}
@@ -168,14 +194,17 @@ const UsersPage = () => {
                   ) : error ? (
                     <tr>
                       <td colSpan={COLUMNS.length} className="py-16 text-center text-sm text-red-500 dark:text-red-400">
-                        {error}
+                        {error}{' '}
+                        <button onClick={handleRefresh} className="font-semibold underline underline-offset-2 hover:text-red-600 cursor-pointer">
+                          Retry
+                        </button>
                       </td>
                     </tr>
                   ) : users.length === 0 ? (
                     <tr>
                       <td colSpan={COLUMNS.length} className="py-16 text-center text-sm text-slate-400 dark:text-slate-500">
-                        {searchQuery
-                          ? <>No users match <span className="font-semibold text-slate-600 dark:text-slate-300">"{searchQuery}"</span></>
+                        {appliedSearch
+                          ? <>No users match <span className="font-semibold text-slate-600 dark:text-slate-300">"{appliedSearch}"</span></>
                           : 'No users found.'}
                       </td>
                     </tr>
@@ -193,12 +222,12 @@ const UsersPage = () => {
               <p className="text-xs text-slate-400 dark:text-slate-500">
                 Showing <span className="font-semibold text-slate-600 dark:text-slate-300">{startItem}–{endItem}</span> of{' '}
                 <span className="font-semibold text-slate-600 dark:text-slate-300">{total}</span> users
-                {searchQuery && <span className="ml-1">for "{searchQuery}"</span>}
+                {appliedSearch && <span className="ml-1">for "{appliedSearch}"</span>}
               </p>
               <div className="flex items-center gap-1">
                 <button
-                  onClick={() => setCurrentPage((p) => p - 1)}
-                  disabled={safePage === 1}
+                  onClick={() => handlePageChange(safePage - 1)}
+                  disabled={safePage === 1 || loading}
                   className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-700 dark:hover:text-slate-300 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                 >
                   <MdChevronLeft className="text-lg" />
@@ -206,7 +235,8 @@ const UsersPage = () => {
                 {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
                   <button
                     key={page}
-                    onClick={() => setCurrentPage(page)}
+                    onClick={() => handlePageChange(page)}
+                    disabled={loading}
                     className={`w-7 h-7 rounded-lg text-xs font-semibold transition-colors ${
                       page === safePage ? 'text-white' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'
                     }`}
@@ -216,8 +246,8 @@ const UsersPage = () => {
                   </button>
                 ))}
                 <button
-                  onClick={() => setCurrentPage((p) => p + 1)}
-                  disabled={safePage === totalPages}
+                  onClick={() => handlePageChange(safePage + 1)}
+                  disabled={safePage === totalPages || loading}
                   className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-700 dark:hover:text-slate-300 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                 >
                   <MdChevronRight className="text-lg" />

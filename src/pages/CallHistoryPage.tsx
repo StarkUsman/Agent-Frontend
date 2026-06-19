@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from 'react'
-import { MdKeyboardArrowDown, MdSearch, MdChevronLeft, MdChevronRight } from 'react-icons/md'
+import { useState, useCallback } from 'react'
+import { MdKeyboardArrowDown, MdSearch, MdChevronLeft, MdChevronRight, MdRefresh } from 'react-icons/md'
 import Sidebar from '../components/dashboard/Sidebar'
 import CallTableRow from '../components/calls/CallTableRow'
 import CallDetailModal from '../components/calls/CallDetailModal'
@@ -65,46 +65,62 @@ const CallHistoryPage = () => {
   const [agentFilter,  setAgentFilter]  = useState('All agents')
   const [statusFilter, setStatusFilter] = useState('All results')
   const [dateFilter,   setDateFilter]   = useState('Today')
-  const [searchQuery,  setSearchQuery]  = useState('')
-  const [currentPage,  setCurrentPage]  = useState(1)
+  // searchInput: what the user types — never triggers a call
+  // appliedSearch: submitted via Enter / search icon — drives the API
+  const [searchInput,   setSearchInput]   = useState('')
+  const [appliedSearch, setAppliedSearch] = useState('')
+  const [currentPage,   setCurrentPage]   = useState(1)
 
-  const [response,      setResponse]      = useState<CallsResponse | null>(null)
-  const [loading,       setLoading]       = useState(true)
-  const [error,         setError]         = useState<string | null>(null)
-  const [selectedCall,  setSelectedCall]  = useState<ApiCallRecord | null>(null)
+  const [response,     setResponse]     = useState<CallsResponse | null>(null)
+  const [loading,      setLoading]      = useState(false)
+  const [error,        setError]        = useState<string | null>(null)
+  const [selectedCall, setSelectedCall] = useState<ApiCallRecord | null>(null)
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (
+    page: number,
+    search: string,
+    status: string,
+    agent: string,
+    date: string,
+  ) => {
     setLoading(true)
     setError(null)
     try {
-      const params: Parameters<typeof fetchCalls>[0] = {
-        page:  currentPage,
-        limit: DEFAULT_LIMIT,
-      }
-      if (statusFilter !== 'All results') params.status      = STATUS_MAP[statusFilter] ?? statusFilter.toLowerCase()
-      if (agentFilter  !== 'All agents')  params.agent_name  = agentFilter
-      if (searchQuery.trim())             params.call_id     = searchQuery.trim()
-      if (DATE_MAP[dateFilter])           params.date_filter = DATE_MAP[dateFilter]
-
-      const data = await fetchCalls(params)
-      setResponse(data)
+      const params: Parameters<typeof fetchCalls>[0] = { page, limit: DEFAULT_LIMIT }
+      if (status !== 'All results') params.status      = STATUS_MAP[status] ?? status.toLowerCase()
+      if (agent  !== 'All agents')  params.agent_name  = agent
+      if (search.trim())            params.call_id     = search.trim()
+      if (DATE_MAP[date])           params.date_filter = DATE_MAP[date]
+      setResponse(await fetchCalls(params))
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load calls')
     } finally {
       setLoading(false)
     }
-  }, [currentPage, statusFilter, agentFilter, searchQuery, dateFilter])
+  }, [])
 
-  useEffect(() => { load() }, [load])
-
-  const handleFilter = (setter: (v: string) => void) => (value: string) => {
+  const handleFilter = (setter: React.Dispatch<React.SetStateAction<string>>, value: string) => {
     setter(value)
-    setCurrentPage(1)
+    const newPage = 1
+    setCurrentPage(newPage)
+    load(newPage, appliedSearch, setter === setStatusFilter ? value : statusFilter,
+                                 setter === setAgentFilter  ? value : agentFilter,
+                                 setter === setDateFilter   ? value : dateFilter)
   }
 
-  const handleSearch = (value: string) => {
-    setSearchQuery(value)
+  const submitSearch = () => {
+    setAppliedSearch(searchInput)
     setCurrentPage(1)
+    load(1, searchInput, statusFilter, agentFilter, dateFilter)
+  }
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page)
+    load(page, appliedSearch, statusFilter, agentFilter, dateFilter)
+  }
+
+  const handleRefresh = () => {
+    load(currentPage, appliedSearch, statusFilter, agentFilter, dateFilter)
   }
 
   const calls      = response?.data       ?? []
@@ -119,43 +135,63 @@ const CallHistoryPage = () => {
       <main className="flex-1 flex flex-col overflow-hidden">
 
         {/* Top bar */}
-        <div className="px-8 pt-5 pb-4 bg-slate-50 dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 shrink-0">
-          <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">Call history</h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-            A record of every call handled by your agents.
-          </p>
+        <div className="flex items-center justify-between px-8 pt-5 pb-4 bg-slate-50 dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 shrink-0">
+          <div>
+            <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">Call history</h1>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+              A record of every call handled by your agents.
+            </p>
+          </div>
+          <button
+            onClick={handleRefresh}
+            disabled={loading}
+            title="Reload calls"
+            className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
+          >
+            <MdRefresh className={`text-lg ${loading ? 'animate-spin' : ''}`} />
+          </button>
         </div>
 
-        {/* Filters — static, never scrolls */}
+        {/* Filters */}
         <div className="px-8 py-4 bg-slate-50 dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 shrink-0 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <FilterSelect
               value={agentFilter}
               options={agentOptions}
-              onChange={handleFilter(setAgentFilter)}
+              onChange={(v) => handleFilter(setAgentFilter, v)}
               disabled={agentFilterDisabled}
               placeholder={agentFilterPlaceholder}
             />
-            <FilterSelect value={statusFilter} options={STATUS_OPTIONS} onChange={handleFilter(setStatusFilter)} />
-            <FilterSelect value={dateFilter}   options={DATE_OPTIONS}   onChange={handleFilter(setDateFilter)} />
+            <FilterSelect value={statusFilter} options={STATUS_OPTIONS} onChange={(v) => handleFilter(setStatusFilter, v)} />
+            <FilterSelect value={dateFilter}   options={DATE_OPTIONS}   onChange={(v) => handleFilter(setDateFilter, v)} />
           </div>
+
+          {/* Search — fires only on Enter or clicking the icon */}
           <div className="relative">
-            <MdSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 text-lg pointer-events-none" />
+            <button
+              onClick={submitSearch}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 text-lg hover:text-indigo-500 transition-colors cursor-pointer"
+              tabIndex={-1}
+              aria-label="Search"
+            >
+              <MdSearch />
+            </button>
             <input
               type="text"
-              value={searchQuery}
-              onChange={(e) => handleSearch(e.target.value)}
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && submitSearch()}
               placeholder="Paste call ID…"
               className="w-56 pl-9 pr-4 py-2 text-sm rounded-xl bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-slate-700 placeholder-slate-400 dark:placeholder-slate-500 shadow-sm dark:shadow-md dark:shadow-black/40 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 hover:border-slate-300 dark:hover:border-slate-600 transition-colors duration-200"
             />
           </div>
         </div>
 
-        {/* Table area — fills remaining height, table card is a flex column */}
+        {/* Table area */}
         <div className="flex-1 flex flex-col min-h-0 px-8 pt-5 pb-5">
           <div className="flex-1 flex flex-col min-h-0 bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-clip">
 
-            {/* Scrollable body — only this div scrolls */}
+            {/* Scrollable body */}
             <div className="flex-1 overflow-y-auto min-h-0">
               <table className="w-full">
                 <thead className="sticky top-0 z-10 bg-white dark:bg-slate-800">
@@ -177,7 +213,16 @@ const CallHistoryPage = () => {
                   ) : error ? (
                     <tr>
                       <td colSpan={COLUMNS.length} className="py-16 text-center text-sm text-red-500">
-                        {error}
+                        {error}{' '}
+                        <button onClick={handleRefresh} className="font-semibold underline underline-offset-2 hover:text-red-600 cursor-pointer">
+                          Retry
+                        </button>
+                      </td>
+                    </tr>
+                  ) : !response ? (
+                    <tr>
+                      <td colSpan={COLUMNS.length} className="py-16 text-center text-sm text-slate-400 dark:text-slate-500">
+                        Click ↻ to load calls.
                       </td>
                     </tr>
                   ) : calls.length > 0 ? (
@@ -203,7 +248,7 @@ const CallHistoryPage = () => {
               </table>
             </div>
 
-            {/* Pagination — always pinned at the bottom of the card */}
+            {/* Pagination */}
             <div className="shrink-0 flex items-center justify-between px-6 py-3 border-t border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800">
               <p className="text-xs text-slate-400 dark:text-slate-500">
                 Showing{' '}
@@ -213,8 +258,8 @@ const CallHistoryPage = () => {
               </p>
               <div className="flex items-center gap-1">
                 <button
-                  onClick={() => setCurrentPage((p) => p - 1)}
-                  disabled={currentPage === 1}
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1 || loading}
                   className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-700 dark:hover:text-slate-300 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                 >
                   <MdChevronLeft className="text-lg" />
@@ -222,7 +267,8 @@ const CallHistoryPage = () => {
                 {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map((page) => (
                   <button
                     key={page}
-                    onClick={() => setCurrentPage(page)}
+                    onClick={() => handlePageChange(page)}
+                    disabled={loading}
                     className={`w-7 h-7 rounded-lg text-xs font-semibold transition-colors ${
                       page === currentPage ? 'text-white' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'
                     }`}
@@ -232,8 +278,8 @@ const CallHistoryPage = () => {
                   </button>
                 ))}
                 <button
-                  onClick={() => setCurrentPage((p) => p + 1)}
-                  disabled={currentPage === pagination.totalPages}
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === pagination.totalPages || loading}
                   className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-700 dark:hover:text-slate-300 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                 >
                   <MdChevronRight className="text-lg" />
