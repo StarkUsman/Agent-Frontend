@@ -4,8 +4,8 @@ import { MdCheck, MdOutlineFileUpload, MdKeyboardArrowDown } from 'react-icons/m
 import { HiEye, HiEyeOff } from 'react-icons/hi'
 import Sidebar from '../components/dashboard/Sidebar'
 import UserAvatar from '../components/users/UserAvatar'
-import { USERS } from '../data/users'
-import type { UserRole, UserRowData } from '../components/users/UserTableRow'
+import { fetchUser, createUser, updateUser, toUserRole } from '../api/users'
+import type { UserRole } from '../components/users/UserTableRow'
 
 const inputClass =
   'w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 text-sm ' +
@@ -41,25 +41,29 @@ const CreateUserPage = () => {
   const navigate = useNavigate()
   const { id } = useParams<{ id: string }>()
   const isEdit = Boolean(id)
-  const editingUser = isEdit ? USERS.find((u) => u.id === Number(id)) ?? null : null
 
-  const [draft, setDraft] = useState<UserDraft>(INITIAL_DRAFT)
+  const [draft, setDraft]           = useState<UserDraft>(INITIAL_DRAFT)
   const [showPassword, setShowPassword] = useState(false)
+  const [saving, setSaving]         = useState(false)
+  const [loadError, setLoadError]   = useState<string | null>(null)
 
   useEffect(() => {
-    if (editingUser) {
-      setDraft({
-        firstName: editingUser.first_name,
-        lastName: editingUser.last_name,
-        username: editingUser.username,
-        email: editingUser.email,
-        password: '',
-        role: editingUser.role,
-        profilePic: editingUser.profile_pic,
-        organisationName: editingUser.organisation_name,
+    if (!id) return
+    fetchUser(id)
+      .then((u) => {
+        setDraft({
+          firstName:        u.first_name,
+          lastName:         u.last_name,
+          username:         u.username,
+          email:            u.email,
+          password:         '',
+          role:             toUserRole(u.role),
+          profilePic:       u.profile_pic ?? '',
+          organisationName: u.organization_name,
+        })
       })
-    }
-  }, [editingUser])
+      .catch((err) => setLoadError(err instanceof Error ? err.message : 'Failed to load user'))
+  }, [id])
 
   const updateDraft = (patch: Partial<UserDraft>) =>
     setDraft((prev) => ({ ...prev, ...patch }))
@@ -80,37 +84,33 @@ const CreateUserPage = () => {
     draft.organisationName.trim().length > 0 &&
     (isEdit || draft.password.trim().length > 0)
 
-  const handleSave = () => {
-    const fields = {
-      first_name: draft.firstName.trim(),
-      last_name: draft.lastName.trim(),
-      username: draft.username.trim(),
-      email: draft.email.trim(),
-      role: draft.role,
-      profile_pic: draft.profilePic,
-      organisation_name: draft.organisationName.trim(),
-    }
-
-    if (isEdit && editingUser) {
-      const updated: UserRowData = {
-        ...editingUser,
-        ...fields,
-        password: draft.password ? draft.password : editingUser.password,
+  const handleSave = async () => {
+    if (!canSave || saving) return
+    setSaving(true)
+    try {
+      const payload = {
+        first_name:        draft.firstName.trim(),
+        last_name:         draft.lastName.trim(),
+        username:          draft.username.trim(),
+        email:             draft.email.trim(),
+        role:              draft.role.toUpperCase(),
+        organization_name: draft.organisationName.trim(),
+        profile_pic:       draft.profilePic || undefined,
+        ...(draft.password ? { password: draft.password } : {}),
       }
-      console.log('[User] updated:', updated)
-      const idx = USERS.findIndex((u) => u.id === editingUser.id)
-      USERS[idx] = updated
-    } else {
-      const newUser: UserRowData = {
-        id: USERS.length ? Math.max(...USERS.map((u) => u.id)) + 1 : 1,
-        ...fields,
-        password: draft.password,
-      }
-      console.log('[User] created:', newUser)
-      USERS.push(newUser)
-    }
 
-    navigate('/users')
+      if (isEdit && id) {
+        await updateUser(id, payload)
+      } else {
+        await createUser({ ...payload, password: draft.password })
+      }
+
+      navigate('/users')
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to save user')
+    } finally {
+      setSaving(false)
+    }
   }
 
   return (
@@ -139,18 +139,21 @@ const CreateUserPage = () => {
             </button>
             <button
               onClick={handleSave}
-              disabled={!canSave}
+              disabled={!canSave || saving}
               className="flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-semibold text-white disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 transition-all cursor-pointer"
               style={{ backgroundColor: '#6366f1' }}
             >
               <MdCheck className="text-base" />
-              {isEdit ? 'Save changes' : 'Create user'}
+              {saving ? 'Saving…' : isEdit ? 'Save changes' : 'Create user'}
             </button>
           </div>
         </div>
 
         {/* Form */}
         <div className="flex-1 overflow-y-auto px-8 py-5 bg-slate-50 dark:bg-slate-900">
+          {loadError ? (
+            <p className="text-sm text-red-500 dark:text-red-400 mt-4">{loadError}</p>
+          ) : (
           <div className="max-w-xxl">
             <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm p-8">
               <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">Account details</h2>
@@ -161,7 +164,7 @@ const CreateUserPage = () => {
               {/* Profile photo */}
               <div className="mb-6 flex items-center gap-4">
                 <UserAvatar
-                  id={editingUser?.id ?? 0}
+                  id={id ? parseInt(id, 10) : 0}
                   firstName={draft.firstName || '?'}
                   lastName={draft.lastName || ''}
                   profilePic={draft.profilePic}
@@ -301,6 +304,7 @@ const CreateUserPage = () => {
               </div>
             </div>
           </div>
+          )}
         </div>
 
       </main>

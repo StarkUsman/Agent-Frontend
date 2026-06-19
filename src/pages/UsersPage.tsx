@@ -1,9 +1,11 @@
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { MdAdd, MdChevronLeft, MdChevronRight, MdSearch } from 'react-icons/md'
 import Sidebar from '../components/dashboard/Sidebar'
 import UserTableRow from '../components/users/UserTableRow'
-import { USERS } from '../data/users'
+import type { UserRowData } from '../components/users/UserTableRow'
+import { fetchUsers, deleteUser, toUserRole } from '../api/users'
+import type { UsersPagination } from '../api/users'
 import { useCurrentUser } from '../contexts/CurrentUserContext'
 
 // ── Config ─────────────────────────────────────────────────────────────────
@@ -25,44 +27,64 @@ const UsersPage = () => {
   const { hasPermission } = useCurrentUser()
   const canManageUsers = hasPermission('users:manage')
   const COLUMNS = canManageUsers ? [...BASE_COLUMNS, ACTIONS_COLUMN] : BASE_COLUMNS
-  const [users, setUsers] = useState(() => [...USERS])
+
+  const [users, setUsers]           = useState<UserRowData[]>([])
+  const [pagination, setPagination] = useState<UsersPagination>({ total: 0, limit: ITEMS_PER_PAGE, page: 1, totalPages: 1 })
   const [currentPage, setCurrentPage] = useState(1)
   const [searchQuery, setSearchQuery] = useState('')
+  const [loading, setLoading]       = useState(true)
+  const [error, setError]           = useState<string | null>(null)
 
-  const q       = searchQuery.trim().toLowerCase()
-  const filtered = q
-    ? users.filter((u) =>
-        u.first_name.toLowerCase().includes(q) ||
-        u.last_name.toLowerCase().includes(q) ||
-        u.username.toLowerCase().includes(q) ||
-        u.email.toLowerCase().includes(q) ||
-        u.organisation_name.toLowerCase().includes(q)
-      )
-    : users
-  const totalPages = Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE))
-  const safePage   = Math.min(currentPage, totalPages)
-  const startIndex = (safePage - 1) * ITEMS_PER_PAGE
-  const paginated  = filtered.slice(startIndex, startIndex + ITEMS_PER_PAGE)
-  const startItem  = filtered.length === 0 ? 0 : startIndex + 1
-  const endItem    = Math.min(startIndex + ITEMS_PER_PAGE, filtered.length)
+  const load = useCallback(async (page: number, search: string) => {
+    setLoading(true)
+    setError(null)
+    try {
+      const res = await fetchUsers({ page, limit: ITEMS_PER_PAGE, search: search || undefined })
+      const mapped: UserRowData[] = res.data.map((u, i) => ({
+        id:                parseInt(u.user_id, 10) || (page - 1) * ITEMS_PER_PAGE + i + 1,
+        first_name:        u.first_name,
+        last_name:         u.last_name,
+        username:          u.username,
+        email:             u.email,
+        password:          '',
+        role:              toUserRole(u.role),
+        profile_pic:       u.profile_pic ?? '',
+        organisation_name: u.organization_name,
+      }))
+      setUsers(mapped)
+      setPagination(res.pagination)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load users')
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    load(currentPage, searchQuery)
+  }, [load, currentPage, searchQuery])
 
   const handleSearch = (value: string) => {
     setSearchQuery(value)
     setCurrentPage(1)
   }
 
-  const handleDelete = (id: number) => {
+  const handleDelete = async (id: number) => {
     const user = users.find((u) => u.id === id)
     if (!user) return
     if (!window.confirm(`Delete ${user.first_name} ${user.last_name}? This cannot be undone.`)) return
-
-    setUsers((prev) => {
-      const next = prev.filter((u) => u.id !== id)
-      USERS.length = 0
-      USERS.push(...next)
-      return next
-    })
+    try {
+      await deleteUser(String(id))
+      load(currentPage, searchQuery)
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to delete user')
+    }
   }
+
+  const { total, totalPages } = pagination
+  const safePage  = Math.min(currentPage, Math.max(1, totalPages))
+  const startItem = total === 0 ? 0 : (safePage - 1) * ITEMS_PER_PAGE + 1
+  const endItem   = Math.min(safePage * ITEMS_PER_PAGE, total)
 
   return (
     <div className="flex h-screen bg-slate-50 dark:bg-slate-900 overflow-hidden">
@@ -86,30 +108,22 @@ const UsersPage = () => {
                 value={searchQuery}
                 onChange={(e) => handleSearch(e.target.value)}
                 placeholder="Search users..."
-                 className="
-                   w-56
+                className="
+                  w-56
                   pl-9 pr-4 py-2
                   text-sm
-
-                    rounded-xl
-
-                 bg-slate-50 dark:bg-slate-900
-                 text-slate-900 dark:text-slate-100
-
-                   border border-slate-200 dark:border-slate-700
-
-                   placeholder-slate-400 dark:placeholder-slate-500
-
-                    shadow-sm
-                    dark:shadow-md dark:shadow-black/40
-
-                    focus:outline-none
-                     focus:ring-2 focus:ring-indigo-500/40
-                     focus:border-indigo-500
-
-                     hover:border-slate-300 dark:hover:border-slate-600
-
-                       transition-colors duration-200"
+                  rounded-xl
+                  bg-slate-50 dark:bg-slate-900
+                  text-slate-900 dark:text-slate-100
+                  border border-slate-200 dark:border-slate-700
+                  placeholder-slate-400 dark:placeholder-slate-500
+                  shadow-sm
+                  dark:shadow-md dark:shadow-black/40
+                  focus:outline-none
+                  focus:ring-2 focus:ring-indigo-500/40
+                  focus:border-indigo-500
+                  hover:border-slate-300 dark:hover:border-slate-600
+                  transition-colors duration-200"
               />
             </div>
             {canManageUsers && (
@@ -145,14 +159,28 @@ const UsersPage = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {paginated.length === 0 ? (
+                  {loading ? (
                     <tr>
                       <td colSpan={COLUMNS.length} className="py-16 text-center text-sm text-slate-400 dark:text-slate-500">
-                        No users match <span className="font-semibold text-slate-600 dark:text-slate-300">"{searchQuery}"</span>
+                        Loading users…
+                      </td>
+                    </tr>
+                  ) : error ? (
+                    <tr>
+                      <td colSpan={COLUMNS.length} className="py-16 text-center text-sm text-red-500 dark:text-red-400">
+                        {error}
+                      </td>
+                    </tr>
+                  ) : users.length === 0 ? (
+                    <tr>
+                      <td colSpan={COLUMNS.length} className="py-16 text-center text-sm text-slate-400 dark:text-slate-500">
+                        {searchQuery
+                          ? <>No users match <span className="font-semibold text-slate-600 dark:text-slate-300">"{searchQuery}"</span></>
+                          : 'No users found.'}
                       </td>
                     </tr>
                   ) : (
-                    paginated.map((user) => (
+                    users.map((user) => (
                       <UserTableRow key={user.id} {...user} onDelete={handleDelete} showActions={canManageUsers} />
                     ))
                   )}
@@ -164,8 +192,8 @@ const UsersPage = () => {
             <div className="shrink-0 flex items-center justify-between px-6 py-3 border-t border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800">
               <p className="text-xs text-slate-400 dark:text-slate-500">
                 Showing <span className="font-semibold text-slate-600 dark:text-slate-300">{startItem}–{endItem}</span> of{' '}
-                <span className="font-semibold text-slate-600 dark:text-slate-300">{filtered.length}</span> users
-                {q && <span className="ml-1">for "{searchQuery}"</span>}
+                <span className="font-semibold text-slate-600 dark:text-slate-300">{total}</span> users
+                {searchQuery && <span className="ml-1">for "{searchQuery}"</span>}
               </p>
               <div className="flex items-center gap-1">
                 <button
