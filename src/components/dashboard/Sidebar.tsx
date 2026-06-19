@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { NavLink, useNavigate } from 'react-router-dom'
+import { NavLink } from 'react-router-dom'
 import {
   MdOutlineDashboard, MdOutlineSmartToy, MdOutlineHistory,
   MdOutlineBarChart, MdOutlineSettings, MdOutlinePeopleAlt,
@@ -12,6 +12,7 @@ import { useCurrentUser } from '../../contexts/CurrentUserContext'
 import { useAgents } from '../../contexts/AgentsContext'
 import type { Permission } from '../../lib/permissions'
 import UserAvatar from '../users/UserAvatar'
+import LogoutModal from '../auth/LogoutModal'
 import favIcon from '../../assets/favIcon.png'
 
 // ── Nav item definition ────────────────────────────────────────────────────
@@ -34,14 +35,12 @@ const NAV_ITEMS: NavItem[] = [
 
 // ── Sidebar ────────────────────────────────────────────────────────────────
 const Sidebar = () => {
-  const navigate = useNavigate()
   const { theme, toggleTheme } = useTheme()
-  const { user, hasPermission, logout } = useCurrentUser()
+  const { user, hasPermission } = useCurrentUser()
   const { runningCount } = useAgents()
 
-  const [collapsed, setCollapsed] = useState(() =>
-    localStorage.getItem('sidebar-collapsed') === 'true'
-  )
+  const [collapsed,       setCollapsed]       = useState(() => localStorage.getItem('sidebar-collapsed') === 'true')
+  const [showLogoutModal, setShowLogoutModal] = useState(false)
 
   const toggle = () =>
     setCollapsed((prev) => {
@@ -51,14 +50,8 @@ const Sidebar = () => {
 
   const navItems = NAV_ITEMS.filter((item) => !item.permission || hasPermission(item.permission))
 
-  const handleLogout = () => {
-    localStorage.removeItem('access_token')
-    localStorage.removeItem('refresh_token')
-    logout()
-    navigate('/')
-  }
-
   return (
+    <>
     <aside
       className={`${collapsed ? 'w-16' : 'w-60'} h-screen bg-white dark:bg-slate-900 border-r border-slate-100 dark:border-slate-800 flex flex-col shrink-0 transition-all duration-300 ease-in-out overflow-hidden`}
     >
@@ -170,7 +163,7 @@ const Sidebar = () => {
                 <MdOutlineSettings className="text-sm" />
               </button>
               <button
-                onClick={handleLogout}
+                onClick={() => setShowLogoutModal(true)}
                 title="Sign out"
                 className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950 rounded-lg transition-colors cursor-pointer"
               >
@@ -202,7 +195,7 @@ const Sidebar = () => {
                 <MdOutlineSettings className="text-base" />
               </button>
               <button
-                onClick={handleLogout}
+                onClick={() => setShowLogoutModal(true)}
                 title="Sign out"
                 className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950 rounded-lg transition-colors cursor-pointer"
               >
@@ -214,7 +207,11 @@ const Sidebar = () => {
       </div>
 
     </aside>
+
+    {showLogoutModal && <LogoutModal onClose={() => setShowLogoutModal(false)} />}
+    </>
   )
 }
+
 
 export default Sidebar

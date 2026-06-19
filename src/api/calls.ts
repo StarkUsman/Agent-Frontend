@@ -1,14 +1,12 @@
-const BASE_URL = (
-  (import.meta.env.VITE_CALLS_URL as string | undefined) ?? 'http://localhost:8790'
-).replace(/\/+$/, '')
+import { authRequest } from './client'
 
 export interface ApiCallRecord {
   call_id:           string
   session_id:        string
   agent_id:          string
   agent_name:        string
-  started_at:        string // ISO 8601
-  ended_at:          string // ISO 8601
+  started_at:        string
+  ended_at:          string
   duration_seconds:  number
   status:            string
   last_node:         string
@@ -20,7 +18,7 @@ export interface ApiCallRecord {
   avg_llm_ttfb_ms:   number
   avg_tts_ttfb_ms:   number
   error:             string | null
-  created_at:        string // ISO 8601
+  created_at:        string
 }
 
 export interface CallsPagination {
@@ -53,14 +51,5 @@ export async function fetchCalls(params: CallsParams): Promise<CallsResponse> {
   if (params.call_id)     qs.set('call_id',     params.call_id)
   if (params.date_filter) qs.set('date_filter', params.date_filter)
 
-  const res = await fetch(`${BASE_URL}/api/call?${qs}`)
-  if (!res.ok) {
-    let message = `${res.status} ${res.statusText}`
-    try {
-      const body = await res.json()
-      if (body?.error) message = body.error
-    } catch { /* non-JSON body */ }
-    throw new Error(message)
-  }
-  return res.json() as Promise<CallsResponse>
+  return authRequest<CallsResponse>(`/api/call?${qs}`)
 }

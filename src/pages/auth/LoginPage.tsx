@@ -8,7 +8,6 @@ import { BsCheckCircleFill } from 'react-icons/bs'
 import { Sun, Moon } from 'lucide-react'
 import { useTheme } from '../../contexts/ThemeContext'
 import { useCurrentUser } from '../../contexts/CurrentUserContext'
-import { USERS } from '../../data/users'
 
 const FEATURES = [
   'Manage your creative projects in one place',
@@ -24,7 +23,7 @@ const LoginPage = () => {
   const [error, setError] = useState('')
   const navigate = useNavigate()
   const { theme, toggleTheme } = useTheme()
-  const { loginAs } = useCurrentUser()
+  const { login } = useCurrentUser()
 
   const handleLogin = async (e: { preventDefault(): void }) => {
     e.preventDefault()
@@ -36,21 +35,14 @@ const LoginPage = () => {
     }
 
     setIsLoading(true)
-
-    const match = USERS.find(
-      (u) => u.email.toLowerCase() === email.trim().toLowerCase() && u.password === password
-    )
-
-    if (!match) {
-      setError('Invalid email or password. Please try again.')
+    try {
+      await login(email.trim(), password)
+      navigate('/dashboard')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Invalid email or password.')
+    } finally {
       setIsLoading(false)
-      return
     }
-
-    localStorage.setItem('access_token', `local-${match.id}`)
-    localStorage.setItem('refresh_token', `local-${match.id}`)
-    loginAs(email)
-    navigate('/dashboard')
   }
 
   return (
@@ -244,19 +236,6 @@ const LoginPage = () => {
               ) : 'Sign in'}
             </button>
           </form>
-
-          {/* Demo credentials hint */}
-          <div className="mt-4 px-4 py-3 rounded-lg border border-dashed border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800">
-            <p className="text-xs text-gray-400 dark:text-slate-500 font-medium mb-0.5">Demo credentials</p>
-            <p className="text-xs text-gray-500 dark:text-slate-400">
-              Email: <span className="font-mono text-gray-700 dark:text-slate-300">sara.ahmed@octavebytes.com</span>
-              &nbsp;·&nbsp;
-              Password: <span className="font-mono text-gray-700 dark:text-slate-300">changeme</span>
-            </p>
-            <p className="text-xs text-gray-400 dark:text-slate-500 mt-1">
-              Or sign in as any user from the Users page (password: <span className="font-mono">changeme</span>) to see their role's access.
-            </p>
-          </div>
 
           {/* Divider */}
           <div className="flex items-center gap-3 my-6">

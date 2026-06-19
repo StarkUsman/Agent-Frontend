@@ -1,56 +1,78 @@
-import { createContext, useContext, useEffect, useState } from 'react'
-import { USERS } from '../data/users'
-import type { UserRowData } from '../components/users/UserTableRow'
+import { createContext, useContext, useState } from 'react'
+import { apiLogin } from '../api/auth'
+import type { ApiAuthUser } from '../api/auth'
+import { setAccessToken, clearAuthStorage } from '../api/client'
+import { toUserRole } from '../api/users'
 import { ROLE_PERMISSIONS, type Permission } from '../lib/permissions'
+import type { UserRole } from '../components/users/UserTableRow'
 
-export type CurrentUser = Omit<UserRowData, 'password'>
-
-const stripPassword = (user: UserRowData): CurrentUser => {
-  const { password, ...rest } = user
-  return rest
+export interface CurrentUser {
+  id:                number
+  first_name:        string
+  last_name:         string
+  username:          string
+  email:             string
+  role:              UserRole
+  profile_pic:       string
+  organisation_name: string
 }
 
-const DEFAULT_USER: CurrentUser = stripPassword(USERS[0])
-
 interface CurrentUserContextValue {
-  user: CurrentUser
+  user:          CurrentUser
   hasPermission: (permission: Permission) => boolean
-  loginAs: (email: string) => void
-  logout: () => void
+  login:         (email: string, password: string) => Promise<void>
+  clearSession:  () => void
+}
+
+const GUEST: CurrentUser = {
+  id: 0, first_name: '', last_name: '', username: '',
+  email: '', role: 'Viewer', profile_pic: '', organisation_name: '',
+}
+
+function fromApiUser(u: ApiAuthUser): CurrentUser {
+  return {
+    id:                parseInt(u.user_id, 10) || 0,
+    first_name:        u.first_name,
+    last_name:         u.last_name,
+    username:          u.username,
+    email:             u.email,
+    role:              toUserRole(u.role),
+    profile_pic:       u.profile_pic ?? '',
+    organisation_name: u.organization_name,
+  }
+}
+
+function loadStoredUser(): CurrentUser {
+  try {
+    const raw = localStorage.getItem('current_user')
+    if (raw) return JSON.parse(raw) as CurrentUser
+  } catch { /* ignore */ }
+  return GUEST
 }
 
 const CurrentUserContext = createContext<CurrentUserContextValue | null>(null)
 
-const getInitialUser = (): CurrentUser => {
-  const stored = localStorage.getItem('current_user')
-  if (stored) {
-    try {
-      return JSON.parse(stored) as CurrentUser
-    } catch {
-      // fall through to default
-    }
-  }
-  return DEFAULT_USER
-}
-
 export const CurrentUserProvider = ({ children }: { children: React.ReactNode }) => {
-  const [user, setUser] = useState<CurrentUser>(getInitialUser)
+  const [user, setUser] = useState<CurrentUser>(loadStoredUser)
 
-  useEffect(() => {
-    localStorage.setItem('current_user', JSON.stringify(user))
-  }, [user])
-
-  const loginAs = (email: string) => {
-    const match = USERS.find((u) => u.email.toLowerCase() === email.trim().toLowerCase())
-    setUser(stripPassword(match ?? USERS[0]))
+  const login = async (email: string, password: string): Promise<void> => {
+    const res = await apiLogin(email, password)
+    setAccessToken(res.access_token)
+    const currentUser = fromApiUser(res.user)
+    localStorage.setItem('current_user', JSON.stringify(currentUser))
+    setUser(currentUser)
   }
 
-  const logout = () => setUser(DEFAULT_USER)
+  const clearSession = () => {
+    clearAuthStorage()
+    setUser(GUEST)
+  }
 
-  const hasPermission = (permission: Permission) => ROLE_PERMISSIONS[user.role].includes(permission)
+  const hasPermission = (permission: Permission) =>
+    ROLE_PERMISSIONS[user.role]?.includes(permission) ?? false
 
   return (
-    <CurrentUserContext.Provider value={{ user, hasPermission, loginAs, logout }}>
+    <CurrentUserContext.Provider value={{ user, hasPermission, login, clearSession }}>
       {children}
     </CurrentUserContext.Provider>
   )
@@ -58,6 +80,6 @@ export const CurrentUserProvider = ({ children }: { children: React.ReactNode })
 
 export const useCurrentUser = () => {
   const ctx = useContext(CurrentUserContext)
-  if (!ctx) throw new Error('useCurrentUser must be used inside CurrentUserProvider')
+  if (!ctx) throw new Error('useCurrentUser must be inside CurrentUserProvider')
   return ctx
 }

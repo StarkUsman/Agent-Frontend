@@ -1,8 +1,5 @@
+import { authRequest } from './client'
 import type { UserRole } from '../components/users/UserTableRow'
-
-const BASE_URL = (
-  (import.meta.env.VITE_CALLS_URL as string | undefined) ?? 'http://localhost:8790'
-).replace(/\/+$/, '')
 
 export interface ApiUser {
   user_id:           string
@@ -52,49 +49,32 @@ export function toUserRole(raw: string): UserRole {
   return valid.includes(title as UserRole) ? (title as UserRole) : 'Viewer'
 }
 
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${BASE_URL}${path}`, {
-    headers: { 'Content-Type': 'application/json' },
-    ...init,
-  })
-  if (!res.ok) {
-    let message = `${res.status} ${res.statusText}`
-    try {
-      const body = await res.json()
-      if (body?.error) message = body.error
-    } catch { /* non-JSON body */ }
-    throw new Error(message)
-  }
-  if (res.status === 204) return undefined as T
-  return res.json() as Promise<T>
-}
-
-export async function fetchUsers(params: UsersParams): Promise<UsersResponse> {
+export function fetchUsers(params: UsersParams): Promise<UsersResponse> {
   const qs = new URLSearchParams()
   qs.set('page',  String(params.page))
   qs.set('limit', String(params.limit))
   if (params.search) qs.set('search', params.search)
-  return request<UsersResponse>(`/api/users?${qs}`)
+  return authRequest<UsersResponse>(`/api/users?${qs}`)
 }
 
-export async function fetchUser(id: string): Promise<ApiUser> {
-  return request<ApiUser>(`/api/users/${id}`)
+export function fetchUser(id: string): Promise<ApiUser> {
+  return authRequest<ApiUser>(`/api/users/${id}`)
 }
 
-export async function createUser(payload: UserPayload): Promise<ApiUser> {
-  return request<ApiUser>('/api/users', {
+export function createUser(payload: UserPayload): Promise<ApiUser> {
+  return authRequest<ApiUser>('/api/users', {
     method: 'POST',
-    body: JSON.stringify(payload),
+    body:   JSON.stringify(payload),
   })
 }
 
-export async function updateUser(id: string, payload: Partial<UserPayload>): Promise<ApiUser> {
-  return request<ApiUser>(`/api/users/${id}`, {
+export function updateUser(id: string, payload: Partial<UserPayload>): Promise<ApiUser> {
+  return authRequest<ApiUser>(`/api/users/${id}`, {
     method: 'PATCH',
-    body: JSON.stringify(payload),
+    body:   JSON.stringify(payload),
   })
 }
 
-export async function deleteUser(id: string): Promise<void> {
-  return request<void>(`/api/users/${id}`, { method: 'DELETE' })
+export function deleteUser(id: string): Promise<void> {
+  return authRequest<void>(`/api/users/${id}`, { method: 'DELETE' })
 }
