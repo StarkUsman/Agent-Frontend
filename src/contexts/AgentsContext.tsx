@@ -1,17 +1,25 @@
 import { createContext, useContext, useEffect, useState, useCallback } from 'react'
 import { listAgents, type ManagerAgent, type AgentPagination } from '../api/manager'
 
+interface AgentFilters {
+  search: string
+  status: string  // '' | 'running' | 'inactive'
+}
+
 interface AgentsContextValue {
   agents:       ManagerAgent[]
   runningCount: number
   loading:      boolean
   error:        string | null
   pagination:   AgentPagination
+  filters:      AgentFilters
   setPage:      (page: number) => void
+  setFilters:   (filters: Partial<AgentFilters>) => void
   refresh:      () => void
 }
 
 const DEFAULT_PAGINATION: AgentPagination = { total: 0, limit: 25, page: 1, totalPages: 1 }
+const DEFAULT_FILTERS: AgentFilters = { search: '', status: '' }
 
 const AgentsContext = createContext<AgentsContextValue | null>(null)
 
@@ -21,11 +29,12 @@ export const AgentsProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading,    setLoading]    = useState(true)
   const [error,      setError]      = useState<string | null>(null)
   const [page,       setPageState]  = useState(1)
+  const [filters,    setFiltersState] = useState<AgentFilters>(DEFAULT_FILTERS)
 
-  const load = useCallback(async (targetPage: number) => {
+  const load = useCallback(async (targetPage: number, f: AgentFilters) => {
     setLoading(true)
     try {
-      const res = await listAgents(targetPage, DEFAULT_PAGINATION.limit)
+      const res = await listAgents(targetPage, DEFAULT_PAGINATION.limit, f.search, f.status)
       setAgents(res.data)
       setPagination(res.pagination)
       setError(null)
@@ -37,16 +46,22 @@ export const AgentsProvider = ({ children }: { children: React.ReactNode }) => {
   }, [])
 
   useEffect(() => {
-    load(page)
-  }, [page, load])
+    load(page, filters)
+  }, [page, filters, load])
 
   const setPage = (p: number) => setPageState(p)
-  const refresh = () => load(page)
+
+  const setFilters = (partial: Partial<AgentFilters>) => {
+    setFiltersState((prev) => ({ ...prev, ...partial }))
+    setPageState(1)
+  }
+
+  const refresh = () => load(page, filters)
 
   const runningCount = agents.filter((a) => a.status === 'running').length
 
   return (
-    <AgentsContext.Provider value={{ agents, runningCount, loading, error, pagination, setPage, refresh }}>
+    <AgentsContext.Provider value={{ agents, runningCount, loading, error, pagination, filters, setPage, setFilters, refresh }}>
       {children}
     </AgentsContext.Provider>
   )

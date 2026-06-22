@@ -92,8 +92,16 @@ export interface AgentListResponse {
   pagination: AgentPagination;
 }
 
-export function listAgents(page = 1, limit = 25): Promise<AgentListResponse> {
-  return requestList<AgentListResponse>(`/api/agents?page=${page}&limit=${limit}`);
+export function listAgents(
+  page = 1,
+  limit = 25,
+  search?: string,
+  status?: string,
+): Promise<AgentListResponse> {
+  const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+  if (search?.trim()) params.set("name", search.trim());
+  if (status)         params.set("status", status);
+  return requestList<AgentListResponse>(`/api/agents?${params.toString()}`);
 }
 
 export function getAgent(id: string): Promise<AgentDetail> {

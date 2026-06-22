@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { MdAdd, MdChevronLeft, MdChevronRight, MdSearch, MdRefresh } from 'react-icons/md'
+import { MdAdd, MdChevronLeft, MdChevronRight, MdSearch, MdRefresh, MdKeyboardArrowDown } from 'react-icons/md'
 import Sidebar from '../components/dashboard/Sidebar'
 import AgentTableRow, { type AgentRowData } from '../components/agents/AgentTableRow'
 import {
@@ -12,62 +12,93 @@ import {
 import { useCurrentUser } from '../contexts/CurrentUserContext'
 import { useAgents } from '../contexts/AgentsContext'
 
-// ── Helpers ─────────────────────────────────────────────────────────────────
-const toRow = (a: ManagerAgent): AgentRowData => ({
-  id: a.id,
-  name: a.name,
-  description: a.config?.OPENAI_MODEL ?? `Port ${a.port}`,
-  calls: 0,
-  avgTtfb: null,
-  interruptions: null,
-  clientUrl: agentClientUrl(a.port),
-  status: a.status === 'running' ? 'Active' : 'Inactive',
-})
+// ── Constants ────────────────────────────────────────────────────────────────
+const STATUS_OPTIONS = ['All status', 'Active', 'Inactive']
+const STATUS_MAP: Record<string, string> = { 'Active': 'running', 'Inactive': 'inactive' }
 
 const COLUMNS = [
-  { label: 'Agent name', width: 'w-[36%]' },
-  { label: 'URL', width: 'w-[18%]' },
-  { label: 'Calls', width: 'w-[7%]' },
-  { label: 'Avg TTFB', width: 'w-[9%]' },
-  { label: 'Interruptions', width: 'w-[9%]' },
-  { label: 'Conversation flow', width: 'w-[12%]' },
-  { label: 'Status', width: 'w-[9%]' },
+  { label: 'Agent name',       width: 'w-[36%]' },
+  { label: 'URL',              width: 'w-[18%]' },
+  { label: 'Calls',            width: 'w-[7%]'  },
+  { label: 'Avg TTFB',         width: 'w-[9%]'  },
+  { label: 'Interruptions',    width: 'w-[9%]'  },
+  { label: 'Conversation flow',width: 'w-[12%]' },
+  { label: 'Status',           width: 'w-[9%]'  },
 ]
 
-// ── Page ───────────────────────────────────────────────────────────────────
+// ── Filter dropdown (same pattern as CallHistoryPage) ─────────────────────
+interface FilterSelectProps {
+  value:    string
+  options:  string[]
+  onChange: (val: string) => void
+  disabled?: boolean
+}
+
+const FilterSelect = ({ value, options, onChange, disabled }: FilterSelectProps) => (
+  <div className="relative">
+    <select
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      disabled={disabled}
+      className={`appearance-none text-sm border rounded-lg pl-3 pr-8 py-2 transition-colors
+        ${disabled
+          ? 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-slate-400 dark:text-slate-500 cursor-not-allowed'
+          : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 cursor-pointer'
+        }`}
+    >
+      {options.map((opt) => <option key={opt} value={opt}>{opt}</option>)}
+    </select>
+    <MdKeyboardArrowDown className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 pointer-events-none text-lg" />
+  </div>
+)
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+const toRow = (a: ManagerAgent): AgentRowData => ({
+  id:           a.id,
+  name:         a.name,
+  description:  a.config?.OPENAI_MODEL ?? `Port ${a.port}`,
+  calls:        0,
+  avgTtfb:      null,
+  interruptions:null,
+  clientUrl:    agentClientUrl(a.port),
+  status:       a.status === 'running' ? 'Active' : 'Inactive',
+})
+
+// ── Page ─────────────────────────────────────────────────────────────────────
 const AgentsPage = () => {
   const navigate = useNavigate()
   const { hasPermission } = useCurrentUser()
   const canCreateAgents = hasPermission('agents:create')
-  const [searchQuery, setSearchQuery] = useState('')
-  const { agents: rawAgents, loading, error, pagination, setPage, refresh } = useAgents()
+
+  const { agents: rawAgents, loading, error, pagination, setPage, setFilters, refresh } = useAgents()
+
+  // Local search input — applied on Enter or icon click
+  const [searchInput,  setSearchInput]  = useState('')
+  const [statusFilter, setStatusFilter] = useState('All status')
 
   const handleToggleStatus = async (id: string, status: AgentRowData['status']) => {
     try {
-      if (status === 'Active') {
-        await deactivateAgent(id)
-      } else {
-        await activateAgent(id)
-      }
+      if (status === 'Active') await deactivateAgent(id)
+      else                     await activateAgent(id)
       refresh()
     } catch (err) {
       console.error('Failed to update agent status', err)
     }
   }
 
-  const q = searchQuery.trim().toLowerCase()
-  const rows = rawAgents.map(toRow)
-  const filtered = q
-    ? rows.filter((a) => a.name.toLowerCase().includes(q) || a.description.toLowerCase().includes(q))
-    : rows
+  const submitSearch = () => {
+    setFilters({ search: searchInput })
+  }
+
+  const handleStatusChange = (val: string) => {
+    setStatusFilter(val)
+    setFilters({ status: STATUS_MAP[val] ?? '' })
+  }
 
   const { page, totalPages, total, limit } = pagination
   const startItem = total === 0 ? 0 : (page - 1) * limit + 1
-  const endItem = Math.min(page * limit, total)
-
-  const handleSearch = (value: string) => {
-    setSearchQuery(value)
-  }
+  const endItem   = Math.min(page * limit, total)
+  const rows      = rawAgents.map(toRow)
 
   return (
     <div className="flex h-screen bg-slate-50 dark:bg-slate-900 overflow-hidden">
@@ -75,7 +106,7 @@ const AgentsPage = () => {
 
       <main className="flex-1 flex flex-col overflow-hidden">
 
-        {/* Sticky top bar */}
+        {/* Top bar */}
         <div className="flex items-center justify-between px-8 pt-5 pb-4 bg-slate-50 dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 shrink-0">
           <div>
             <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">My agents</h1>
@@ -84,31 +115,6 @@ const AgentsPage = () => {
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <div className="relative">
-              <MdSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 text-lg pointer-events-none" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => handleSearch(e.target.value)}
-                placeholder="Search agents..."
-                className="
-                   w-56
-                  pl-9 pr-4 py-2
-                  text-sm
-                    rounded-xl
-                 bg-slate-50 dark:bg-slate-900
-                 text-slate-900 dark:text-slate-100
-                   border border-slate-200 dark:border-slate-700
-                   placeholder-slate-400 dark:placeholder-slate-500
-                    shadow-sm
-                    dark:shadow-md dark:shadow-black/40
-                    focus:outline-none
-                     focus:ring-2 focus:ring-indigo-500/40
-                     focus:border-indigo-500
-                     hover:border-slate-300 dark:hover:border-slate-600
-                       transition-colors duration-200"
-              />
-            </div>
             <button
               onClick={refresh}
               disabled={loading}
@@ -127,6 +133,38 @@ const AgentsPage = () => {
                 Create agent
               </button>
             )}
+          </div>
+        </div>
+
+        {/* Filters row */}
+        <div className="px-8 py-4 bg-slate-50 dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 shrink-0 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <FilterSelect
+              value={statusFilter}
+              options={STATUS_OPTIONS}
+              onChange={handleStatusChange}
+              disabled={loading}
+            />
+          </div>
+
+          {/* Search — fires on Enter or icon click */}
+          <div className="relative">
+            <button
+              onClick={submitSearch}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 text-lg hover:text-indigo-500 transition-colors cursor-pointer"
+              tabIndex={-1}
+              aria-label="Search"
+            >
+              <MdSearch />
+            </button>
+            <input
+              type="text"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && submitSearch()}
+              placeholder="Search agents…"
+              className="w-56 pl-9 pr-4 py-2 text-sm rounded-xl bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-slate-700 placeholder-slate-400 dark:placeholder-slate-500 shadow-sm dark:shadow-md dark:shadow-black/40 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 hover:border-slate-300 dark:hover:border-slate-600 transition-colors duration-200"
+            />
           </div>
         </div>
 
@@ -160,24 +198,19 @@ const AgentsPage = () => {
                     <tr>
                       <td colSpan={COLUMNS.length} className="py-16 text-center text-sm text-red-500">
                         {error}{' '}
-                        <button
-                          onClick={refresh}
-                          className="font-semibold underline underline-offset-2 hover:text-red-600 cursor-pointer"
-                        >
+                        <button onClick={refresh} className="font-semibold underline underline-offset-2 hover:text-red-600 cursor-pointer">
                           Retry
                         </button>
                       </td>
                     </tr>
-                  ) : filtered.length === 0 ? (
+                  ) : rows.length === 0 ? (
                     <tr>
                       <td colSpan={COLUMNS.length} className="py-16 text-center text-sm text-slate-400 dark:text-slate-500">
-                        {q
-                          ? <><span>No agents match </span><span className="font-semibold text-slate-600 dark:text-slate-300">"{searchQuery}"</span></>
-                          : 'No agents yet — create one to get started.'}
+                        No agents match the selected filters.
                       </td>
                     </tr>
                   ) : (
-                    filtered.map((agent) => (
+                    rows.map((agent) => (
                       <AgentTableRow key={agent.id} {...agent} onToggleStatus={handleToggleStatus} />
                     ))
                   )}
@@ -188,7 +221,9 @@ const AgentsPage = () => {
             {/* Pagination */}
             <div className="shrink-0 flex items-center justify-between px-6 py-3 border-t border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800">
               <p className="text-xs text-slate-400 dark:text-slate-500">
-                Showing <span className="font-semibold text-slate-600 dark:text-slate-300">{startItem}–{endItem}</span> of{' '}
+                Showing{' '}
+                <span className="font-semibold text-slate-600 dark:text-slate-300">{startItem}–{endItem}</span>
+                {' '}of{' '}
                 <span className="font-semibold text-slate-600 dark:text-slate-300">{total}</span> agents
               </p>
               <div className="flex items-center gap-1">
