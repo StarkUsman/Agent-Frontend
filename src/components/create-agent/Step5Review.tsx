@@ -43,11 +43,6 @@ const Step5Review = ({ draft, onEdit, ...navProps }: Props) => {
     draft.voiceGender ? cap(draft.voiceGender) : '',
   ].filter(Boolean).join(' — ')
 
-  const topicsLines = draft.topicsHandled.split('\n').filter((l) => l.trim())
-  const topicsValue =
-    topicsLines.slice(0, 2).join(', ') +
-    (topicsLines.length > 2 ? `, +${topicsLines.length - 2} more` : '')
-
   return (
     <div className="max-w-xxl">
       <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
@@ -68,10 +63,10 @@ const Step5Review = ({ draft, onEdit, ...navProps }: Props) => {
           <Row label="Name"             value={draft.name || '—'} />
           <Row label="Voice"            value={voiceValue || '—'} />
           <Row label="Language"         value={LANGUAGE_LABELS[draft.language] ?? draft.language} />
-          <Row label="Voice recognition" value={`${draft.voiceProvider} (nova-3)`} />
-          <Row label="AI pipeline"      value="Speech-to-speech — Voice-native AI" />
-          <Row label="Model"            value={draft.openaiModel} />
-          <Row label="Base URL"         value={draft.openaiBaseUrl} />
+          <Row label="LLM"              value={[draft.llmModel, draft.llmProvider].filter(Boolean).join(' · ') || '—'} />
+          {draft.llmBaseUrl.trim() && <Row label="LLM base URL" value={draft.llmBaseUrl} />}
+          <Row label="Speech-to-text"   value={[draft.sttProvider, draft.sttModel, draft.sttLanguage].filter(Boolean).join(' · ') || '—'} />
+          <Row label="Text-to-speech"   value={[draft.ttsProvider, draft.voiceName].filter(Boolean).join(' · ') || '—'} />
           {/* <Row label="Opening greeting" value={truncate(draft.openingGreeting, 70) || '—'} />
           <Row label="Topics handled"   value={topicsValue || '—'} /> */}
           {draft.topicsToAvoid.trim() && (

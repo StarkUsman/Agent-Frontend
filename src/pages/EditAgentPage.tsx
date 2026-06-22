@@ -8,7 +8,8 @@ import Step1BasicInfo from '../components/create-agent/Step1BasicInfo'
 import Step2ChooseVoice from '../components/create-agent/Step2ChooseVoice'
 import Step3AISettings from '../components/create-agent/Step3AISettings'
 import Step5Review from '../components/create-agent/Step5Review'
-import { getAgent, updateAgent, type ManagerAgent } from '../api/manager'
+import { getAgent, updateAgent, type ManagerAgent, type ProviderCatalog } from '../api/manager'
+import { useProviderCatalog, findProvider, neededKeyEnvs, buildAgentConfig } from '../components/create-agent/catalog'
 import { useAgents } from '../contexts/AgentsContext'
 import type { AgentDraft } from './CreateAgentPage'
 
@@ -20,29 +21,46 @@ const STEPS = [
 ]
 const TOTAL_STEPS = STEPS.length
 
-const draftFromAgent = (agent: ManagerAgent): AgentDraft => ({
-  name:            agent.name,
-  purpose:         'Handles customer inquiries and provides assistance.',
-  language:        'en-GB',
-  voiceId:         '',
-  voiceName:       '',
-  voiceProvider:   '',
-  age:             '',
-  voiceGender:     'neutral',
-  openaiModel:     agent.config?.OPENAI_MODEL    ?? 'llama-3.3-70b-versatile',
-  openaiBaseUrl:   agent.config?.OPENAI_BASE_URL ?? 'https://api.groq.com/openai/v1',
-  ttsProvider:     (agent.config?.TTS_PROVIDER   ?? 'deepgram') as 'deepgram' | 'cartesia',
-  openaiApiKey:    '',
-  deepgramApiKey:  '',
-  cartesiaApiKey:  '',
-  openingGreeting: '',
-  topicsHandled:   '',
-  topicsToAvoid:   '',
-})
+const draftFromAgent = (agent: ManagerAgent, catalog: ProviderCatalog): AgentDraft => {
+  const cfg = agent.config ?? {}
+
+  // Back-compat: agents created by the old form used OPENAI_MODEL/OPENAI_BASE_URL
+  // with an implicit Groq/OpenAI provider.
+  const llmProvider = cfg.LLM_PROVIDER
+    ?? (cfg.OPENAI_BASE_URL?.includes('groq') ? 'groq' : 'openai')
+  const ttsProvider = cfg.TTS_PROVIDER ?? 'deepgram'
+  const voiceId     = cfg.TTS_VOICE ?? ''
+
+  const ttsCat = findProvider(catalog, 'tts', ttsProvider)
+  const voice  = ttsCat?.voices?.find((v) => v.id === voiceId)
+
+  return {
+    name:            agent.name,
+    language:        'en-GB',
+    ttsProvider,
+    ttsModel:        cfg.TTS_MODEL ?? '',
+    voiceId,
+    voiceName:       voice?.name ?? voiceId,
+    voiceProvider:   ttsCat?.label ?? '',
+    age:             '',
+    voiceGender:     (voice?.gender as AgentDraft['voiceGender']) ?? 'neutral',
+    llmProvider,
+    llmModel:        cfg.LLM_MODEL ?? cfg.OPENAI_MODEL ?? '',
+    llmBaseUrl:      cfg.LLM_BASE_URL ?? cfg.OPENAI_BASE_URL ?? '',
+    sttProvider:     cfg.STT_PROVIDER ?? 'deepgram',
+    sttModel:        cfg.STT_MODEL ?? '',
+    sttLanguage:     cfg.STT_LANGUAGE ?? '',
+    apiKeys:         {},
+    openingGreeting: '',
+    topicsHandled:   '',
+    topicsToAvoid:   '',
+  }
+}
 
 const canAdvance = (step: number, draft: AgentDraft): boolean => {
   if (step === 1) return draft.name.trim().length > 0
-  if (step === 2) return draft.voiceId.length > 0
+  if (step === 2) return draft.voiceId.trim().length > 0
+  // Keys are optional in edit mode (blank keeps existing), so no key gate here.
   return true
 }
 
@@ -50,6 +68,7 @@ const EditAgentPage = () => {
   const { id }    = useParams<{ id: string }>()
   const navigate  = useNavigate()
   const { refresh } = useAgents()
+  const { catalog } = useProviderCatalog()
 
   const [agent,       setAgent]       = useState<ManagerAgent | null>(null)
   const [fetchError,  setFetchError]  = useState<string | null>(null)
@@ -61,8 +80,9 @@ const EditAgentPage = () => {
   useEffect(() => {
     if (!id) return
     getAgent(id)
-      .then((a) => { setAgent(a); setDraft(draftFromAgent(a)) })
+      .then((a) => { setAgent(a); setDraft(draftFromAgent(a, catalog)) })
       .catch((err) => setFetchError(err instanceof Error ? err.message : 'Failed to load agent'))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id])
 
   if (fetchError) {
@@ -92,14 +112,7 @@ const EditAgentPage = () => {
 
   const submitAgent = async () => {
     if (!draft) return
-    const config: Record<string, string> = {
-      OPENAI_MODEL:    draft.openaiModel,
-      OPENAI_BASE_URL: draft.openaiBaseUrl.trim(),
-      TTS_PROVIDER:    draft.ttsProvider,
-    }
-    if (draft.openaiApiKey.trim())   config.OPENAI_API_KEY   = draft.openaiApiKey.trim()
-    if (draft.deepgramApiKey.trim()) config.DEEPGRAM_API_KEY = draft.deepgramApiKey.trim()
-    if (draft.cartesiaApiKey.trim()) config.CARTESIA_API_KEY = draft.cartesiaApiKey.trim()
+    const config = buildAgentConfig(catalog, draft)
 
     setSubmitting(true)
     setSubmitError(null)
@@ -187,6 +200,7 @@ const EditAgentPage = () => {
               <Step1BasicInfo
                 draft={draft}
                 onChange={updateDraft}
+                nameDisabled
                 onContinue={handleContinue}
                 canContinue={continueReady}
                 isFinalStep={isFinalStep}
@@ -196,6 +210,7 @@ const EditAgentPage = () => {
               <Step2ChooseVoice
                 draft={draft}
                 onChange={updateDraft}
+                catalog={catalog}
                 onBack={handleBack}
                 onContinue={handleContinue}
                 canContinue={continueReady}
@@ -206,6 +221,8 @@ const EditAgentPage = () => {
               <Step3AISettings
                 draft={draft}
                 onChange={updateDraft}
+                catalog={catalog}
+                neededEnvs={neededKeyEnvs(catalog, draft)}
                 onBack={handleBack}
                 onContinue={handleContinue}
                 canContinue={continueReady}
@@ -231,7 +248,7 @@ const EditAgentPage = () => {
 
           {/* Right: live preview */}
           <div className="w-90 rounded-2xl mr-8 mt-4 shrink-0 border-l border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800 overflow-y-auto">
-            <AgentPreview draft={draft} currentStep={step} totalSteps={TOTAL_STEPS} />
+            <AgentPreview draft={draft} currentStep={step} totalSteps={TOTAL_STEPS} catalog={catalog} />
           </div>
 
         </div>

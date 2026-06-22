@@ -119,6 +119,36 @@ export function createAgent(body: CreateAgentBody): Promise<CreateAgentResponse>
   });
 }
 
+// ── Provider catalog (GET /providers) ───────────────────────────────────────
+// Mirrors services.PROVIDER_CATALOG on the manager. Models/voices are advisory:
+// the backend accepts any string, so the UI allows free-text alongside these.
+export interface CatalogVoice {
+  id: string;
+  name: string;
+  gender?: string;
+  accent?: string;
+  description?: string;
+}
+
+export interface CatalogProvider {
+  id: string;
+  label: string;
+  apiKeyEnv: string | null;
+  baseUrl?: string;
+  models?: string[];
+  voices?: CatalogVoice[];
+}
+
+export interface ProviderCatalog {
+  stt: CatalogProvider[];
+  llm: CatalogProvider[];
+  tts: CatalogProvider[];
+}
+
+export function getProviders(): Promise<ProviderCatalog> {
+  return request<ProviderCatalog>("/providers");
+}
+
 export function updateAgentFlow(
   id: string,
   flowCode: string
@@ -143,7 +173,7 @@ export interface UpdateAgentBody {
 }
 
 export function updateAgent(id: string, body: UpdateAgentBody): Promise<ManagerAgent> {
-  return request<ManagerAgent>(`/agents/${id}`, {
+  return request<ManagerAgent>(`/agents/${id}/config`, {
     method: "PUT",
     body: JSON.stringify(body),
   });

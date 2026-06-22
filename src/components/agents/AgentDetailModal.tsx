@@ -83,9 +83,12 @@ const AgentDetailModal = ({ agent, onClose, onEdit, onDelete }: Props) => {
           <div className="border-t border-slate-100 dark:border-slate-700" />
 
           <Section title="Configuration">
-            <Field label="Model"        value={agent.config?.OPENAI_MODEL} />
+            <Field label="LLM provider" value={agent.config?.LLM_PROVIDER} />
+            <Field label="LLM model"    value={agent.config?.LLM_MODEL ?? agent.config?.OPENAI_MODEL} />
+            <Field label="STT provider" value={agent.config?.STT_PROVIDER} />
             <Field label="TTS provider" value={agent.config?.TTS_PROVIDER} />
-            <Field label="Base URL"     value={agent.config?.OPENAI_BASE_URL} />
+            <Field label="Voice"        value={agent.config?.TTS_VOICE} />
+            <Field label="LLM base URL" value={agent.config?.LLM_BASE_URL ?? agent.config?.OPENAI_BASE_URL} />
           </Section>
 
           <div className="border-t border-slate-100 dark:border-slate-700" />

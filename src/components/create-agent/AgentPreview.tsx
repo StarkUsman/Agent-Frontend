@@ -1,5 +1,7 @@
 import { MdLock, MdCheck } from 'react-icons/md'
 import type { AgentDraft } from '../../pages/CreateAgentPage'
+import type { ProviderCatalog } from '../../api/manager'
+import { findProvider, neededKeyEnvs } from './catalog'
 
 const LANGUAGE_LABELS: Record<string, string> = {
   'en-GB': 'English (UK)',
@@ -92,13 +94,20 @@ interface Props {
   draft:       AgentDraft
   currentStep: number
   totalSteps:  number
+  catalog:     ProviderCatalog
 }
 
-const AgentPreview = ({ draft, currentStep, totalSteps }: Props) => {
+const AgentPreview = ({ draft, currentStep, totalSteps, catalog }: Props) => {
   const initial       = draft.name.trim().charAt(0).toUpperCase()
   const identityState = getState(1, currentStep)
   const voiceState    = getState(2, currentStep)
   const aiState       = getState(3, currentStep)
+
+  const llmLabel = findProvider(catalog, 'llm', draft.llmProvider)?.label ?? draft.llmProvider
+  const sttLabel = findProvider(catalog, 'stt', draft.sttProvider)?.label ?? draft.sttProvider
+  const ttsLabel = findProvider(catalog, 'tts', draft.ttsProvider)?.label ?? draft.ttsProvider
+  const voiceMeta = [draft.voiceProvider, draft.age, draft.voiceGender ? cap(draft.voiceGender) : '']
+    .filter(Boolean).join(' · ')
 
   return (
     <div className="h-full flex flex-col">
@@ -155,13 +164,6 @@ const AgentPreview = ({ draft, currentStep, totalSteps }: Props) => {
               </span>
             </div>
           </div>
-          <p className=
-          {`text-xs leading-relaxed line-clamp-3 
-            ${
-            draft.purpose ? 'text-slate-700 dark:text-slate-200' : 'text-slate-300 dark:text-slate-600 italic'
-          }`}>
-            {draft.purpose || 'No purpose set yet…'}
-          </p>
         </Section>
 
         {/* ── Step 2: Voice ───────────────────────── */}
@@ -176,7 +178,7 @@ const AgentPreview = ({ draft, currentStep, totalSteps }: Props) => {
               <div>
                 <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">{draft.voiceName}</p>
                 <p className="text-xs text-slate-400 dark:text-slate-100">
-                  {draft.voiceProvider} -  {draft.age} -  {cap(draft.voiceGender)}
+                  {voiceMeta}
                 </p>
               </div>
             </div>
@@ -190,17 +192,18 @@ const AgentPreview = ({ draft, currentStep, totalSteps }: Props) => {
           <div className="space-y-2.5">
             <div>
               <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate">
-                {draft.openaiModel}
-                
-                    <span className="text-xs font-semibold mx-1 text-slate-400 dark:text-slate-500">via</span>
-                    <span className="text-xs font-bold text-slate-600 dark:text-slate-300">Grop</span>
-                
+                {draft.llmModel || draft.llmProvider}
+                <span className="text-xs font-semibold mx-1 text-slate-400 dark:text-slate-500">via</span>
+                <span className="text-xs font-bold text-slate-600 dark:text-slate-300">{llmLabel}</span>
               </p>
-              <p className="text-xs text-slate-400 dark:text-slate-300">OpenAI-compatible</p>
+              <p className="text-xs text-slate-400 dark:text-slate-300">
+                STT: {sttLabel} · TTS: {ttsLabel}
+              </p>
             </div>
             <div className="space-y-1.5 pt-0.5 dark:text-slate-300">
-              <KeyRow label="Groq API key"    set={!!draft.openaiApiKey.trim()} />
-              <KeyRow label="Deepgram API key" set={!!draft.deepgramApiKey.trim()} />
+              {neededKeyEnvs(catalog, draft).map((env) => (
+                <KeyRow key={env} label={env} set={!!(draft.apiKeys[env] ?? '').trim()} />
+              ))}
             </div>
           </div>
         </Section>

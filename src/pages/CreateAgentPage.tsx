@@ -9,6 +9,7 @@ import Step3AISettings  from '../components/create-agent/Step3AISettings'
 import Step4Behaviour   from '../components/create-agent/Step4Behaviour'
 import Step5Review      from '../components/create-agent/Step5Review'
 import { createAgent } from '../api/manager'
+import { useProviderCatalog, neededKeyEnvs, buildAgentConfig } from '../components/create-agent/catalog'
 import { useAgents } from '../contexts/AgentsContext'
 import { generatePythonCode } from '../features/flow-editor/lib/codegen/pythonGenerator'
 import { embedFlowJsonInPython } from '../features/flow-editor/lib/codegen/flowEmbed'
@@ -19,22 +20,25 @@ import type { FlowJson } from '../features/flow-editor/lib/schema/flow.schema'
 export interface AgentDraft {
   // Step 1
   name: string
-  purpose: string
   language: string
-  // Step 2
-  voiceId: string
+  // Step 2 — TTS provider + voice
+  ttsProvider: string
+  ttsModel: string
+  voiceId: string        // → TTS_VOICE
   voiceName: string
-  voiceProvider: string
+  voiceProvider: string  // display label (e.g. "Deepgram")
   age: string
   voiceGender: 'male' | 'female' | 'neutral'
-  // Step 3
-  openaiApiKey: string
-  openaiModel: string
-  openaiBaseUrl: string
-  deepgramApiKey: string
-  cartesiaApiKey: string
-  ttsProvider: 'deepgram' | 'cartesia'
-  // Step 4
+  // Step 3 — LLM + STT
+  llmProvider: string
+  llmModel: string
+  llmBaseUrl: string
+  sttProvider: string
+  sttModel: string
+  sttLanguage: string
+  // API keys, keyed by env var (e.g. OPENAI_API_KEY) — only the needed ones are shown
+  apiKeys: Record<string, string>
+  // Step 4 (behaviour step currently disabled in the flow)
   openingGreeting: string
   topicsHandled: string
   topicsToAvoid: string
@@ -42,19 +46,21 @@ export interface AgentDraft {
 
 const INITIAL_DRAFT: AgentDraft = {
   name: '',
-  purpose: '',
   language: 'en-GB',
-  voiceId: '',
-  voiceName: '',
-  voiceProvider: '',
-  age: '',
-  voiceGender: 'neutral',
-  openaiApiKey: '',
-  openaiModel: 'llama-3.3-70b-versatile',
-  openaiBaseUrl: 'https://api.groq.com/openai/v1',
-  deepgramApiKey: '',
-  cartesiaApiKey: '',
   ttsProvider: 'deepgram',
+  ttsModel: '',
+  voiceId: 'aura-2-helena-en',
+  voiceName: 'Helena',
+  voiceProvider: 'Deepgram',
+  age: 'Adult',
+  voiceGender: 'female',
+  llmProvider: 'groq',
+  llmModel: 'llama-3.3-70b-versatile',
+  llmBaseUrl: '',
+  sttProvider: 'deepgram',
+  sttModel: '',
+  sttLanguage: '',
+  apiKeys: {},
   openingGreeting: "Hello! Thank you for calling. My name is Clara and I'm here to help you today. What can I do for you?",
   topicsHandled: 'Billing questions and invoice queries\nAccount management and password resets\nOrder status and delivery enquiries\nProduct information',
   topicsToAvoid: '',
@@ -71,11 +77,12 @@ const STEPS = [
 const TOTAL_STEPS = STEPS.length
 
 // ── Step validation ────────────────────────────────────────────────────────
-const canAdvance = (step: number, draft: AgentDraft): boolean => {
+const canAdvance = (step: number, draft: AgentDraft, neededEnvs: string[]): boolean => {
   switch (step) {
-    case 1: return draft.name.trim().length > 0 && draft.purpose.trim().length > 0
-    case 2: return draft.voiceId.length > 0
-    case 3: return draft.openaiApiKey.trim().length > 0 && draft.deepgramApiKey.trim().length > 0
+    case 1: return draft.name.trim().length > 0
+    case 2: return draft.voiceId.trim().length > 0 && draft.ttsProvider.trim().length > 0
+    // Every API key required by the selected providers must be filled.
+    case 3: return neededEnvs.every((env) => (draft.apiKeys[env] ?? '').trim().length > 0)
     case 4: return draft.openingGreeting.trim().length > 0 && draft.topicsHandled.trim().length > 0
     default: return true
   }
@@ -85,10 +92,13 @@ const canAdvance = (step: number, draft: AgentDraft): boolean => {
 const CreateAgentPage = () => {
   const navigate = useNavigate()
   const { refresh } = useAgents()
+  const { catalog } = useProviderCatalog()
   const [step, setStep]   = useState(1)
   const [draft, setDraft] = useState<AgentDraft>(INITIAL_DRAFT)
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
+
+  const neededEnvs = neededKeyEnvs(catalog, draft)
 
   const updateDraft = (patch: Partial<AgentDraft>) =>
     setDraft((prev) => ({ ...prev, ...patch }))
@@ -101,16 +111,7 @@ const CreateAgentPage = () => {
   }
 
   const submitAgent = async () => {
-    const config: Record<string, string> = {
-      OPENAI_API_KEY: draft.openaiApiKey.trim(),
-      OPENAI_MODEL: draft.openaiModel,
-      OPENAI_BASE_URL: draft.openaiBaseUrl.trim(),
-      DEEPGRAM_API_KEY: draft.deepgramApiKey.trim(),
-      TTS_PROVIDER: draft.ttsProvider,
-    }
-    if (draft.cartesiaApiKey.trim()) {
-      config.CARTESIA_API_KEY = draft.cartesiaApiKey.trim()
-    }
+    const config = buildAgentConfig(catalog, draft)
 
     setSubmitting(true)
     setSubmitError(null)
@@ -144,7 +145,7 @@ const CreateAgentPage = () => {
   const isStepClickable = (target: number): boolean => {
     if (target <= step) return true
     for (let s = step; s < target; s++) {
-      if (!canAdvance(s, draft)) return false
+      if (!canAdvance(s, draft, neededEnvs)) return false
     }
     return true
   }
@@ -154,7 +155,7 @@ const CreateAgentPage = () => {
   }
 
   const isFinalStep   = step === TOTAL_STEPS
-  const continueReady = canAdvance(step, draft)
+  const continueReady = canAdvance(step, draft, neededEnvs)
 
   return (
     <div className="flex h-screen bg-white dark:bg-slate-900 overflow-hidden">
@@ -203,13 +204,13 @@ const CreateAgentPage = () => {
             )}
             {step === 2 && (
               <Step2ChooseVoice
-                draft={draft} onChange={updateDraft}
+                draft={draft} onChange={updateDraft} catalog={catalog}
                 onBack={handleBack} onContinue={handleContinue} canContinue={continueReady} isFinalStep={isFinalStep}
               />
             )}
             {step === 3 && (
               <Step3AISettings
-                draft={draft} onChange={updateDraft}
+                draft={draft} onChange={updateDraft} catalog={catalog} neededEnvs={neededEnvs}
                 onBack={handleBack} onContinue={handleContinue} canContinue={continueReady} isFinalStep={isFinalStep}
               />
             )}
@@ -224,7 +225,7 @@ const CreateAgentPage = () => {
 
           {/* Right: live preview */}
           <div className="w-90 rounded-2xl mr-8 mt-4  shrink-0 border-l border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800 overflow-y-auto">
-            <AgentPreview draft={draft} currentStep={step} totalSteps={TOTAL_STEPS} />
+            <AgentPreview draft={draft} currentStep={step} totalSteps={TOTAL_STEPS} catalog={catalog} />
           </div>
 
         </div>
