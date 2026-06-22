@@ -9,6 +9,7 @@ import Step3AISettings  from '../components/create-agent/Step3AISettings'
 import Step4Behaviour   from '../components/create-agent/Step4Behaviour'
 import Step5Review      from '../components/create-agent/Step5Review'
 import { createAgent } from '../api/manager'
+import { useAgents } from '../contexts/AgentsContext'
 import { generatePythonCode } from '../features/flow-editor/lib/codegen/pythonGenerator'
 import { embedFlowJsonInPython } from '../features/flow-editor/lib/codegen/flowEmbed'
 import { EXAMPLES } from '../features/flow-editor/lib/examples'
@@ -83,6 +84,7 @@ const canAdvance = (step: number, draft: AgentDraft): boolean => {
 // ── Page ───────────────────────────────────────────────────────────────────
 const CreateAgentPage = () => {
   const navigate = useNavigate()
+  const { refresh } = useAgents()
   const [step, setStep]   = useState(1)
   const [draft, setDraft] = useState<AgentDraft>(INITIAL_DRAFT)
   const [submitting, setSubmitting] = useState(false)
@@ -118,6 +120,7 @@ const CreateAgentPage = () => {
         flow_code: buildPlaceholderFlowCode(),
         config,
       })
+      refresh()
       navigate('/agents')
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : 'Failed to create agent')

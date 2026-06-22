@@ -9,6 +9,7 @@ import Step2ChooseVoice from '../components/create-agent/Step2ChooseVoice'
 import Step3AISettings from '../components/create-agent/Step3AISettings'
 import Step5Review from '../components/create-agent/Step5Review'
 import { getAgent, updateAgent, type ManagerAgent } from '../api/manager'
+import { useAgents } from '../contexts/AgentsContext'
 import type { AgentDraft } from './CreateAgentPage'
 
 const STEPS = [
@@ -48,6 +49,7 @@ const canAdvance = (step: number, draft: AgentDraft): boolean => {
 const EditAgentPage = () => {
   const { id }    = useParams<{ id: string }>()
   const navigate  = useNavigate()
+  const { refresh } = useAgents()
 
   const [agent,       setAgent]       = useState<ManagerAgent | null>(null)
   const [fetchError,  setFetchError]  = useState<string | null>(null)
@@ -103,6 +105,7 @@ const EditAgentPage = () => {
     setSubmitError(null)
     try {
       await updateAgent(agent.id, { name: draft.name.trim(), config })
+      refresh()
       navigate('/agents')
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : 'Failed to update agent')
