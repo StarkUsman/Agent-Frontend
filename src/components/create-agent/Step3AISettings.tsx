@@ -4,8 +4,9 @@ import type { AgentDraft } from '../../pages/CreateAgentPage'
 import StepNav, { type StepNavProps } from './StepNav'
 
 interface Props extends StepNavProps {
-  draft:    AgentDraft
-  onChange: (patch: Partial<AgentDraft>) => void
+  draft:      AgentDraft
+  onChange:   (patch: Partial<AgentDraft>) => void
+  editMode?:  boolean
 }
 
 const MODELS = [
@@ -27,7 +28,7 @@ const inputClass =
   'text-slate-800 dark:text-slate-200 bg-white dark:bg-slate-800 placeholder-slate-300 dark:placeholder-slate-500 ' +
   'focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400 transition'
 
-const Step3AISettings = ({ draft, onChange, ...navProps }: Props) => {
+const Step3AISettings = ({ draft, onChange, editMode, ...navProps }: Props) => {
   const [showKey, setShowKey] = useState(false)
   const [showDeepgram, setShowDeepgram] = useState(false)
   const [showCartesia, setShowCartesia] = useState(false)
@@ -125,7 +126,7 @@ const Step3AISettings = ({ draft, onChange, ...navProps }: Props) => {
                 <div>
                   <label className="block text-xs text-slate-600 dark:text-slate-400 mb-1.5">
                     <span className="font-mono text-slate-500 dark:text-slate-400">OPENAI_API_KEY</span>
-                    <span className="text-red-500 ml-0.5">*</span>
+                    {editMode ? <span className="text-slate-400 ml-1">(optional)</span> : <span className="text-red-500 ml-0.5">*</span>}
                   </label>
                   <div className="relative">
                     <input
@@ -183,7 +184,7 @@ const Step3AISettings = ({ draft, onChange, ...navProps }: Props) => {
                 <div>
                   <label className="block text-xs text-slate-600 dark:text-slate-400 mb-1.5">
                     <span className="font-mono text-slate-500 dark:text-slate-400">DEEPGRAM_API_KEY</span>
-                    <span className="text-red-500 ml-0.5">*</span>
+                    {editMode ? <span className="text-slate-400 ml-1">(optional)</span> : <span className="text-red-500 ml-0.5">*</span>}
                   </label>
                   <div className="relative">
                     <input

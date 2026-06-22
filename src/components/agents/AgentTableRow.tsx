@@ -17,6 +17,7 @@ export interface AgentRowData {
 
 interface AgentRowProps extends AgentRowData {
   onToggleStatus: (id: string, status: AgentRowData['status']) => Promise<void> | void
+  onClick?:       () => void
 }
 
 // ── Sub-components ─────────────────────────────────────────────────────────
@@ -118,10 +119,13 @@ const AgentTableRow = ({
   clientUrl,
   status,
   onToggleStatus,
+  onClick,
 }: AgentRowProps) => {
   return (
-    <tr className="border-b border-slate-100 dark:border-slate-700 hover:bg-slate-50/60 dark:hover:bg-slate-800/60 transition-colors group">
-
+    <tr
+      onClick={onClick}
+      className={`border-b border-slate-100 dark:border-slate-700 hover:bg-slate-50/60 dark:hover:bg-slate-800/60 transition-colors group ${onClick ? 'cursor-pointer' : ''}`}
+    >
       {/* Agent name + description */}
       <td className="py-4 pl-6 pr-4">
         <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
@@ -130,8 +134,8 @@ const AgentTableRow = ({
         <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">{description}</p>
       </td>
 
-      {/* URL */}
-      <td className="py-4 px-4">
+      {/* URL — stop propagation so copying doesn't open the detail modal */}
+      <td className="py-4 px-4" onClick={(e) => e.stopPropagation()}>
         <UrlCell url={clientUrl} />
       </td>
 
@@ -156,13 +160,13 @@ const AgentTableRow = ({
         </span>
       </td>
 
-      {/* Conversation flow */}
-      <td className="py-4 px-4">
+      {/* Conversation flow — stop propagation so navigation doesn't also open modal */}
+      <td className="py-4 px-4" onClick={(e) => e.stopPropagation()}>
         <FlowCell id={id} />
       </td>
 
-      {/* Status */}
-      <td className="py-4 pl-4 pr-6">
+      {/* Status — stop propagation so toggle doesn't also open modal */}
+      <td className="py-4 pl-4 pr-6" onClick={(e) => e.stopPropagation()}>
         <StatusToggle id={id} status={status} onToggle={onToggleStatus} />
       </td>
 

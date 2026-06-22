@@ -3,9 +3,12 @@ import { useNavigate } from 'react-router-dom'
 import { MdAdd, MdChevronLeft, MdChevronRight, MdSearch, MdRefresh, MdKeyboardArrowDown } from 'react-icons/md'
 import Sidebar from '../components/dashboard/Sidebar'
 import AgentTableRow, { type AgentRowData } from '../components/agents/AgentTableRow'
+import AgentDetailModal from '../components/agents/AgentDetailModal'
+import DeleteConfirmModal from '../components/ui/DeleteConfirmModal'
 import {
   activateAgent,
   deactivateAgent,
+  deleteAgent,
   agentClientUrl,
   type ManagerAgent,
 } from '../api/manager'
@@ -76,6 +79,11 @@ const AgentsPage = () => {
   const [searchInput,  setSearchInput]  = useState('')
   const [statusFilter, setStatusFilter] = useState('All status')
 
+  // Modal state
+  const [detailAgent,  setDetailAgent]  = useState<ManagerAgent | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<ManagerAgent | null>(null)
+  const [deleting,     setDeleting]     = useState(false)
+
   const handleToggleStatus = async (id: string, status: AgentRowData['status']) => {
     try {
       if (status === 'Active') await deactivateAgent(id)
@@ -84,6 +92,30 @@ const AgentsPage = () => {
     } catch (err) {
       console.error('Failed to update agent status', err)
     }
+  }
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteTarget) return
+    setDeleting(true)
+    try {
+      await deleteAgent(deleteTarget.id)
+      setDeleteTarget(null)
+      refresh()
+    } catch (err) {
+      console.error('Failed to delete agent', err)
+    } finally {
+      setDeleting(false)
+    }
+  }
+
+  const openEdit = (agent: ManagerAgent) => {
+    setDetailAgent(null)
+    navigate(`/agents/${agent.id}/edit`)
+  }
+
+  const openDelete = (agent: ManagerAgent) => {
+    setDetailAgent(null)
+    setDeleteTarget(agent)
   }
 
   const submitSearch = () => {
@@ -210,8 +242,13 @@ const AgentsPage = () => {
                       </td>
                     </tr>
                   ) : (
-                    rows.map((agent) => (
-                      <AgentTableRow key={agent.id} {...agent} onToggleStatus={handleToggleStatus} />
+                    rows.map((agent, i) => (
+                      <AgentTableRow
+                        key={agent.id}
+                        {...agent}
+                        onToggleStatus={handleToggleStatus}
+                        onClick={() => setDetailAgent(rawAgents[i])}
+                      />
                     ))
                   )}
                 </tbody>
@@ -258,6 +295,24 @@ const AgentsPage = () => {
           </div>
         </div>
       </main>
+      {detailAgent && (
+        <AgentDetailModal
+          agent={detailAgent}
+          onClose={() => setDetailAgent(null)}
+          onEdit={() => openEdit(detailAgent)}
+          onDelete={() => openDelete(detailAgent)}
+        />
+      )}
+
+      {deleteTarget && (
+        <DeleteConfirmModal
+          title="Delete agent"
+          description={`Are you sure you want to delete "${deleteTarget.name}"? This action cannot be undone.`}
+          loading={deleting}
+          onConfirm={handleDeleteConfirm}
+          onCancel={() => setDeleteTarget(null)}
+        />
+      )}
     </div>
   )
 }

@@ -137,6 +137,18 @@ export function deactivateAgent(id: string): Promise<{ status: string; message: 
   return request(`/agents/${id}/deactivate`, { method: "PUT" });
 }
 
+export interface UpdateAgentBody {
+  name?:   string;
+  config?: Record<string, string>;
+}
+
+export function updateAgent(id: string, body: UpdateAgentBody): Promise<ManagerAgent> {
+  return request<ManagerAgent>(`/agents/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(body),
+  });
+}
+
 export function deleteAgent(id: string): Promise<{ status: string }> {
   return request(`/agents/${id}`, { method: "DELETE" });
 }

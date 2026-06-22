@@ -1,0 +1,215 @@
+import { useEffect, useState } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
+import { MdInfoOutline } from 'react-icons/md'
+import Sidebar from '../components/dashboard/Sidebar'
+import StepIndicator from '../components/create-agent/StepIndicator'
+import Step1BasicInfo from '../components/create-agent/Step1BasicInfo'
+import Step2ChooseVoice from '../components/create-agent/Step2ChooseVoice'
+import Step3AISettings from '../components/create-agent/Step3AISettings'
+import { getAgent, updateAgent, type ManagerAgent } from '../api/manager'
+import type { AgentDraft } from './CreateAgentPage'
+
+const STEPS = [
+  { number: 1, label: 'Basic info' },
+  { number: 2, label: 'Choose voice' },
+  { number: 3, label: 'AI settings' },
+]
+const TOTAL_STEPS = STEPS.length
+
+const draftFromAgent = (agent: ManagerAgent): AgentDraft => ({
+  name:            agent.name,
+  purpose:         'Handles customer inquiries and provides assistance.',
+  language:        'en-GB',
+  voiceId:         '',
+  voiceName:       '',
+  voiceProvider:   '',
+  age:             '',
+  voiceGender:     'neutral',
+  openaiModel:     agent.config?.OPENAI_MODEL    ?? 'llama-3.3-70b-versatile',
+  openaiBaseUrl:   agent.config?.OPENAI_BASE_URL ?? 'https://api.groq.com/openai/v1',
+  ttsProvider:     (agent.config?.TTS_PROVIDER   ?? 'deepgram') as 'deepgram' | 'cartesia',
+  openaiApiKey:    '',
+  deepgramApiKey:  '',
+  cartesiaApiKey:  '',
+  openingGreeting: '',
+  topicsHandled:   '',
+  topicsToAvoid:   '',
+})
+
+const canAdvance = (step: number, draft: AgentDraft): boolean => {
+  if (step === 1) return draft.name.trim().length > 0
+  if (step === 2) return draft.voiceId.length > 0
+  return true
+}
+
+const EditAgentPage = () => {
+  const { id }    = useParams<{ id: string }>()
+  const navigate  = useNavigate()
+
+  const [agent,       setAgent]       = useState<ManagerAgent | null>(null)
+  const [fetchError,  setFetchError]  = useState<string | null>(null)
+  const [step,        setStep]        = useState(1)
+  const [draft,       setDraft]       = useState<AgentDraft | null>(null)
+  const [submitting,  setSubmitting]  = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!id) return
+    getAgent(id)
+      .then((a) => { setAgent(a); setDraft(draftFromAgent(a)) })
+      .catch((err) => setFetchError(err instanceof Error ? err.message : 'Failed to load agent'))
+  }, [id])
+
+  if (fetchError) {
+    return (
+      <div className="flex h-screen bg-slate-50 dark:bg-slate-900">
+        <Sidebar />
+        <main className="flex-1 flex items-center justify-center">
+          <p className="text-sm text-red-500">{fetchError}</p>
+        </main>
+      </div>
+    )
+  }
+
+  if (!draft || !agent) {
+    return (
+      <div className="flex h-screen bg-slate-50 dark:bg-slate-900">
+        <Sidebar />
+        <main className="flex-1 flex items-center justify-center">
+          <p className="text-sm text-slate-400 dark:text-slate-500">Loading…</p>
+        </main>
+      </div>
+    )
+  }
+
+  const updateDraft = (patch: Partial<AgentDraft>) =>
+    setDraft((prev) => (prev ? { ...prev, ...patch } : prev))
+
+  const submitAgent = async () => {
+    if (!draft) return
+    const config: Record<string, string> = {
+      OPENAI_MODEL:    draft.openaiModel,
+      OPENAI_BASE_URL: draft.openaiBaseUrl.trim(),
+      TTS_PROVIDER:    draft.ttsProvider,
+    }
+    if (draft.openaiApiKey.trim())   config.OPENAI_API_KEY   = draft.openaiApiKey.trim()
+    if (draft.deepgramApiKey.trim()) config.DEEPGRAM_API_KEY = draft.deepgramApiKey.trim()
+    if (draft.cartesiaApiKey.trim()) config.CARTESIA_API_KEY = draft.cartesiaApiKey.trim()
+
+    setSubmitting(true)
+    setSubmitError(null)
+    try {
+      await updateAgent(agent.id, { name: draft.name.trim(), config })
+      navigate('/agents')
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : 'Failed to update agent')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const handleContinue = () => {
+    if (step < TOTAL_STEPS) setStep((s) => s + 1)
+    else submitAgent()
+  }
+
+  const handleBack = () => {
+    if (step > 1) setStep((s) => s - 1)
+  }
+
+  const isStepClickable = (target: number): boolean => {
+    if (target <= step) return true
+    for (let s = step; s < target; s++) {
+      if (!canAdvance(s, draft)) return false
+    }
+    return true
+  }
+
+  const isFinalStep   = step === TOTAL_STEPS
+  const continueReady = canAdvance(step, draft)
+
+  return (
+    <div className="flex h-screen bg-white dark:bg-slate-900 overflow-hidden">
+      <Sidebar />
+
+      <main className="flex-1 flex flex-col overflow-hidden bg-white dark:bg-slate-900">
+
+        {/* Header */}
+        <div className="flex items-center justify-between px-8 pt-6 pb-5 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 shrink-0">
+          <div>
+            <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">Edit agent</h1>
+            <p className="text-sm text-slate-400 dark:text-slate-500 mt-0.5 font-mono">{agent.id}</p>
+          </div>
+          <button
+            onClick={() => navigate('/agents')}
+            className="px-4 py-2 rounded-xl text-sm font-semibold text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-95 transition-all cursor-pointer"
+          >
+            Cancel
+          </button>
+        </div>
+
+        <StepIndicator
+          steps={STEPS}
+          currentStep={step}
+          onStepClick={(t) => { if (isStepClickable(t)) setStep(t) }}
+          isClickable={isStepClickable}
+        />
+
+        {/* Key masking notice shown on AI settings step */}
+        {step === 3 && (
+          <div className="mx-8 mt-4 flex items-start gap-2 px-4 py-3 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 shrink-0">
+            <MdInfoOutline className="text-amber-500 dark:text-amber-400 text-base shrink-0 mt-0.5" />
+            <p className="text-xs text-amber-700 dark:text-amber-400 leading-relaxed">
+              API keys are not returned by the server. Leave key fields blank to keep the existing values, or enter a new value to replace them.
+            </p>
+          </div>
+        )}
+
+        {submitError && (
+          <div className="mx-8 mt-4 px-4 py-3 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-sm text-red-600 dark:text-red-400 shrink-0">
+            {submitError}
+          </div>
+        )}
+
+        {/* Step content */}
+        <div className="flex-1 overflow-y-auto px-8 py-5 bg-slate-50 dark:bg-slate-900">
+          {step === 1 && (
+            <Step1BasicInfo
+              draft={draft}
+              onChange={updateDraft}
+              onContinue={handleContinue}
+              canContinue={continueReady}
+              isFinalStep={isFinalStep}
+            />
+          )}
+          {step === 2 && (
+            <Step2ChooseVoice
+              draft={draft}
+              onChange={updateDraft}
+              onBack={handleBack}
+              onContinue={handleContinue}
+              canContinue={continueReady}
+              isFinalStep={isFinalStep}
+            />
+          )}
+          {step === 3 && (
+            <Step3AISettings
+              draft={draft}
+              onChange={updateDraft}
+              onBack={handleBack}
+              onContinue={handleContinue}
+              canContinue={continueReady}
+              isFinalStep={isFinalStep}
+              submitting={submitting}
+              finalLabel="Save changes"
+              editMode
+            />
+          )}
+        </div>
+
+      </main>
+    </div>
+  )
+}
+
+export default EditAgentPage

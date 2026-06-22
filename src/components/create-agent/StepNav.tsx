@@ -1,14 +1,15 @@
 import { MdArrowBack, MdArrowForward, MdCheck } from 'react-icons/md'
 
 export interface StepNavProps {
-  onBack?:     () => void
-  onContinue:  () => void
-  canContinue: boolean
-  isFinalStep: boolean
-  submitting?: boolean
+  onBack?:      () => void
+  onContinue:   () => void
+  canContinue:  boolean
+  isFinalStep:  boolean
+  submitting?:  boolean
+  finalLabel?:  string
 }
 
-const StepNav = ({ onBack, onContinue, canContinue, isFinalStep, submitting }: StepNavProps) => (
+const StepNav = ({ onBack, onContinue, canContinue, isFinalStep, submitting, finalLabel }: StepNavProps) => (
   <div className="flex items-center justify-end gap-3 rounded-2xl pt-2 mt-2">
     {onBack ? (
       <button
@@ -31,7 +32,7 @@ const StepNav = ({ onBack, onContinue, canContinue, isFinalStep, submitting }: S
       {isFinalStep ? (
         <>
           <MdCheck className="text-base" />
-          {submitting ? 'Creating…' : 'Create agent'}
+          {submitting ? (finalLabel ? 'Saving…' : 'Creating…') : (finalLabel ?? 'Create agent')}
         </>
       ) : (
         <>

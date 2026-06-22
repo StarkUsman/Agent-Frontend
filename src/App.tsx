@@ -10,6 +10,7 @@ import CallHistoryPage from './pages/CallHistoryPage'
 import ReportsPage from './pages/ReportsPage'
 import FlowEditorPage from './pages/FlowEditorPage'
 import CreateAgentPage from './pages/CreateAgentPage'
+import EditAgentPage from './pages/EditAgentPage'
 import UsersPage from './pages/UsersPage'
 import CreateUserPage from './pages/CreateUserPage'
 
@@ -24,6 +25,7 @@ const App = () => {
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/agents" element={<ProtectedRoute><AgentsPage /></ProtectedRoute>} />
             <Route path="/agents/new" element={<ProtectedRoute permission="agents:create" fallback="/agents"><CreateAgentPage /></ProtectedRoute>} />
+            <Route path="/agents/:id/edit" element={<ProtectedRoute permission="agents:create" fallback="/agents"><EditAgentPage /></ProtectedRoute>} />
             <Route path="/calls" element={<ProtectedRoute><CallHistoryPage /></ProtectedRoute>} />
             <Route path="/reports" element={<ProtectedRoute><ReportsPage /></ProtectedRoute>} />
             <Route path="/agents/:id/flow" element={<ProtectedRoute><FlowEditorPage /></ProtectedRoute>} />
