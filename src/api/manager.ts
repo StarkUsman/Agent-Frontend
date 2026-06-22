@@ -1,10 +1,14 @@
 // REST client for the pipecat-flows multi-agent manager (manager.py).
 //
-// Base URL is read from VITE_MANAGER_URL and defaults to the manager's
-// documented local port. The manager serves permissive CORS ("*").
+// GET /agents and GET /agents/:id are served by the calls API (VITE_CALLS_URL).
+// All mutations (POST, PUT, DELETE) go to the manager API (VITE_MANAGER_URL).
 
 const BASE_URL = (
   (import.meta.env.VITE_MANAGER_URL as string | undefined) ?? "http://84.46.251.98:8080"
+).replace(/\/+$/, "");
+
+const LIST_BASE_URL = (
+  (import.meta.env.VITE_CALLS_URL as string | undefined) ?? "http://localhost:8790"
 ).replace(/\/+$/, "");
 
 export type AgentStatus = "running" | "inactive";
@@ -13,12 +17,14 @@ export interface ManagerAgent {
   id: string;
   name: string;
   port: number;
+  config: Record<string, string>;
   status: AgentStatus;
   created_at: string;
+  updated_at: string;
+  flow_api_port: number;
 }
 
 export interface AgentDetail extends ManagerAgent {
-  flow_api_port: number;
   client_url: string;
 }
 
@@ -52,17 +58,46 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     }
     throw new Error(message);
   }
-  // Some endpoints (DELETE) may return an empty body.
   const text = await res.text();
   return (text ? JSON.parse(text) : undefined) as T;
 }
 
-export function listAgents(): Promise<ManagerAgent[]> {
-  return request<ManagerAgent[]>("/agents");
+async function requestList<T>(path: string): Promise<T> {
+  const res = await fetch(`${LIST_BASE_URL}${path}`, {
+    headers: { "Content-Type": "application/json" },
+  });
+  if (!res.ok) {
+    let message = `${res.status} ${res.statusText}`;
+    try {
+      const body = await res.json();
+      if (body?.error) message = body.error;
+    } catch {
+      // non-JSON error body — keep the status line
+    }
+    throw new Error(message);
+  }
+  const text = await res.text();
+  return (text ? JSON.parse(text) : undefined) as T;
+}
+
+export interface AgentPagination {
+  total: number;
+  limit: number;
+  page: number;
+  totalPages: number;
+}
+
+export interface AgentListResponse {
+  data: ManagerAgent[];
+  pagination: AgentPagination;
+}
+
+export function listAgents(page = 1, limit = 25): Promise<AgentListResponse> {
+  return requestList<AgentListResponse>(`/api/agents?page=${page}&limit=${limit}`);
 }
 
 export function getAgent(id: string): Promise<AgentDetail> {
-  return request<AgentDetail>(`/agents/${id}`);
+  return requestList<AgentDetail>(`/api/agents/${id}`);
 }
 
 export function getAgentFlow(id: string): Promise<{ flow_code: string }> {

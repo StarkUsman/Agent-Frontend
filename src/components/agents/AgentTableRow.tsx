@@ -8,10 +8,9 @@ export interface AgentRowData {
   id: string
   name: string
   description: string
-  voice: { initial: string; name: string; color: string }
   calls: number
-  avgTtfb: string | null       // null = no data yet ("—")
-  interruptions: string | null // null = no data yet ("—")
+  avgTtfb: string | null
+  interruptions: string | null
   clientUrl: string
   status: 'Active' | 'Inactive'
 }
@@ -21,18 +20,6 @@ interface AgentRowProps extends AgentRowData {
 }
 
 // ── Sub-components ─────────────────────────────────────────────────────────
-const VoiceCell = ({ initial, name, color }: AgentRowData['voice']) => (
-  <div className="flex items-center gap-2">
-    <span
-      className="w-6 h-6 rounded-full flex items-center justify-center text-white text-[10px] font-bold shrink-0"
-      style={{ backgroundColor: color }}
-    >
-      {initial}
-    </span>
-    <span className="text-sm text-slate-600 dark:text-slate-400">{name}</span>
-  </div>
-)
-
 const UrlCell = ({ url }: { url: string }) => {
   const [copied, setCopied] = useState(false)
 
@@ -125,7 +112,6 @@ const AgentTableRow = ({
   id,
   name,
   description,
-  voice,
   calls,
   avgTtfb,
   interruptions,
@@ -142,11 +128,6 @@ const AgentTableRow = ({
           {name}
         </p>
         <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">{description}</p>
-      </td>
-
-      {/* Voice */}
-      <td className="py-4 px-4">
-        <VoiceCell {...voice} />
       </td>
 
       {/* URL */}

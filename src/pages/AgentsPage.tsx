@@ -12,32 +12,20 @@ import {
 import { useCurrentUser } from '../contexts/CurrentUserContext'
 import { useAgents } from '../contexts/AgentsContext'
 
-// ── Config ─────────────────────────────────────────────────────────────────
-const ITEMS_PER_PAGE = 6
-
-const AVATAR_COLORS = ['#6366f1', '#0ea5e9', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6']
-
-// Backend agents have no voice/analytics yet — derive a stable avatar and show
-// placeholders for metrics the manager doesn't track.
-const toRow = (a: ManagerAgent): AgentRowData => {
-  const initial = (a.name.trim()[0] ?? '?').toUpperCase()
-  const color = AVATAR_COLORS[a.id.charCodeAt(0) % AVATAR_COLORS.length]
-  return {
-    id: a.id,
-    name: a.name,
-    description: `Agent on port ${a.port}`,
-    voice: { initial, name: '—', color },
-    calls: 0,
-    avgTtfb: null,
-    interruptions: null,
-    clientUrl: agentClientUrl(a.port),
-    status: a.status === 'running' ? 'Active' : 'Inactive',
-  }
-}
+// ── Helpers ─────────────────────────────────────────────────────────────────
+const toRow = (a: ManagerAgent): AgentRowData => ({
+  id: a.id,
+  name: a.name,
+  description: a.config?.OPENAI_MODEL ?? `Port ${a.port}`,
+  calls: 0,
+  avgTtfb: null,
+  interruptions: null,
+  clientUrl: agentClientUrl(a.port),
+  status: a.status === 'running' ? 'Active' : 'Inactive',
+})
 
 const COLUMNS = [
-  { label: 'Agent name', width: 'w-[26%]' },
-  { label: 'Voice', width: 'w-[10%]' },
+  { label: 'Agent name', width: 'w-[36%]' },
   { label: 'URL', width: 'w-[18%]' },
   { label: 'Calls', width: 'w-[7%]' },
   { label: 'Avg TTFB', width: 'w-[9%]' },
@@ -51,10 +39,8 @@ const AgentsPage = () => {
   const navigate = useNavigate()
   const { hasPermission } = useCurrentUser()
   const canCreateAgents = hasPermission('agents:create')
-  const [currentPage, setCurrentPage] = useState(1)
   const [searchQuery, setSearchQuery] = useState('')
-  const { agents: rawAgents, loading, error, refresh } = useAgents()
-  const rows = rawAgents.map(toRow)
+  const { agents: rawAgents, loading, error, pagination, setPage, refresh } = useAgents()
 
   const handleToggleStatus = async (id: string, status: AgentRowData['status']) => {
     try {
@@ -70,19 +56,17 @@ const AgentsPage = () => {
   }
 
   const q = searchQuery.trim().toLowerCase()
-  const agents = q
-    ? rows.filter((a) => a.name.toLowerCase().includes(q) || a.description?.toLowerCase().includes(q))
+  const rows = rawAgents.map(toRow)
+  const filtered = q
+    ? rows.filter((a) => a.name.toLowerCase().includes(q) || a.description.toLowerCase().includes(q))
     : rows
-  const totalPages = Math.max(1, Math.ceil(agents.length / ITEMS_PER_PAGE))
-  const safePage = Math.min(currentPage, totalPages)
-  const startIndex = (safePage - 1) * ITEMS_PER_PAGE
-  const paginated = agents.slice(startIndex, startIndex + ITEMS_PER_PAGE)
-  const startItem = agents.length === 0 ? 0 : startIndex + 1
-  const endItem = Math.min(startIndex + ITEMS_PER_PAGE, agents.length)
+
+  const { page, totalPages, total, limit } = pagination
+  const startItem = total === 0 ? 0 : (page - 1) * limit + 1
+  const endItem = Math.min(page * limit, total)
 
   const handleSearch = (value: string) => {
     setSearchQuery(value)
-    setCurrentPage(1)
   }
 
   return (
@@ -184,16 +168,16 @@ const AgentsPage = () => {
                         </button>
                       </td>
                     </tr>
-                  ) : paginated.length === 0 ? (
+                  ) : filtered.length === 0 ? (
                     <tr>
                       <td colSpan={COLUMNS.length} className="py-16 text-center text-sm text-slate-400 dark:text-slate-500">
                         {q
-                          ? <>No agents match <span className="font-semibold text-slate-600 dark:text-slate-300">"{searchQuery}"</span></>
+                          ? <><span>No agents match </span><span className="font-semibold text-slate-600 dark:text-slate-300">"{searchQuery}"</span></>
                           : 'No agents yet — create one to get started.'}
                       </td>
                     </tr>
                   ) : (
-                    paginated.map((agent) => (
+                    filtered.map((agent) => (
                       <AgentTableRow key={agent.id} {...agent} onToggleStatus={handleToggleStatus} />
                     ))
                   )}
@@ -205,30 +189,30 @@ const AgentsPage = () => {
             <div className="shrink-0 flex items-center justify-between px-6 py-3 border-t border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800">
               <p className="text-xs text-slate-400 dark:text-slate-500">
                 Showing <span className="font-semibold text-slate-600 dark:text-slate-300">{startItem}–{endItem}</span> of{' '}
-                <span className="font-semibold text-slate-600 dark:text-slate-300">{agents.length}</span> agents
-                {q && <span className="ml-1">for "{searchQuery}"</span>}
+                <span className="font-semibold text-slate-600 dark:text-slate-300">{total}</span> agents
               </p>
               <div className="flex items-center gap-1">
                 <button
-                  onClick={() => setCurrentPage((p) => p - 1)}
-                  disabled={safePage === 1}
+                  onClick={() => setPage(page - 1)}
+                  disabled={page === 1 || loading}
                   className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-700 dark:hover:text-slate-300 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                 >
                   <MdChevronLeft className="text-lg" />
                 </button>
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
                   <button
-                    key={page}
-                    onClick={() => setCurrentPage(page)}
-                    className={`w-7 h-7 rounded-lg text-xs font-semibold transition-colors ${page === safePage ? 'text-white' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'}`}
-                    style={page === safePage ? { backgroundColor: '#6366f1' } : {}}
+                    key={p}
+                    onClick={() => setPage(p)}
+                    disabled={loading}
+                    className={`w-7 h-7 rounded-lg text-xs font-semibold transition-colors disabled:opacity-50 ${p === page ? 'text-white' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'}`}
+                    style={p === page ? { backgroundColor: '#6366f1' } : {}}
                   >
-                    {page}
+                    {p}
                   </button>
                 ))}
                 <button
-                  onClick={() => setCurrentPage((p) => p + 1)}
-                  disabled={safePage === totalPages}
+                  onClick={() => setPage(page + 1)}
+                  disabled={page === totalPages || loading}
                   className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-700 dark:hover:text-slate-300 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                 >
                   <MdChevronRight className="text-lg" />
