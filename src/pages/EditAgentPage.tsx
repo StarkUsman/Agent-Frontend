@@ -3,9 +3,11 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { MdInfoOutline } from 'react-icons/md'
 import Sidebar from '../components/dashboard/Sidebar'
 import StepIndicator from '../components/create-agent/StepIndicator'
+import AgentPreview from '../components/create-agent/AgentPreview'
 import Step1BasicInfo from '../components/create-agent/Step1BasicInfo'
 import Step2ChooseVoice from '../components/create-agent/Step2ChooseVoice'
 import Step3AISettings from '../components/create-agent/Step3AISettings'
+import Step5Review from '../components/create-agent/Step5Review'
 import { getAgent, updateAgent, type ManagerAgent } from '../api/manager'
 import type { AgentDraft } from './CreateAgentPage'
 
@@ -13,6 +15,7 @@ const STEPS = [
   { number: 1, label: 'Basic info' },
   { number: 2, label: 'Choose voice' },
   { number: 3, label: 'AI settings' },
+  { number: 4, label: 'Review' },
 ]
 const TOTAL_STEPS = STEPS.length
 
@@ -155,16 +158,6 @@ const EditAgentPage = () => {
           isClickable={isStepClickable}
         />
 
-        {/* Key masking notice shown on AI settings step */}
-        {step === 3 && (
-          <div className="mx-8 mt-4 flex items-start gap-2 px-4 py-3 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 shrink-0">
-            <MdInfoOutline className="text-amber-500 dark:text-amber-400 text-base shrink-0 mt-0.5" />
-            <p className="text-xs text-amber-700 dark:text-amber-400 leading-relaxed">
-              API keys are not returned by the server. Leave key fields blank to keep the existing values, or enter a new value to replace them.
-            </p>
-          </div>
-        )}
-
         {submitError && (
           <div className="mx-8 mt-4 px-4 py-3 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-sm text-red-600 dark:text-red-400 shrink-0">
             {submitError}
@@ -172,39 +165,72 @@ const EditAgentPage = () => {
         )}
 
         {/* Step content */}
-        <div className="flex-1 overflow-y-auto px-8 py-5 bg-slate-50 dark:bg-slate-900">
-          {step === 1 && (
-            <Step1BasicInfo
-              draft={draft}
-              onChange={updateDraft}
-              onContinue={handleContinue}
-              canContinue={continueReady}
-              isFinalStep={isFinalStep}
-            />
-          )}
-          {step === 2 && (
-            <Step2ChooseVoice
-              draft={draft}
-              onChange={updateDraft}
-              onBack={handleBack}
-              onContinue={handleContinue}
-              canContinue={continueReady}
-              isFinalStep={isFinalStep}
-            />
-          )}
-          {step === 3 && (
-            <Step3AISettings
-              draft={draft}
-              onChange={updateDraft}
-              onBack={handleBack}
-              onContinue={handleContinue}
-              canContinue={continueReady}
-              isFinalStep={isFinalStep}
-              submitting={submitting}
-              finalLabel="Save changes"
-              editMode
-            />
-          )}
+        <div className="flex-1 w-full flex overflow-hidden bg-slate-50 dark:bg-slate-900">
+
+          {/* Left: form */}
+          <div className="flex-1 overflow-y-auto px-8 py-5">
+
+            {/* Key masking notice on AI settings step */}
+            {step === 3 && (
+              <div className="mb-5 flex items-start gap-2 px-4 py-3 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
+                <MdInfoOutline className="text-amber-500 dark:text-amber-400 text-base shrink-0 mt-0.5" />
+                <p className="text-xs text-amber-700 dark:text-amber-400 leading-relaxed">
+                  API keys are not returned by the server. Leave key fields blank to keep existing values, or enter a new value to replace them.
+                </p>
+              </div>
+            )}
+
+            {step === 1 && (
+              <Step1BasicInfo
+                draft={draft}
+                onChange={updateDraft}
+                onContinue={handleContinue}
+                canContinue={continueReady}
+                isFinalStep={isFinalStep}
+              />
+            )}
+            {step === 2 && (
+              <Step2ChooseVoice
+                draft={draft}
+                onChange={updateDraft}
+                onBack={handleBack}
+                onContinue={handleContinue}
+                canContinue={continueReady}
+                isFinalStep={isFinalStep}
+              />
+            )}
+            {step === 3 && (
+              <Step3AISettings
+                draft={draft}
+                onChange={updateDraft}
+                onBack={handleBack}
+                onContinue={handleContinue}
+                canContinue={continueReady}
+                isFinalStep={isFinalStep}
+                submitting={submitting}
+                finalLabel="Save changes"
+                editMode
+              />
+            )}
+            {step === 4 && (
+              <Step5Review
+                draft={draft}
+                onEdit={() => setStep(1)}
+                onBack={handleBack}
+                onContinue={handleContinue}
+                canContinue={continueReady}
+                isFinalStep={isFinalStep}
+                submitting={submitting}
+                finalLabel="Save changes"
+              />
+            )}
+          </div>
+
+          {/* Right: live preview */}
+          <div className="w-90 rounded-2xl mr-8 mt-4 shrink-0 border-l border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800 overflow-y-auto">
+            <AgentPreview draft={draft} currentStep={step} totalSteps={TOTAL_STEPS} />
+          </div>
+
         </div>
 
       </main>
