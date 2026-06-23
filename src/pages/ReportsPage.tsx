@@ -1,78 +1,68 @@
+import { useEffect, useState } from 'react'
 import { MdOutlineAccessTime, MdOutlinePause, MdOutlineSyncAlt } from 'react-icons/md'
 import { BiPhoneCall } from 'react-icons/bi'
 import Sidebar from '../components/dashboard/Sidebar'
 import StatCard, { type StatCardProps } from '../components/dashboard/StatCard'
 import CallsBarChart from '../components/reports/CallsBarChart'
+import { fetchWeeklyTotalCalls, fetchWeeklyAvgLlmLatency, fetchWeeklyInterruptionRate, fetchWeeklyAvgTtsLatency, fetchWeeklyUsageTotals, fetchWeeklyConversationQuality, fetchWeeklyCallsByAgent, type WeeklyUsageTotalsResponse, type WeeklyConversationQualityResponse, type WeeklyCallsByAgentItem } from '../api/reports'
 
 // ════════════════════════════════════════════
-// Mock data
+// Mock data (remaining stats — replaced lazily as APIs are wired up)
 // ════════════════════════════════════════════
 
-const REPORT_STATS: StatCardProps[] = [
+const STAT_CARD_BASE: StatCardProps[] = [
   {
-    label: 'Total calls this week',
-    value: '1,099',
-    sub: 'Across all agents',
-    subType: 'neutral',
-    icon: BiPhoneCall,
-    iconBg: '#ede9fe',
+    label:     'Total calls this week',
+    value:     '—',
+    sub:       'Across all agents',
+    subType:   'neutral',
+    icon:      BiPhoneCall,
+    iconBg:    '#ede9fe',
     iconColor: '#7c3aed',
   },
   {
-    label: 'Avg TTFB (user→bot)',
-    value: '780ms',
-    sub: 'p50',
-    subType: 'positive',
-    icon: MdOutlineAccessTime,
-    iconBg: '#e0f2fe',
+    label:     'Avg TTFB (LLM)',
+    value:     '—',
+    sub:       'avg first token latency',
+    subType:   'positive',
+    icon:      MdOutlineAccessTime,
+    iconBg:    '#e0f2fe',
     iconColor: '#0284c7',
   },
   {
-    label: 'Interruption rate',
-    value: '12%',
-    sub: 'was_interrupted',
-    subType: 'neutral',
-    icon: MdOutlinePause,
-    iconBg: '#ede9fe',
+    label:     'Interruption rate',
+    value:     '—',
+    sub:       'interrupted calls',
+    subType:   'neutral',
+    icon:      MdOutlinePause,
+    iconBg:    '#ede9fe',
     iconColor: '#7c3aed',
   },
   {
-    label: 'Transferred',
-    value: '4.1%',
-    sub: '53 calls',
-    subType: 'indigo',
-    icon: MdOutlineSyncAlt,
-    iconBg: '#ede9fe',
+    label:     'Transferred',
+    value:     '4.1%',
+    sub:       '53 calls',
+    subType:   'indigo',
+    icon:      MdOutlineSyncAlt,
+    iconBg:    '#ede9fe',
     iconColor: '#6366f1',
   },
 ]
 
-const LATENCY_SERVICES = [
-  { value: '118ms', label: 'Voice recognition (STT)', sub: 'Deepgram nova-3',              color: '#10b981' },
-  { value: '382ms', label: 'AI brain (LLM)',          sub: 'Claude 3.5 Sonnet first token', color: '#6366f1' },
-  { value: '162ms', label: 'Voice output (TTS)',      sub: 'ElevenLabs first audio byte',   color: '#f97316' },
-]
+const STT_LATENCY = { label: 'Voice recognition (STT)', sub: 'Deepgram nova-3', value: '118ms', color: '#10b981' }
 
-const API_USAGE = [
-  { label: 'LLM prompt tokens',      value: '3.4M', color: '#6366f1' },
-  { label: 'LLM completion tokens',  value: '1.6M', color: '#6366f1' },
-  { label: 'TTS characters',         value: '8.2M', color: '#f97316' },
-]
+const fmtCount = (n: number): string => {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`
+  if (n >= 1_000)     return `${(n / 1_000).toFixed(1)}K`
+  return n.toString()
+}
 
-const AGENT_CALLS = [
-  { name: 'Customer support',    calls: 584 },
-  { name: 'Sales assistant',     calls: 312 },
-  { name: 'Appointment booking', calls: 241 },
-  { name: 'IT helpdesk',         calls: 147 },
-]
-const MAX_AGENT_CALLS = Math.max(...AGENT_CALLS.map((a) => a.calls))
 
-const QUALITY_METRICS = [
-  { label: 'Avg turns per call',        value: '7.4',    color: 'text-slate-800 dark:text-slate-200' },
-  { label: 'Calls with interruptions',  value: '12%',    color: 'text-amber-500' },
-  { label: 'Calls with 0 interruptions',value: '88%',    color: 'text-emerald-500' },
-  { label: 'Avg call duration',         value: '2m 14s', color: 'text-slate-800 dark:text-slate-200' },
-]
+const fmtDuration = (seconds: number): string => {
+  const m = Math.floor(seconds / 60)
+  const s = Math.round(seconds % 60)
+  return `${m}m ${s}s`
+}
 
 const OUTCOMES = [
   { label: 'Resolved by agent',     value: '94.2%', dot: '#10b981', text: 'text-emerald-600 dark:text-emerald-400' },
@@ -84,6 +74,128 @@ const OUTCOMES = [
 // Page
 // ════════════════════════════════════════════
 const ReportsPage = () => {
+  const [totalCalls,        setTotalCalls]        = useState<number | null>(null)
+  const [totalCallsLoading, setTotalCallsLoading] = useState(true)
+
+  const [avgLlmTtfb,        setAvgLlmTtfb]        = useState<number | null>(null)
+  const [avgLlmTtfbLoading, setAvgLlmTtfbLoading] = useState(true)
+
+  const [interruptionRate,        setInterruptionRate]        = useState<number | null>(null)
+  const [interruptionRateLoading, setInterruptionRateLoading] = useState(true)
+
+  const [avgTtsTtfb,        setAvgTtsTtfb]        = useState<number | null>(null)
+  const [avgTtsTtfbLoading, setAvgTtsTtfbLoading] = useState(true)
+
+  const [usageTotals,        setUsageTotals]        = useState<WeeklyUsageTotalsResponse | null>(null)
+  const [usageTotalsLoading, setUsageTotalsLoading] = useState(true)
+
+  const [convQuality,        setConvQuality]        = useState<WeeklyConversationQualityResponse | null>(null)
+  const [convQualityLoading, setConvQualityLoading] = useState(true)
+
+  const [agentCalls,        setAgentCalls]        = useState<WeeklyCallsByAgentItem[]>([])
+  const [agentCallsLoading, setAgentCallsLoading] = useState(true)
+
+  useEffect(() => {
+    fetchWeeklyTotalCalls()
+      .then((res) => setTotalCalls(res.total))
+      .catch(() => setTotalCalls(null))
+      .finally(() => setTotalCallsLoading(false))
+
+    fetchWeeklyAvgLlmLatency()
+      .then((res) => setAvgLlmTtfb(res.avg_llm_ttfb_ms))
+      .catch(() => setAvgLlmTtfb(null))
+      .finally(() => setAvgLlmTtfbLoading(false))
+
+    fetchWeeklyInterruptionRate()
+      .then((res) => setInterruptionRate(res.interruption_rate))
+      .catch(() => setInterruptionRate(null))
+      .finally(() => setInterruptionRateLoading(false))
+
+    fetchWeeklyAvgTtsLatency()
+      .then((res) => setAvgTtsTtfb(res.avg_tts_ttfb_ms))
+      .catch(() => setAvgTtsTtfb(null))
+      .finally(() => setAvgTtsTtfbLoading(false))
+
+    fetchWeeklyUsageTotals()
+      .then(setUsageTotals)
+      .catch(() => setUsageTotals(null))
+      .finally(() => setUsageTotalsLoading(false))
+
+    fetchWeeklyConversationQuality()
+      .then(setConvQuality)
+      .catch(() => setConvQuality(null))
+      .finally(() => setConvQualityLoading(false))
+
+    fetchWeeklyCallsByAgent()
+      .then((res) => setAgentCalls(res.agents))
+      .catch(() => setAgentCalls([]))
+      .finally(() => setAgentCallsLoading(false))
+  }, [])
+
+  const q = convQuality
+  const qualityMetrics = [
+    {
+      label: 'Avg turns per call',
+      value: convQualityLoading ? '—' : q ? q.avg_turns_per_call.toFixed(1) : 'N/A',
+      color: 'text-slate-800 dark:text-slate-200',
+    },
+    {
+      label: 'Calls with interruptions',
+      value: convQualityLoading ? '—' : q ? `${q.calls_with_interruptions_pct.toFixed(1)}%` : 'N/A',
+      color: 'text-amber-500',
+    },
+    {
+      label: 'Calls with 0 interruptions',
+      value: convQualityLoading ? '—' : q ? `${q.calls_without_interruptions_pct.toFixed(1)}%` : 'N/A',
+      color: 'text-emerald-500',
+    },
+    {
+      label: 'Avg call duration',
+      value: convQualityLoading ? '—' : q ? fmtDuration(q.avg_call_duration_seconds) : 'N/A',
+      color: 'text-slate-800 dark:text-slate-200',
+    },
+  ]
+
+  const fmt = (n: number | undefined) => (usageTotalsLoading ? '—' : n !== undefined ? fmtCount(n) : 'N/A')
+
+  const apiUsage = [
+    { label: 'LLM prompt tokens',     value: fmt(usageTotals?.total_prompt_tokens),     color: '#6366f1' },
+    { label: 'LLM completion tokens', value: fmt(usageTotals?.total_completion_tokens),  color: '#6366f1' },
+    { label: 'TTS characters',        value: fmt(usageTotals?.total_tts_characters),     color: '#f97316' },
+  ]
+
+  const latencyServices = [
+    STT_LATENCY,
+    {
+      label: 'AI brain (LLM)',
+      sub:   'avg first token latency',
+      color: '#6366f1',
+      value: avgLlmTtfbLoading ? '—' : avgLlmTtfb !== null ? `${Math.round(avgLlmTtfb)}ms` : 'N/A',
+    },
+    {
+      label: 'Voice output (TTS)',
+      sub:   'avg first audio byte',
+      color: '#f97316',
+      value: avgTtsTtfbLoading ? '—' : avgTtsTtfb !== null ? `${Math.round(avgTtsTtfb)}ms` : 'N/A',
+    },
+  ]
+
+  const statCards: StatCardProps[] = STAT_CARD_BASE.map((s, i) => {
+    if (i === 0) return {
+      ...s,
+      value: totalCallsLoading ? '—' : totalCalls !== null ? totalCalls.toLocaleString() : 'N/A',
+    }
+    if (i === 1) return {
+      ...s,
+      value: avgLlmTtfbLoading ? '—' : avgLlmTtfb !== null ? `${Math.round(avgLlmTtfb)}ms` : 'N/A',
+    }
+    if (i === 2) return {
+      ...s,
+      value: interruptionRateLoading ? '—' : interruptionRate !== null ? `${interruptionRate.toFixed(1)}%` : 'N/A',
+    }
+    return s
+  })
+
   return (
     <div className="flex h-screen bg-slate-50 dark:bg-slate-900 overflow-hidden">
       <Sidebar />
@@ -103,7 +215,7 @@ const ReportsPage = () => {
 
           {/* ── Section 1: Stat cards ── */}
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-            {REPORT_STATS.map((stat) => (
+            {statCards.map((stat) => (
               <StatCard key={stat.label} {...stat} />
             ))}
           </div>
@@ -122,7 +234,7 @@ const ReportsPage = () => {
               </p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {LATENCY_SERVICES.map((s) => (
+              {latencyServices.map((s) => (
                 <div
                   key={s.label}
                   className="bg-slate-50 dark:bg-slate-900 rounded-xl p-4 border border-slate-100 dark:border-slate-700"
@@ -155,7 +267,7 @@ const ReportsPage = () => {
                   </p>
                 </div>
                 <div className="space-y-4">
-                  {API_USAGE.map((row) => (
+                  {apiUsage.map((row) => (
                     <div key={row.label} className="flex items-center justify-between">
                       <span className="text-sm text-slate-600 dark:text-slate-400">{row.label}</span>
                       <span
@@ -175,25 +287,38 @@ const ReportsPage = () => {
               {/* Calls by agent */}
               <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-100 dark:border-slate-700 shadow-sm">
                 <h2 className="text-base font-bold text-slate-900 dark:text-slate-100 mb-5">Calls by agent</h2>
-                <div className="space-y-4">
-                  {AGENT_CALLS.map(({ name, calls }) => (
-                    <div key={name}>
-                      <div className="flex items-center justify-between mb-1.5">
-                        <span className="text-sm text-slate-600 dark:text-slate-400">{name}</span>
-                        <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">{calls}</span>
+                {agentCallsLoading ? (
+                  <div className="space-y-4">
+                    {Array.from({ length: 4 }).map((_, i) => (
+                      <div key={i} className="space-y-1.5">
+                        <div className="h-3 w-1/2 bg-slate-100 dark:bg-slate-700 rounded animate-pulse" />
+                        <div className="h-1.5 bg-slate-100 dark:bg-slate-700 rounded-full animate-pulse" />
                       </div>
-                      <div className="h-1.5 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
-                        <div
-                          className="h-full rounded-full transition-all"
-                          style={{
-                            width: `${(calls / MAX_AGENT_CALLS) * 100}%`,
-                            backgroundColor: '#6366f1',
-                          }}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                ) : agentCalls.length === 0 ? (
+                  <p className="text-sm text-slate-400 dark:text-slate-500">No data for this period.</p>
+                ) : (
+                  <div className="space-y-4">
+                    {(() => {
+                      const max = Math.max(...agentCalls.map((a) => a.total_calls))
+                      return agentCalls.map((a) => (
+                        <div key={`${a.agent_id}-${a.agent_name}`}>
+                          <div className="flex items-center justify-between mb-1.5">
+                            <span className="text-sm text-slate-600 dark:text-slate-400">{a.agent_name}</span>
+                            <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">{a.total_calls}</span>
+                          </div>
+                          <div className="h-1.5 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+                            <div
+                              className="h-full rounded-full transition-all"
+                              style={{ width: `${(a.total_calls / max) * 100}%`, backgroundColor: '#6366f1' }}
+                            />
+                          </div>
+                        </div>
+                      ))
+                    })()}
+                  </div>
+                )}
               </div>
 
             </div>
@@ -210,7 +335,7 @@ const ReportsPage = () => {
                   </p>
                 </div>
                 <div className="space-y-4">
-                  {QUALITY_METRICS.map((m) => (
+                  {qualityMetrics.map((m) => (
                     <div key={m.label} className="flex items-center justify-between">
                       <span className="text-sm text-slate-600 dark:text-slate-400">{m.label}</span>
                       <span className={`text-sm font-bold ${m.color}`}>{m.value}</span>
