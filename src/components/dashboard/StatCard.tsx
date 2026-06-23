@@ -1,12 +1,13 @@
 // ── Types ──────────────────────────────────────────────────────────────────
 export interface StatCardProps {
-  label: string
-  value: string
-  sub: string
-  subType: 'positive' | 'neutral' | 'indigo'
-  icon: React.ElementType
-  iconBg: string
+  label:     string
+  value:     string
+  sub:       string
+  subType:   'positive' | 'neutral' | 'indigo'
+  icon:      React.ElementType
+  iconBg:    string
   iconColor: string
+  loading?:  boolean
 }
 
 // ── Component ──────────────────────────────────────────────────────────────
@@ -18,6 +19,7 @@ const StatCard = ({
   icon: Icon,
   iconBg,
   iconColor,
+  loading,
 }: StatCardProps) => {
   return (
     <div className="bg-white dark:bg-slate-800 rounded-xl px-4 py-3.5 border border-slate-100 dark:border-slate-700 shadow-sm hover:shadow-md transition-shadow">
@@ -36,20 +38,28 @@ const StatCard = ({
       </div>
 
       {/* Value */}
-      <p className="text-2xl font-bold text-slate-900 dark:text-slate-100 leading-none mb-1">
-        {value}
-      </p>
+      {loading ? (
+        <div className="h-8 w-24 rounded-lg bg-slate-200 dark:bg-slate-700 animate-pulse mb-1" />
+      ) : (
+        <p className="text-2xl font-bold text-slate-900 dark:text-slate-100 leading-none mb-1">
+          {value}
+        </p>
+      )}
 
       {/* Sub text */}
-      <p
-        className={`text-xs font-medium ${
-          subType === 'positive' ? 'text-emerald-500'
-          : subType === 'indigo'   ? 'text-indigo-500'
-          : 'text-slate-400 dark:text-slate-500'
-        }`}
-      >
-        {sub}
-      </p>
+      {loading ? (
+        <div className="h-3 w-20 rounded bg-slate-200 dark:bg-slate-700 animate-pulse" />
+      ) : (
+        <p
+          className={`text-xs font-medium ${
+            subType === 'positive' ? 'text-emerald-500'
+            : subType === 'indigo'   ? 'text-indigo-500'
+            : 'text-slate-400 dark:text-slate-500'
+          }`}
+        >
+          {sub}
+        </p>
+      )}
 
     </div>
   )

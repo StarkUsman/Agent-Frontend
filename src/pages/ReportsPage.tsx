@@ -4,16 +4,25 @@ import { BiPhoneCall } from 'react-icons/bi'
 import Sidebar from '../components/dashboard/Sidebar'
 import StatCard, { type StatCardProps } from '../components/dashboard/StatCard'
 import CallsBarChart from '../components/reports/CallsBarChart'
-import { fetchWeeklyTotalCalls, fetchWeeklyAvgLlmLatency, fetchWeeklyInterruptionRate, fetchWeeklyAvgTtsLatency, fetchWeeklyUsageTotals, fetchWeeklyConversationQuality, fetchWeeklyCallsByAgent, type WeeklyUsageTotalsResponse, type WeeklyConversationQualityResponse, type WeeklyCallsByAgentItem } from '../api/reports'
+import {
+  fetchWeeklyTotalCalls,
+  fetchWeeklyAvgLlmLatency,
+  fetchWeeklyInterruptionRate,
+  fetchWeeklyAvgTtsLatency,
+  fetchWeeklyUsageTotals,
+  fetchWeeklyConversationQuality,
+  fetchWeeklyCallsByAgent,
+  type WeeklyUsageTotalsResponse,
+  type WeeklyConversationQualityResponse,
+  type WeeklyCallsByAgentItem,
+} from '../api/reports'
 
-// ════════════════════════════════════════════
-// Mock data (remaining stats — replaced lazily as APIs are wired up)
-// ════════════════════════════════════════════
+// ── Static base data ──────────────────────────────────────────────────────────
 
 const STAT_CARD_BASE: StatCardProps[] = [
   {
     label:     'Total calls this week',
-    value:     '—',
+    value:     '',
     sub:       'Across all agents',
     subType:   'neutral',
     icon:      BiPhoneCall,
@@ -22,7 +31,7 @@ const STAT_CARD_BASE: StatCardProps[] = [
   },
   {
     label:     'Avg TTFB (LLM)',
-    value:     '—',
+    value:     '',
     sub:       'avg first token latency',
     subType:   'positive',
     icon:      MdOutlineAccessTime,
@@ -31,7 +40,7 @@ const STAT_CARD_BASE: StatCardProps[] = [
   },
   {
     label:     'Interruption rate',
-    value:     '—',
+    value:     '',
     sub:       'interrupted calls',
     subType:   'neutral',
     icon:      MdOutlinePause,
@@ -49,7 +58,21 @@ const STAT_CARD_BASE: StatCardProps[] = [
   },
 ]
 
-const STT_LATENCY = { label: 'Voice recognition (STT)', sub: 'Deepgram nova-3', value: '118ms', color: '#10b981' }
+const STT_LATENCY = {
+  label:   'Voice recognition (STT)',
+  sub:     'Deepgram nova-3',
+  value:   '118ms',
+  color:   '#10b981',
+  loading: false,
+}
+
+const OUTCOMES = [
+  { label: 'Resolved by agent',      value: '94.2%', dot: '#10b981', text: 'text-emerald-600 dark:text-emerald-400' },
+  { label: 'Transferred to person',  value: '4.1%',  dot: '#f97316', text: 'text-amber-500' },
+  { label: 'Call dropped or failed', value: '1.7%',  dot: '#ef4444', text: 'text-red-500'   },
+]
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
 const fmtCount = (n: number): string => {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`
@@ -57,22 +80,19 @@ const fmtCount = (n: number): string => {
   return n.toString()
 }
 
-
 const fmtDuration = (seconds: number): string => {
   const m = Math.floor(seconds / 60)
   const s = Math.round(seconds % 60)
   return `${m}m ${s}s`
 }
 
-const OUTCOMES = [
-  { label: 'Resolved by agent',     value: '94.2%', dot: '#10b981', text: 'text-emerald-600 dark:text-emerald-400' },
-  { label: 'Transferred to person', value: '4.1%',  dot: '#f97316', text: 'text-amber-500'   },
-  { label: 'Call dropped or failed',value: '1.7%',  dot: '#ef4444', text: 'text-red-500'     },
-]
+// Inline shimmer used for row-level value cells
+const ValueSkeleton = () => (
+  <div className="h-3.5 w-14 rounded bg-slate-200 dark:bg-slate-700 animate-pulse" />
+)
 
-// ════════════════════════════════════════════
-// Page
-// ════════════════════════════════════════════
+// ── Page ──────────────────────────────────────────────────────────────────────
+
 const ReportsPage = () => {
   const [totalCalls,        setTotalCalls]        = useState<number | null>(null)
   const [totalCallsLoading, setTotalCallsLoading] = useState(true)
@@ -132,69 +152,50 @@ const ReportsPage = () => {
       .finally(() => setAgentCallsLoading(false))
   }, [])
 
-  const q = convQuality
-  const qualityMetrics = [
-    {
-      label: 'Avg turns per call',
-      value: convQualityLoading ? '—' : q ? q.avg_turns_per_call.toFixed(1) : 'N/A',
-      color: 'text-slate-800 dark:text-slate-200',
-    },
-    {
-      label: 'Calls with interruptions',
-      value: convQualityLoading ? '—' : q ? `${q.calls_with_interruptions_pct.toFixed(1)}%` : 'N/A',
-      color: 'text-amber-500',
-    },
-    {
-      label: 'Calls with 0 interruptions',
-      value: convQualityLoading ? '—' : q ? `${q.calls_without_interruptions_pct.toFixed(1)}%` : 'N/A',
-      color: 'text-emerald-500',
-    },
-    {
-      label: 'Avg call duration',
-      value: convQualityLoading ? '—' : q ? fmtDuration(q.avg_call_duration_seconds) : 'N/A',
-      color: 'text-slate-800 dark:text-slate-200',
-    },
-  ]
+  // ── Derived data ────────────────────────────────────────────────────────────
 
-  const fmt = (n: number | undefined) => (usageTotalsLoading ? '—' : n !== undefined ? fmtCount(n) : 'N/A')
-
-  const apiUsage = [
-    { label: 'LLM prompt tokens',     value: fmt(usageTotals?.total_prompt_tokens),     color: '#6366f1' },
-    { label: 'LLM completion tokens', value: fmt(usageTotals?.total_completion_tokens),  color: '#6366f1' },
-    { label: 'TTS characters',        value: fmt(usageTotals?.total_tts_characters),     color: '#f97316' },
-  ]
+  const statCards: StatCardProps[] = STAT_CARD_BASE.map((s, i) => {
+    if (i === 0) return { ...s, value: totalCalls !== null ? totalCalls.toLocaleString() : 'N/A', loading: totalCallsLoading }
+    if (i === 1) return { ...s, value: avgLlmTtfb !== null ? `${Math.round(avgLlmTtfb)}ms` : 'N/A', loading: avgLlmTtfbLoading }
+    if (i === 2) return { ...s, value: interruptionRate !== null ? `${interruptionRate.toFixed(1)}%` : 'N/A', loading: interruptionRateLoading }
+    return s
+  })
 
   const latencyServices = [
     STT_LATENCY,
     {
-      label: 'AI brain (LLM)',
-      sub:   'avg first token latency',
-      color: '#6366f1',
-      value: avgLlmTtfbLoading ? '—' : avgLlmTtfb !== null ? `${Math.round(avgLlmTtfb)}ms` : 'N/A',
+      label:   'AI brain (LLM)',
+      sub:     'avg first token latency',
+      color:   '#6366f1',
+      value:   avgLlmTtfb !== null ? `${Math.round(avgLlmTtfb)}ms` : 'N/A',
+      loading: avgLlmTtfbLoading,
     },
     {
-      label: 'Voice output (TTS)',
-      sub:   'avg first audio byte',
-      color: '#f97316',
-      value: avgTtsTtfbLoading ? '—' : avgTtsTtfb !== null ? `${Math.round(avgTtsTtfb)}ms` : 'N/A',
+      label:   'Voice output (TTS)',
+      sub:     'avg first audio byte',
+      color:   '#f97316',
+      value:   avgTtsTtfb !== null ? `${Math.round(avgTtsTtfb)}ms` : 'N/A',
+      loading: avgTtsTtfbLoading,
     },
   ]
 
-  const statCards: StatCardProps[] = STAT_CARD_BASE.map((s, i) => {
-    if (i === 0) return {
-      ...s,
-      value: totalCallsLoading ? '—' : totalCalls !== null ? totalCalls.toLocaleString() : 'N/A',
-    }
-    if (i === 1) return {
-      ...s,
-      value: avgLlmTtfbLoading ? '—' : avgLlmTtfb !== null ? `${Math.round(avgLlmTtfb)}ms` : 'N/A',
-    }
-    if (i === 2) return {
-      ...s,
-      value: interruptionRateLoading ? '—' : interruptionRate !== null ? `${interruptionRate.toFixed(1)}%` : 'N/A',
-    }
-    return s
-  })
+  const fmt = (n: number | undefined) => n !== undefined ? fmtCount(n) : 'N/A'
+
+  const apiUsage = [
+    { label: 'LLM prompt tokens',     value: fmt(usageTotals?.total_prompt_tokens),    color: '#6366f1' },
+    { label: 'LLM completion tokens', value: fmt(usageTotals?.total_completion_tokens), color: '#6366f1' },
+    { label: 'TTS characters',        value: fmt(usageTotals?.total_tts_characters),    color: '#f97316' },
+  ]
+
+  const q = convQuality
+  const qualityMetrics = [
+    { label: 'Avg turns per call',          value: q ? q.avg_turns_per_call.toFixed(1)                    : 'N/A', color: 'text-slate-800 dark:text-slate-200' },
+    { label: 'Calls with interruptions',    value: q ? `${q.calls_with_interruptions_pct.toFixed(1)}%`    : 'N/A', color: 'text-amber-500' },
+    { label: 'Calls with 0 interruptions',  value: q ? `${q.calls_without_interruptions_pct.toFixed(1)}%` : 'N/A', color: 'text-emerald-500' },
+    { label: 'Avg call duration',           value: q ? fmtDuration(q.avg_call_duration_seconds)           : 'N/A', color: 'text-slate-800 dark:text-slate-200' },
+  ]
+
+  // ── Render ──────────────────────────────────────────────────────────────────
 
   return (
     <div className="flex h-screen bg-slate-50 dark:bg-slate-900 overflow-hidden">
@@ -202,7 +203,7 @@ const ReportsPage = () => {
 
       <main className="flex-1 flex flex-col overflow-hidden">
 
-        {/* Sticky top bar — never scrolls */}
+        {/* Sticky top bar */}
         <div className="px-8 pt-5 pb-4 bg-slate-50 dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 shrink-0">
           <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">Reports</h1>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
@@ -210,20 +211,20 @@ const ReportsPage = () => {
           </p>
         </div>
 
-        {/* Scrollable content area */}
+        {/* Scrollable content */}
         <div className="flex-1 overflow-y-auto px-8 pt-5 pb-6 space-y-5">
 
-          {/* ── Section 1: Stat cards ── */}
+          {/* ── Stat cards ── */}
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
             {statCards.map((stat) => (
               <StatCard key={stat.label} {...stat} />
             ))}
           </div>
 
-          {/* ── Section 2: Calls per day bar chart ── */}
+          {/* ── Calls per day bar chart ── */}
           <CallsBarChart />
 
-          {/* ── Section 3: Response latency per service ── */}
+          {/* ── Response latency per service ── */}
           <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-100 dark:border-slate-700 shadow-sm">
             <div className="mb-5">
               <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">
@@ -239,12 +240,13 @@ const ReportsPage = () => {
                   key={s.label}
                   className="bg-slate-50 dark:bg-slate-900 rounded-xl p-4 border border-slate-100 dark:border-slate-700"
                 >
-                  <p
-                    className="text-2xl font-bold mb-1"
-                    style={{ color: s.color }}
-                  >
-                    {s.value}
-                  </p>
+                  {s.loading ? (
+                    <div className="h-8 w-20 rounded-lg bg-slate-200 dark:bg-slate-700 animate-pulse mb-1" />
+                  ) : (
+                    <p className="text-2xl font-bold mb-1" style={{ color: s.color }}>
+                      {s.value}
+                    </p>
+                  )}
                   <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">{s.label}</p>
                   <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">{s.sub}</p>
                 </div>
@@ -252,7 +254,7 @@ const ReportsPage = () => {
             </div>
           </div>
 
-          {/* ── Section 4: Bottom 2-col grid ── */}
+          {/* ── Bottom 2-col grid ── */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
             {/* Left column */}
@@ -270,12 +272,13 @@ const ReportsPage = () => {
                   {apiUsage.map((row) => (
                     <div key={row.label} className="flex items-center justify-between">
                       <span className="text-sm text-slate-600 dark:text-slate-400">{row.label}</span>
-                      <span
-                        className="text-sm font-bold"
-                        style={{ color: row.color }}
-                      >
-                        {row.value}
-                      </span>
+                      {usageTotalsLoading ? (
+                        <ValueSkeleton />
+                      ) : (
+                        <span className="text-sm font-bold" style={{ color: row.color }}>
+                          {row.value}
+                        </span>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -291,8 +294,11 @@ const ReportsPage = () => {
                   <div className="space-y-4">
                     {Array.from({ length: 4 }).map((_, i) => (
                       <div key={i} className="space-y-1.5">
-                        <div className="h-3 w-1/2 bg-slate-100 dark:bg-slate-700 rounded animate-pulse" />
-                        <div className="h-1.5 bg-slate-100 dark:bg-slate-700 rounded-full animate-pulse" />
+                        <div className="flex items-center justify-between">
+                          <div className="h-3 w-1/2 bg-slate-200 dark:bg-slate-700 rounded animate-pulse" />
+                          <div className="h-3 w-8 bg-slate-200 dark:bg-slate-700 rounded animate-pulse" />
+                        </div>
+                        <div className="h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full animate-pulse" />
                       </div>
                     ))}
                   </div>
@@ -338,7 +344,11 @@ const ReportsPage = () => {
                   {qualityMetrics.map((m) => (
                     <div key={m.label} className="flex items-center justify-between">
                       <span className="text-sm text-slate-600 dark:text-slate-400">{m.label}</span>
-                      <span className={`text-sm font-bold ${m.color}`}>{m.value}</span>
+                      {convQualityLoading ? (
+                        <ValueSkeleton />
+                      ) : (
+                        <span className={`text-sm font-bold ${m.color}`}>{m.value}</span>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -351,10 +361,7 @@ const ReportsPage = () => {
                   {OUTCOMES.map((o) => (
                     <div key={o.label} className="flex items-center justify-between">
                       <div className="flex items-center gap-2.5">
-                        <span
-                          className="w-2 h-2 rounded-full shrink-0"
-                          style={{ backgroundColor: o.dot }}
-                        />
+                        <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: o.dot }} />
                         <span className="text-sm text-slate-600 dark:text-slate-400">{o.label}</span>
                       </div>
                       <span className={`text-sm font-bold ${o.text}`}>{o.value}</span>
