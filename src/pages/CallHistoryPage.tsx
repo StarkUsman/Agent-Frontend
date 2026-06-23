@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { MdKeyboardArrowDown, MdSearch, MdChevronLeft, MdChevronRight, MdRefresh } from 'react-icons/md'
 import Sidebar from '../components/dashboard/Sidebar'
 import CallTableRow from '../components/calls/CallTableRow'
@@ -72,7 +72,7 @@ const CallHistoryPage = () => {
   const [currentPage,   setCurrentPage]   = useState(1)
 
   const [response,     setResponse]     = useState<CallsResponse | null>(null)
-  const [loading,      setLoading]      = useState(false)
+  const [loading,      setLoading]      = useState(true)
   const [error,        setError]        = useState<string | null>(null)
   const [selectedCall, setSelectedCall] = useState<ApiCallRecord | null>(null)
 
@@ -98,6 +98,10 @@ const CallHistoryPage = () => {
       setLoading(false)
     }
   }, [])
+
+  useEffect(() => {
+    load(1, '', 'All results', 'All agents', 'Today')
+  }, [load])
 
   const handleFilter = (setter: React.Dispatch<React.SetStateAction<string>>, value: string) => {
     setter(value)
@@ -217,12 +221,6 @@ const CallHistoryPage = () => {
                         <button onClick={handleRefresh} className="font-semibold underline underline-offset-2 hover:text-red-600 cursor-pointer">
                           Retry
                         </button>
-                      </td>
-                    </tr>
-                  ) : !response ? (
-                    <tr>
-                      <td colSpan={COLUMNS.length} className="py-16 text-center text-sm text-slate-400 dark:text-slate-500">
-                        Click ↻ to load calls.
                       </td>
                     </tr>
                   ) : calls.length > 0 ? (
