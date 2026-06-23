@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from 'react'
 import { MdKeyboardArrowDown, MdSearch, MdChevronLeft, MdChevronRight, MdRefresh } from 'react-icons/md'
 import Sidebar from '../components/dashboard/Sidebar'
-import CallTableRow from '../components/calls/CallTableRow'
+import CallTableRow, { CallTableRowSkeleton } from '../components/calls/CallTableRow'
 import CallDetailModal from '../components/calls/CallDetailModal'
 import { useAgents } from '../contexts/AgentsContext'
 import { fetchCalls, type CallsResponse, type ApiCallRecord } from '../api/calls'
@@ -209,11 +209,9 @@ const CallHistoryPage = () => {
                 </thead>
                 <tbody>
                   {loading ? (
-                    <tr>
-                      <td colSpan={COLUMNS.length} className="py-16 text-center text-sm text-slate-400 dark:text-slate-500">
-                        Loading calls…
-                      </td>
-                    </tr>
+                    Array.from({ length: 8 }).map((_, i) => (
+                      <CallTableRowSkeleton key={i} />
+                    ))
                   ) : error ? (
                     <tr>
                       <td colSpan={COLUMNS.length} className="py-16 text-center text-sm text-red-500">

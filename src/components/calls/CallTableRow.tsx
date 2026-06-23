@@ -71,6 +71,28 @@ const IdCell = ({ id }: { id: string }) => {
   )
 }
 
+// ── Skeleton row ──────────────────────────────────────────────────────────
+
+export const CallTableRowSkeleton = () => (
+  <tr className="border-b border-slate-100 dark:border-slate-700">
+    <td className="py-4 pl-6 pr-4">
+      <div className="h-3 w-20 rounded-md bg-slate-200 dark:bg-slate-700 animate-pulse" />
+    </td>
+    <td className="py-4 px-4">
+      <div className="h-3.5 w-24 rounded-md bg-slate-200 dark:bg-slate-700 animate-pulse" />
+    </td>
+    <td className="py-4 px-4">
+      <div className="h-5 w-20 rounded-full bg-slate-200 dark:bg-slate-700 animate-pulse" />
+    </td>
+    <td className="py-4 px-4">
+      <div className="h-3 w-14 rounded-md bg-slate-200 dark:bg-slate-700 animate-pulse" />
+    </td>
+    <td className="py-4 pl-4 pr-6">
+      <div className="h-3 w-32 rounded-md bg-slate-200 dark:bg-slate-700 animate-pulse" />
+    </td>
+  </tr>
+)
+
 // ── Row ────────────────────────────────────────────────────────────────────
 interface RowProps extends CallRecord {
   onClick: () => void

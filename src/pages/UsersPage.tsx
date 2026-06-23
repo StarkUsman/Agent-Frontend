@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { MdAdd, MdChevronLeft, MdChevronRight, MdSearch, MdRefresh } from 'react-icons/md'
 import Sidebar from '../components/dashboard/Sidebar'
-import UserTableRow from '../components/users/UserTableRow'
+import UserTableRow, { UserTableRowSkeleton } from '../components/users/UserTableRow'
 import type { UserRowData } from '../components/users/UserTableRow'
 import { fetchUsers, deleteUser, toUserRole } from '../api/users'
 import type { UsersPagination } from '../api/users'
@@ -199,11 +199,9 @@ const UsersPage = () => {
                 </thead>
                 <tbody>
                   {loading ? (
-                    <tr>
-                      <td colSpan={COLUMNS.length} className="py-16 text-center text-sm text-slate-400 dark:text-slate-500">
-                        Loading users…
-                      </td>
-                    </tr>
+                    Array.from({ length: 8 }).map((_, i) => (
+                      <UserTableRowSkeleton key={i} showActions={canManageUsers} />
+                    ))
                   ) : error ? (
                     <tr>
                       <td colSpan={COLUMNS.length} className="py-16 text-center text-sm text-red-500 dark:text-red-400">

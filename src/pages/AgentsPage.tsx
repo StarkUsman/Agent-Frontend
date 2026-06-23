@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { MdAdd, MdChevronLeft, MdChevronRight, MdSearch, MdRefresh, MdKeyboardArrowDown } from 'react-icons/md'
 import Sidebar from '../components/dashboard/Sidebar'
-import AgentTableRow, { type AgentRowData } from '../components/agents/AgentTableRow'
+import AgentTableRow, { AgentTableRowSkeleton, type AgentRowData } from '../components/agents/AgentTableRow'
 import AgentDetailModal from '../components/agents/AgentDetailModal'
 import DeleteConfirmModal from '../components/ui/DeleteConfirmModal'
 import {
@@ -228,11 +228,9 @@ const AgentsPage = () => {
                 </thead>
                 <tbody>
                   {loading ? (
-                    <tr>
-                      <td colSpan={COLUMNS.length} className="py-16 text-center text-sm text-slate-400 dark:text-slate-500">
-                        Loading agents…
-                      </td>
-                    </tr>
+                    Array.from({ length: 6 }).map((_, i) => (
+                      <AgentTableRowSkeleton key={i} />
+                    ))
                   ) : error ? (
                     <tr>
                       <td colSpan={COLUMNS.length} className="py-16 text-center text-sm text-red-500">

@@ -31,6 +31,39 @@ const RoleBadge = ({ role }: { role: UserRole }) => (
   </span>
 )
 
+// ── Skeleton row ──────────────────────────────────────────────────────────
+
+export const UserTableRowSkeleton = ({ showActions = true }: { showActions?: boolean }) => (
+  <tr className="border-b border-slate-100 dark:border-slate-700">
+    <td className="py-4 pl-6 pr-4">
+      <div className="flex items-center gap-3">
+        <div className="h-8 w-8 rounded-full bg-slate-200 dark:bg-slate-700 animate-pulse shrink-0" />
+        <div className="h-3.5 w-28 rounded-md bg-slate-200 dark:bg-slate-700 animate-pulse" />
+      </div>
+    </td>
+    <td className="py-4 px-4">
+      <div className="h-3.5 w-20 rounded-md bg-slate-200 dark:bg-slate-700 animate-pulse" />
+    </td>
+    <td className="py-4 px-4">
+      <div className="h-3.5 w-44 rounded-md bg-slate-200 dark:bg-slate-700 animate-pulse" />
+    </td>
+    <td className="py-4 px-4">
+      <div className="h-6 w-16 rounded-full bg-slate-200 dark:bg-slate-700 animate-pulse" />
+    </td>
+    <td className="py-4 px-4">
+      <div className="h-3.5 w-24 rounded-md bg-slate-200 dark:bg-slate-700 animate-pulse" />
+    </td>
+    {showActions && (
+      <td className="py-4 pl-4 pr-6">
+        <div className="flex items-center gap-1">
+          <div className="h-7 w-7 rounded-lg bg-slate-200 dark:bg-slate-700 animate-pulse" />
+          <div className="h-7 w-7 rounded-lg bg-slate-200 dark:bg-slate-700 animate-pulse" />
+        </div>
+      </td>
+    )}
+  </tr>
+)
+
 // ── Row component ──────────────────────────────────────────────────────────
 interface UserTableRowProps extends UserRowData {
   onDelete: (id: number) => void
