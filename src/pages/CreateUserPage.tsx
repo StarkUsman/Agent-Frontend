@@ -5,6 +5,7 @@ import { HiEye, HiEyeOff } from 'react-icons/hi'
 import Sidebar from '../components/dashboard/Sidebar'
 import UserAvatar from '../components/users/UserAvatar'
 import { fetchUser, createUser, updateUser, toUserRole } from '../api/users'
+import { showToast } from '../components/ui/Toast'
 import type { UserRole } from '../components/users/UserTableRow'
 
 const inputClass =
@@ -101,13 +102,18 @@ const CreateUserPage = () => {
 
       if (isEdit && id) {
         await updateUser(id, payload)
+        showToast.success('User updated', `${draft.firstName} ${draft.lastName}'s details have been saved.`)
       } else {
         await createUser({ ...payload, password: draft.password })
+        showToast.success('User created', `${draft.firstName} ${draft.lastName} has been added.`)
       }
 
       navigate('/users')
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Failed to save user')
+      showToast.error(
+        isEdit ? 'Failed to update user' : 'Failed to create user',
+        err instanceof Error ? err.message : undefined,
+      )
     } finally {
       setSaving(false)
     }

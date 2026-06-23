@@ -11,6 +11,7 @@ import Step5Review      from '../components/create-agent/Step5Review'
 import { createAgent } from '../api/manager'
 import { useProviderCatalog, neededKeyEnvs, buildAgentConfig } from '../components/create-agent/catalog'
 import { useAgents } from '../contexts/AgentsContext'
+import { showToast } from '../components/ui/Toast'
 import { generatePythonCode } from '../features/flow-editor/lib/codegen/pythonGenerator'
 import { embedFlowJsonInPython } from '../features/flow-editor/lib/codegen/flowEmbed'
 import { EXAMPLES } from '../features/flow-editor/lib/examples'
@@ -122,9 +123,12 @@ const CreateAgentPage = () => {
         config,
       })
       refresh()
+      showToast.success('Agent created', `"${draft.name.trim()}" is ready.`)
       navigate('/agents')
     } catch (err) {
-      setSubmitError(err instanceof Error ? err.message : 'Failed to create agent')
+      const msg = err instanceof Error ? err.message : 'Failed to create agent'
+      setSubmitError(msg)
+      showToast.error('Failed to create agent', msg)
     } finally {
       setSubmitting(false)
     }

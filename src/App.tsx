@@ -13,6 +13,7 @@ import CreateAgentPage from './pages/CreateAgentPage'
 import EditAgentPage from './pages/EditAgentPage'
 import UsersPage from './pages/UsersPage'
 import CreateUserPage from './pages/CreateUserPage'
+import ToastContainer from './components/ui/Toast'
 
 const App = () => {
   return (
@@ -34,6 +35,7 @@ const App = () => {
             <Route path="/users/:id/edit" element={<ProtectedRoute permission="users:manage" fallback="/users"><CreateUserPage /></ProtectedRoute>} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
+          <ToastContainer />
           </AgentsProvider>
         </BrowserRouter>
       </CurrentUserProvider>

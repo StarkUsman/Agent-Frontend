@@ -11,6 +11,7 @@ import Step5Review from '../components/create-agent/Step5Review'
 import { getAgent, updateAgent, type ManagerAgent, type ProviderCatalog } from '../api/manager'
 import { useProviderCatalog, findProvider, neededKeyEnvs, buildAgentConfig } from '../components/create-agent/catalog'
 import { useAgents } from '../contexts/AgentsContext'
+import { showToast } from '../components/ui/Toast'
 import type { AgentDraft } from './CreateAgentPage'
 
 const STEPS = [
@@ -119,9 +120,12 @@ const EditAgentPage = () => {
     try {
       await updateAgent(agent.id, { name: draft.name.trim(), config })
       refresh()
+      showToast.success('Agent updated', 'Changes saved successfully.')
       navigate('/agents')
     } catch (err) {
-      setSubmitError(err instanceof Error ? err.message : 'Failed to update agent')
+      const msg = err instanceof Error ? err.message : 'Failed to update agent'
+      setSubmitError(msg)
+      showToast.error('Failed to update agent', msg)
     } finally {
       setSubmitting(false)
     }

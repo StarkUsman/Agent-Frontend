@@ -8,6 +8,7 @@ import { fetchUsers, deleteUser, toUserRole } from '../api/users'
 import type { UsersPagination } from '../api/users'
 import { useCurrentUser } from '../contexts/CurrentUserContext'
 import DeleteConfirmModal from '../components/ui/DeleteConfirmModal'
+import { showToast } from '../components/ui/Toast'
 
 // ── Config ─────────────────────────────────────────────────────────────────
 const ITEMS_PER_PAGE = 25
@@ -91,13 +92,15 @@ const UsersPage = () => {
 
   const handleDeleteConfirm = async () => {
     if (!pendingDelete) return
+    const name = `${pendingDelete.first_name} ${pendingDelete.last_name}`
     setDeleting(true)
     try {
       await deleteUser(String(pendingDelete.id))
       setPendingDelete(null)
       load(currentPage, appliedSearch)
+      showToast.success('User deleted', `${name} has been removed.`)
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Failed to delete user')
+      showToast.error('Failed to delete user', err instanceof Error ? err.message : undefined)
     } finally {
       setDeleting(false)
     }

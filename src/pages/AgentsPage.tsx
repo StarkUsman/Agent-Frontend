@@ -14,6 +14,7 @@ import {
 } from '../api/manager'
 import { useCurrentUser } from '../contexts/CurrentUserContext'
 import { useAgents } from '../contexts/AgentsContext'
+import { showToast } from '../components/ui/Toast'
 
 // ── Constants ────────────────────────────────────────────────────────────────
 const STATUS_OPTIONS = ['All status', 'Active', 'Inactive']
@@ -89,20 +90,26 @@ const AgentsPage = () => {
       if (status === 'Active') await deactivateAgent(id)
       else                     await activateAgent(id)
       refresh()
+      showToast.success(
+        status === 'Active' ? 'Agent deactivated' : 'Agent activated',
+        'Status updated successfully.',
+      )
     } catch (err) {
-      console.error('Failed to update agent status', err)
+      showToast.error('Failed to update status', err instanceof Error ? err.message : undefined)
     }
   }
 
   const handleDeleteConfirm = async () => {
     if (!deleteTarget) return
+    const name = deleteTarget.name
     setDeleting(true)
     try {
       await deleteAgent(deleteTarget.id)
       setDeleteTarget(null)
       refresh()
+      showToast.success('Agent deleted', `"${name}" has been removed.`)
     } catch (err) {
-      console.error('Failed to delete agent', err)
+      showToast.error('Failed to delete agent', err instanceof Error ? err.message : undefined)
     } finally {
       setDeleting(false)
     }
