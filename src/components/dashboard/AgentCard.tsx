@@ -2,7 +2,7 @@ import { TbGitFork } from 'react-icons/tb'
 
 // ── Types ──────────────────────────────────────────────────────────────────
 export interface AgentCardProps {
-  id: number
+  id: string | number
   name: string
   status: 'Active' | 'Inactive'
   description: string
@@ -26,6 +26,34 @@ const StatusBadge = ({ status }: { status: AgentCardProps['status'] }) => {
     </span>
   )
 }
+
+// ── Skeleton card ─────────────────────────────────────────────────────────
+
+export const AgentCardSkeleton = () => (
+  <div className="bg-white dark:bg-slate-800 rounded-xl p-4 border border-slate-100 dark:border-slate-700 shadow-sm">
+    <div className="flex items-start justify-between gap-3 mb-1.5">
+      <div className="h-4 w-32 rounded-md bg-slate-200 dark:bg-slate-700 animate-pulse" />
+      <div className="h-5 w-16 rounded-full bg-slate-200 dark:bg-slate-700 animate-pulse shrink-0" />
+    </div>
+    <div className="space-y-1.5 mb-3">
+      <div className="h-3 w-full rounded bg-slate-100 dark:bg-slate-700/70 animate-pulse" />
+      <div className="h-3 w-3/4 rounded bg-slate-100 dark:bg-slate-700/70 animate-pulse" />
+    </div>
+    <div className="flex items-end justify-between">
+      <div className="flex gap-6">
+        <div className="space-y-1">
+          <div className="h-2.5 w-16 rounded bg-slate-100 dark:bg-slate-700/70 animate-pulse" />
+          <div className="h-4 w-8 rounded bg-slate-200 dark:bg-slate-700 animate-pulse" />
+        </div>
+        <div className="space-y-1">
+          <div className="h-2.5 w-16 rounded bg-slate-100 dark:bg-slate-700/70 animate-pulse" />
+          <div className="h-4 w-12 rounded bg-slate-200 dark:bg-slate-700 animate-pulse" />
+        </div>
+      </div>
+      <div className="h-3.5 w-16 rounded bg-slate-100 dark:bg-slate-700/70 animate-pulse" />
+    </div>
+  </div>
+)
 
 // ── Component ──────────────────────────────────────────────────────────────
 const AgentCard = ({
