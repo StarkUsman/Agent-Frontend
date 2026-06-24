@@ -113,10 +113,12 @@ export function listAgents(
   limit = 25,
   search?: string,
   status?: string,
+  kind?: AgentKind,
 ): Promise<AgentListResponse> {
   const params = new URLSearchParams({ page: String(page), limit: String(limit) });
   if (search?.trim()) params.set("name", search.trim());
   if (status)         params.set("status", status);
+  if (kind)           params.set("kind", kind);
   return requestList<AgentListResponse>(`/api/agents?${params.toString()}`);
 }
 

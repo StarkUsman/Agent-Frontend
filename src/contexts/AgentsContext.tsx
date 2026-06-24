@@ -1,9 +1,10 @@
 import { createContext, useContext, useEffect, useState, useCallback } from 'react'
-import { listAgents, type ManagerAgent, type AgentPagination } from '../api/manager'
+import { listAgents, type AgentKind, type ManagerAgent, type AgentPagination } from '../api/manager'
 
 interface AgentFilters {
   search: string
-  status: string  // '' | 'running' | 'inactive'
+  status: string     // '' | 'running' | 'inactive'
+  kind:   AgentKind | ''
 }
 
 interface AgentsContextValue {
@@ -19,7 +20,7 @@ interface AgentsContextValue {
 }
 
 const DEFAULT_PAGINATION: AgentPagination = { total: 0, limit: 25, page: 1, totalPages: 1 }
-const DEFAULT_FILTERS: AgentFilters = { search: '', status: '' }
+const DEFAULT_FILTERS: AgentFilters = { search: '', status: '', kind: '' }
 
 const AgentsContext = createContext<AgentsContextValue | null>(null)
 
@@ -34,7 +35,7 @@ export const AgentsProvider = ({ children }: { children: React.ReactNode }) => {
   const load = useCallback(async (targetPage: number, f: AgentFilters) => {
     setLoading(true)
     try {
-      const res = await listAgents(targetPage, DEFAULT_PAGINATION.limit, f.search, f.status)
+      const res = await listAgents(targetPage, DEFAULT_PAGINATION.limit, f.search, f.status, f.kind || undefined)
       setAgents(res.data)
       setPagination(res.pagination)
       setError(null)

@@ -22,6 +22,9 @@ import { showToast } from '../components/ui/Toast'
 const STATUS_OPTIONS = ['All status', 'Active', 'Inactive']
 const STATUS_MAP: Record<string, string> = { 'Active': 'running', 'Inactive': 'inactive' }
 
+const KIND_OPTIONS = ['All types', 'Pipeline', 'S2S']
+const KIND_MAP: Record<string, 'pipeline' | 's2s'> = { 'Pipeline': 'pipeline', 'S2S': 's2s' }
+
 const COLUMNS = [
   { label: 'Agent name',       width: 'w-[36%]' },
   { label: 'URL',              width: 'w-[18%]' },
@@ -82,6 +85,7 @@ const AgentsPage = () => {
   // Local search input — applied on Enter or icon click
   const [searchInput,  setSearchInput]  = useState('')
   const [statusFilter, setStatusFilter] = useState('All status')
+  const [kindFilter,   setKindFilter]   = useState('All types')
 
   // Modal state
   const [detailAgent,  setDetailAgent]  = useState<ManagerAgent | null>(null)
@@ -137,10 +141,15 @@ const AgentsPage = () => {
     setFilters({ status: STATUS_MAP[val] ?? '' })
   }
 
+  const handleKindChange = (val: string) => {
+    setKindFilter(val)
+    setFilters({ kind: KIND_MAP[val] ?? '' })
+  }
+
   const { page, totalPages, total, limit } = pagination
   const startItem = total === 0 ? 0 : (page - 1) * limit + 1
   const endItem   = Math.min(page * limit, total)
-  const rows      = rawAgents.map(toRow)
+  const rows = rawAgents.map(toRow)
 
   return (
     <div className="flex h-screen bg-slate-50 dark:bg-slate-900 overflow-hidden">
@@ -185,6 +194,12 @@ const AgentsPage = () => {
               value={statusFilter}
               options={STATUS_OPTIONS}
               onChange={handleStatusChange}
+              disabled={loading}
+            />
+            <FilterSelect
+              value={kindFilter}
+              options={KIND_OPTIONS}
+              onChange={handleKindChange}
               disabled={loading}
             />
           </div>
