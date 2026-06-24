@@ -10,6 +10,8 @@ import {
   deactivateAgent,
   deleteAgent,
   agentClientUrl,
+  agentKindOf,
+  type AgentKind,
   type ManagerAgent,
 } from '../api/manager'
 import { useCurrentUser } from '../contexts/CurrentUserContext'
@@ -60,7 +62,8 @@ const FilterSelect = ({ value, options, onChange, disabled }: FilterSelectProps)
 const toRow = (a: ManagerAgent): AgentRowData => ({
   id:           a.id,
   name:         a.name,
-  description:  a.config?.OPENAI_MODEL ?? `Port ${a.port}`,
+  description:  a.config?.S2S_PROVIDER ?? a.config?.LLM_MODEL ?? a.config?.OPENAI_MODEL ?? `Port ${a.port}`,
+  kind:         agentKindOf(a),
   calls:        0,
   avgTtfb:      null,
   interruptions:null,
@@ -85,10 +88,10 @@ const AgentsPage = () => {
   const [deleteTarget, setDeleteTarget] = useState<ManagerAgent | null>(null)
   const [deleting,     setDeleting]     = useState(false)
 
-  const handleToggleStatus = async (id: string, status: AgentRowData['status']) => {
+  const handleToggleStatus = async (id: string, status: AgentRowData['status'], kind: AgentKind) => {
     try {
-      if (status === 'Active') await deactivateAgent(id)
-      else                     await activateAgent(id)
+      if (status === 'Active') await deactivateAgent(id, kind)
+      else                     await activateAgent(id, kind)
       refresh()
       showToast.success(
         status === 'Active' ? 'Agent deactivated' : 'Agent activated',
@@ -104,7 +107,7 @@ const AgentsPage = () => {
     const name = deleteTarget.name
     setDeleting(true)
     try {
-      await deleteAgent(deleteTarget.id)
+      await deleteAgent(deleteTarget.id, agentKindOf(deleteTarget))
       setDeleteTarget(null)
       refresh()
       showToast.success('Agent deleted', `"${name}" has been removed.`)

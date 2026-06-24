@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { MdClose, MdEdit, MdOutlineDeleteOutline } from 'react-icons/md'
 import { formatDateTime } from '../calls/CallTableRow'
-import type { ManagerAgent } from '../../api/manager'
+import { agentKindOf, type ManagerAgent } from '../../api/manager'
 
 interface Props {
   agent:    ManagerAgent
@@ -38,6 +38,8 @@ const StatusBadge = ({ status }: { status: string }) => {
 }
 
 const AgentDetailModal = ({ agent, onClose, onEdit, onDelete }: Props) => {
+  const isS2s = agentKindOf(agent) === 's2s'
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
     document.addEventListener('keydown', onKey)
@@ -59,6 +61,13 @@ const AgentDetailModal = ({ agent, onClose, onEdit, onDelete }: Props) => {
             <div className="flex items-center gap-3 mb-1">
               <span className="text-xs font-mono text-slate-400 dark:text-slate-500">{agent.id}</span>
               <StatusBadge status={agent.status} />
+              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border ${
+                isS2s
+                  ? 'border-purple-200 dark:border-purple-800 text-purple-600 dark:text-purple-300 bg-purple-50 dark:bg-purple-900/30'
+                  : 'border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-800'
+              }`}>
+                {isS2s ? 'Speech to Speech' : 'STT → LLM → TTS'}
+              </span>
             </div>
             <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">{agent.name}</h2>
           </div>
@@ -83,12 +92,22 @@ const AgentDetailModal = ({ agent, onClose, onEdit, onDelete }: Props) => {
           <div className="border-t border-slate-100 dark:border-slate-700" />
 
           <Section title="Configuration">
-            <Field label="LLM provider" value={agent.config?.LLM_PROVIDER} />
-            <Field label="LLM model"    value={agent.config?.LLM_MODEL ?? agent.config?.OPENAI_MODEL} />
-            <Field label="STT provider" value={agent.config?.STT_PROVIDER} />
-            <Field label="TTS provider" value={agent.config?.TTS_PROVIDER} />
-            <Field label="Voice"        value={agent.config?.TTS_VOICE} />
-            <Field label="LLM base URL" value={agent.config?.LLM_BASE_URL ?? agent.config?.OPENAI_BASE_URL} />
+            {isS2s ? (
+              <>
+                <Field label="Provider" value={agent.config?.S2S_PROVIDER} />
+                <Field label="Model"    value={agent.config?.S2S_MODEL} />
+                <Field label="Voice"    value={agent.config?.S2S_VOICE} />
+              </>
+            ) : (
+              <>
+                <Field label="LLM provider" value={agent.config?.LLM_PROVIDER} />
+                <Field label="LLM model"    value={agent.config?.LLM_MODEL ?? agent.config?.OPENAI_MODEL} />
+                <Field label="STT provider" value={agent.config?.STT_PROVIDER} />
+                <Field label="TTS provider" value={agent.config?.TTS_PROVIDER} />
+                <Field label="Voice"        value={agent.config?.TTS_VOICE} />
+                <Field label="LLM base URL" value={agent.config?.LLM_BASE_URL ?? agent.config?.OPENAI_BASE_URL} />
+              </>
+            )}
           </Section>
 
           <div className="border-t border-slate-100 dark:border-slate-700" />

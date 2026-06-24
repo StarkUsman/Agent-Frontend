@@ -103,9 +103,11 @@ const AgentPreview = ({ draft, currentStep, totalSteps, catalog }: Props) => {
   const voiceState    = getState(2, currentStep)
   const aiState       = getState(3, currentStep)
 
+  const isS2s    = draft.agentType === 's2s'
   const llmLabel = findProvider(catalog, 'llm', draft.llmProvider)?.label ?? draft.llmProvider
   const sttLabel = findProvider(catalog, 'stt', draft.sttProvider)?.label ?? draft.sttProvider
   const ttsLabel = findProvider(catalog, 'tts', draft.ttsProvider)?.label ?? draft.ttsProvider
+  const s2sLabel = findProvider(catalog, 's2s', draft.s2sProvider)?.label ?? draft.s2sProvider
   const voiceMeta = [draft.voiceProvider, draft.age, draft.voiceGender ? cap(draft.voiceGender) : '']
     .filter(Boolean).join(' · ')
 
@@ -191,14 +193,29 @@ const AgentPreview = ({ draft, currentStep, totalSteps, catalog }: Props) => {
         <Section title="AI Settings" state={aiState}>
           <div className="space-y-2.5">
             <div>
-              <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate">
-                {draft.llmModel || draft.llmProvider}
-                <span className="text-xs font-semibold mx-1 text-slate-400 dark:text-slate-500">via</span>
-                <span className="text-xs font-bold text-slate-600 dark:text-slate-300">{llmLabel}</span>
-              </p>
-              <p className="text-xs text-slate-400 dark:text-slate-300">
-                STT: {sttLabel} · TTS: {ttsLabel}
-              </p>
+              {isS2s ? (
+                <>
+                  <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate">
+                    {draft.s2sModel || draft.s2sProvider}
+                    <span className="text-xs font-semibold mx-1 text-slate-400 dark:text-slate-500">via</span>
+                    <span className="text-xs font-bold text-slate-600 dark:text-slate-300">{s2sLabel}</span>
+                  </p>
+                  <p className="text-xs text-slate-400 dark:text-slate-300">
+                    Realtime · voice: {draft.voiceName || '—'}
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate">
+                    {draft.llmModel || draft.llmProvider}
+                    <span className="text-xs font-semibold mx-1 text-slate-400 dark:text-slate-500">via</span>
+                    <span className="text-xs font-bold text-slate-600 dark:text-slate-300">{llmLabel}</span>
+                  </p>
+                  <p className="text-xs text-slate-400 dark:text-slate-300">
+                    STT: {sttLabel} · TTS: {ttsLabel}
+                  </p>
+                </>
+              )}
             </div>
             <div className="space-y-1.5 pt-0.5 dark:text-slate-300">
               {neededKeyEnvs(catalog, draft).map((env) => (

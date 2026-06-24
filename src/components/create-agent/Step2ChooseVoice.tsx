@@ -110,8 +110,13 @@ const Step2ChooseVoice = ({ draft, onChange, catalog, ...navProps }: Props) => {
   const [playingId, setPlayingId] = useState<string | null>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
 
-  const ttsProviders = catalog.tts
-  const provider = findProvider(catalog, 'tts', draft.ttsProvider) ?? ttsProviders[0]
+  // For s2s agents the realtime provider is chosen here and drives the voices;
+  // for pipeline agents this is the TTS provider.
+  const isS2s = draft.agentType === 's2s'
+  const modality = isS2s ? 's2s' : 'tts'
+  const providers = isS2s ? catalog.s2s : catalog.tts
+  const selectedId = isS2s ? draft.s2sProvider : draft.ttsProvider
+  const provider = findProvider(catalog, modality, selectedId) ?? providers[0]
   const voices = provider?.voices ?? []
 
   const stopAudio = () => {
@@ -142,12 +147,12 @@ const Step2ChooseVoice = ({ draft, onChange, catalog, ...navProps }: Props) => {
     })
 
   const selectProvider = (id: string) => {
-    if (id === draft.ttsProvider) return
+    if (id === selectedId) return
     stopAudio()
-    const next = findProvider(catalog, 'tts', id)
+    const next = findProvider(catalog, modality, id)
     const first = next?.voices?.[0]
     onChange({
-      ttsProvider: id,
+      ...(isS2s ? { s2sProvider: id, s2sModel: next?.models?.[0] ?? '' } : { ttsProvider: id }),
       voiceId: first?.id ?? '',
       voiceName: first?.name ?? '',
       voiceProvider: next?.label ?? '',
@@ -164,23 +169,24 @@ const Step2ChooseVoice = ({ draft, onChange, catalog, ...navProps }: Props) => {
     }
     return () => { audioRef.current?.pause() }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [draft.ttsProvider, voices.length])
+  }, [selectedId, voices.length])
 
   return (
     <div className="max-w-xxl space-y-6">
       <p className="text-sm text-slate-600 dark:text-slate-400">
-        Choose the text-to-speech provider and a voice for your agent. Callers will hear this voice
-        throughout the conversation.
+        {isS2s
+          ? 'Choose the realtime speech-to-speech provider and a voice for your agent. Callers will hear this voice throughout the conversation.'
+          : 'Choose the text-to-speech provider and a voice for your agent. Callers will hear this voice throughout the conversation.'}
       </p>
 
-      {/* ── TTS provider ── */}
+      {/* ── Provider ── */}
       <div className="max-w-sm">
-        <label className={inputLabel}>TTS provider</label>
+        <label className={inputLabel}>{isS2s ? 'Speech-to-speech provider' : 'TTS provider'}</label>
         <SearchableSelect
-          value={draft.ttsProvider}
+          value={selectedId}
           onChange={selectProvider}
-          options={ttsProviders.map((p) => ({ value: p.id, label: p.label }))}
-          placeholder="Select a TTS provider…"
+          options={providers.map((p) => ({ value: p.id, label: p.label }))}
+          placeholder={isS2s ? 'Select a realtime provider…' : 'Select a TTS provider…'}
         />
       </div>
 

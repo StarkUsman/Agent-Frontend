@@ -2,12 +2,14 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { TbGitFork } from 'react-icons/tb'
 import { MdOpenInNew, MdContentCopy, MdCheck } from 'react-icons/md'
+import type { AgentKind } from '../../api/manager'
 
 // ── Types ──────────────────────────────────────────────────────────────────
 export interface AgentRowData {
   id: string
   name: string
   description: string
+  kind: AgentKind
   calls: number
   avgTtfb: string | null
   interruptions: string | null
@@ -16,7 +18,7 @@ export interface AgentRowData {
 }
 
 interface AgentRowProps extends AgentRowData {
-  onToggleStatus: (id: string, status: AgentRowData['status']) => Promise<void> | void
+  onToggleStatus: (id: string, status: AgentRowData['status'], kind: AgentKind) => Promise<void> | void
   onClick?:       () => void
 }
 
@@ -73,10 +75,12 @@ const FlowCell = ({ id }: { id: string }) => {
 const StatusToggle = ({
   id,
   status,
+  kind,
   onToggle,
 }: {
   id: string
   status: AgentRowData['status']
+  kind: AgentKind
   onToggle: AgentRowProps['onToggleStatus']
 }) => {
   const [pending, setPending] = useState(false)
@@ -86,7 +90,7 @@ const StatusToggle = ({
     if (pending) return
     setPending(true)
     try {
-      await onToggle(id, status)
+      await onToggle(id, status, kind)
     } finally {
       setPending(false)
     }
@@ -142,6 +146,7 @@ const AgentTableRow = ({
   id,
   name,
   description,
+  kind,
   calls,
   avgTtfb,
   interruptions,
@@ -157,9 +162,16 @@ const AgentTableRow = ({
     >
       {/* Agent name + description */}
       <td className="py-4 pl-6 pr-4">
-        <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
-          {name}
-        </p>
+        <div className="flex items-center gap-2">
+          <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+            {name}
+          </p>
+          {kind === 's2s' && (
+            <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/40 text-purple-600 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
+              S2S
+            </span>
+          )}
+        </div>
         <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">{description}</p>
       </td>
 
@@ -196,7 +208,7 @@ const AgentTableRow = ({
 
       {/* Status — stop propagation so toggle doesn't also open modal */}
       <td className="py-4 pl-4 pr-6" onClick={(e) => e.stopPropagation()}>
-        <StatusToggle id={id} status={status} onToggle={onToggleStatus} />
+        <StatusToggle id={id} status={status} kind={kind} onToggle={onToggleStatus} />
       </td>
 
     </tr>

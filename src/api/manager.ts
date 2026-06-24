@@ -13,6 +13,11 @@ const LIST_BASE_URL = (
 
 export type AgentStatus = "running" | "inactive";
 
+// Which manager pipeline an agent runs on: a classic STT→LLM→TTS "pipeline"
+// agent (routes under "") or a realtime speech-to-speech "s2s" agent (routes
+// under "/STS"). The list API tags each agent with this discriminator.
+export type AgentKind = "pipeline" | "s2s";
+
 export interface ManagerAgent {
   id: string;
   name: string;
@@ -22,6 +27,17 @@ export interface ManagerAgent {
   created_at: string;
   updated_at: string;
   flow_api_port: number;
+  kind?: AgentKind;
+}
+
+// Manager route prefix for a given agent kind. S2S agents live under /STS.
+const prefix = (kind: AgentKind = "pipeline"): string =>
+  kind === "s2s" ? "/STS" : "";
+
+// Resolve an agent's kind, falling back to its config if the list API didn't
+// tag it (e.g. an older backend).
+export function agentKindOf(agent: Pick<ManagerAgent, "kind" | "config">): AgentKind {
+  return agent.kind ?? (agent.config?.S2S_PROVIDER ? "s2s" : "pipeline");
 }
 
 export interface AgentDetail extends ManagerAgent {
@@ -108,12 +124,19 @@ export function getAgent(id: string): Promise<AgentDetail> {
   return requestList<AgentDetail>(`/api/agents/${id}`);
 }
 
-export function getAgentFlow(id: string): Promise<{ flow_code: string }> {
-  return request<{ flow_code: string }>(`/agents/${id}/flow`);
+// The flow editor only knows an agent id, not its kind. When kind is omitted we
+// try the pipeline route and fall back to the s2s route on failure.
+export async function getAgentFlow(id: string, kind?: AgentKind): Promise<{ flow_code: string }> {
+  if (kind) return request<{ flow_code: string }>(`${prefix(kind)}/agents/${id}/flow`);
+  try {
+    return await request<{ flow_code: string }>(`/agents/${id}/flow`);
+  } catch {
+    return await request<{ flow_code: string }>(`/STS/agents/${id}/flow`);
+  }
 }
 
-export function createAgent(body: CreateAgentBody): Promise<CreateAgentResponse> {
-  return request<CreateAgentResponse>("/agents", {
+export function createAgent(body: CreateAgentBody, kind: AgentKind = "pipeline"): Promise<CreateAgentResponse> {
+  return request<CreateAgentResponse>(`${prefix(kind)}/agents`, {
     method: "POST",
     body: JSON.stringify(body),
   });
@@ -143,28 +166,44 @@ export interface ProviderCatalog {
   stt: CatalogProvider[];
   llm: CatalogProvider[];
   tts: CatalogProvider[];
+  // Speech-to-speech realtime providers (GET /STS/providers). Flat list — each
+  // provider bundles STT+LLM+TTS, so one entry drives the whole agent.
+  s2s: CatalogProvider[];
 }
 
-export function getProviders(): Promise<ProviderCatalog> {
-  return request<ProviderCatalog>("/providers");
+export function getProviders(): Promise<Omit<ProviderCatalog, "s2s">> {
+  return request<Omit<ProviderCatalog, "s2s">>("/providers");
 }
 
-export function updateAgentFlow(
+// GET /STS/providers returns a flat array of realtime providers.
+export function getS2sProviders(): Promise<CatalogProvider[]> {
+  return request<CatalogProvider[]>("/STS/providers");
+}
+
+export async function updateAgentFlow(
   id: string,
-  flowCode: string
+  flowCode: string,
+  kind?: AgentKind
 ): Promise<{ status: string; message: string }> {
-  return request(`/agents/${id}/flow`, {
-    method: "PUT",
-    body: JSON.stringify({ flow_code: flowCode }),
-  });
+  const body = JSON.stringify({ flow_code: flowCode });
+  if (kind) {
+    return request(`${prefix(kind)}/agents/${id}/flow`, { method: "PUT", body });
+  }
+  // Kind unknown (flow editor): try pipeline, fall back to s2s. Retrying a PUT
+  // is safe — a 404 means nothing was modified in that table.
+  try {
+    return await request(`/agents/${id}/flow`, { method: "PUT", body });
+  } catch {
+    return await request(`/STS/agents/${id}/flow`, { method: "PUT", body });
+  }
 }
 
-export function activateAgent(id: string): Promise<{ status: string; client_url: string }> {
-  return request(`/agents/${id}/activate`, { method: "PUT" });
+export function activateAgent(id: string, kind: AgentKind = "pipeline"): Promise<{ status: string; client_url: string }> {
+  return request(`${prefix(kind)}/agents/${id}/activate`, { method: "PUT" });
 }
 
-export function deactivateAgent(id: string): Promise<{ status: string; message: string }> {
-  return request(`/agents/${id}/deactivate`, { method: "PUT" });
+export function deactivateAgent(id: string, kind: AgentKind = "pipeline"): Promise<{ status: string; message: string }> {
+  return request(`${prefix(kind)}/agents/${id}/deactivate`, { method: "PUT" });
 }
 
 export interface UpdateAgentBody {
@@ -172,15 +211,15 @@ export interface UpdateAgentBody {
   config?: Record<string, string>;
 }
 
-export function updateAgent(id: string, body: UpdateAgentBody): Promise<ManagerAgent> {
-  return request<ManagerAgent>(`/agents/${id}/config`, {
+export function updateAgent(id: string, body: UpdateAgentBody, kind: AgentKind = "pipeline"): Promise<ManagerAgent> {
+  return request<ManagerAgent>(`${prefix(kind)}/agents/${id}/config`, {
     method: "PUT",
     body: JSON.stringify(body),
   });
 }
 
-export function deleteAgent(id: string): Promise<{ status: string }> {
-  return request(`/agents/${id}`, { method: "DELETE" });
+export function deleteAgent(id: string, kind: AgentKind = "pipeline"): Promise<{ status: string }> {
+  return request(`${prefix(kind)}/agents/${id}`, { method: "DELETE" });
 }
 
 // The /agents list returns `port` but not `client_url`; build it from the

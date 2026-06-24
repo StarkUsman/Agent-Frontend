@@ -36,6 +36,7 @@ interface Props extends StepNavProps {
 }
 
 const Step5Review = ({ draft, onEdit, ...navProps }: Props) => {
+  const isS2s = draft.agentType === 's2s'
   const voiceValue = [
     draft.voiceName,
     draft.voiceProvider,
@@ -61,12 +62,22 @@ const Step5Review = ({ draft, onEdit, ...navProps }: Props) => {
         {/* Rows */}
         <div className="px-6">
           <Row label="Name"             value={draft.name || '—'} />
+          <Row label="Agent type"       value={isS2s ? 'Speech to Speech' : 'STT → LLM → TTS'} />
           <Row label="Voice"            value={voiceValue || '—'} />
           <Row label="Language"         value={LANGUAGE_LABELS[draft.language] ?? draft.language} />
-          <Row label="LLM"              value={[draft.llmModel, draft.llmProvider].filter(Boolean).join(' · ') || '—'} />
-          {draft.llmBaseUrl.trim() && <Row label="LLM base URL" value={draft.llmBaseUrl} />}
-          <Row label="Speech-to-text"   value={[draft.sttProvider, draft.sttModel, draft.sttLanguage].filter(Boolean).join(' · ') || '—'} />
-          <Row label="Text-to-speech"   value={[draft.ttsProvider, draft.voiceName].filter(Boolean).join(' · ') || '—'} />
+          {isS2s ? (
+            <>
+              <Row label="Provider" value={draft.voiceProvider || draft.s2sProvider || '—'} />
+              <Row label="Model"    value={draft.s2sModel || 'Provider default'} />
+            </>
+          ) : (
+            <>
+              <Row label="LLM"              value={[draft.llmModel, draft.llmProvider].filter(Boolean).join(' · ') || '—'} />
+              {draft.llmBaseUrl.trim() && <Row label="LLM base URL" value={draft.llmBaseUrl} />}
+              <Row label="Speech-to-text"   value={[draft.sttProvider, draft.sttModel, draft.sttLanguage].filter(Boolean).join(' · ') || '—'} />
+              <Row label="Text-to-speech"   value={[draft.ttsProvider, draft.voiceName].filter(Boolean).join(' · ') || '—'} />
+            </>
+          )}
           {/* <Row label="Opening greeting" value={truncate(draft.openingGreeting, 70) || '—'} />
           <Row label="Topics handled"   value={topicsValue || '—'} /> */}
           {draft.topicsToAvoid.trim() && (

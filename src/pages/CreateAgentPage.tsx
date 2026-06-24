@@ -22,6 +22,13 @@ export interface AgentDraft {
   // Step 1
   name: string
   language: string
+  // Which pipeline this agent runs: classic STT→LLM→TTS or realtime
+  // speech-to-speech. Drives which providers the later steps show.
+  agentType: 'pipeline' | 's2s'
+  // s2s — a single realtime provider drives the whole agent. The chosen voice
+  // reuses the shared voiceId/voiceName/voiceProvider/voiceGender fields below.
+  s2sProvider: string
+  s2sModel: string
   // Step 2 — TTS provider + voice
   ttsProvider: string
   ttsModel: string
@@ -48,6 +55,9 @@ export interface AgentDraft {
 const INITIAL_DRAFT: AgentDraft = {
   name: '',
   language: 'en-GB',
+  agentType: 'pipeline',
+  s2sProvider: 'openai_realtime',
+  s2sModel: '',
   ttsProvider: 'deepgram',
   ttsModel: '',
   voiceId: 'aura-2-helena-en',
@@ -81,7 +91,9 @@ const TOTAL_STEPS = STEPS.length
 const canAdvance = (step: number, draft: AgentDraft, neededEnvs: string[]): boolean => {
   switch (step) {
     case 1: return draft.name.trim().length > 0
-    case 2: return draft.voiceId.trim().length > 0 && draft.ttsProvider.trim().length > 0
+    case 2: return draft.agentType === 's2s'
+      ? draft.voiceId.trim().length > 0 && draft.s2sProvider.trim().length > 0
+      : draft.voiceId.trim().length > 0 && draft.ttsProvider.trim().length > 0
     // Every API key required by the selected providers must be filled.
     case 3: return neededEnvs.every((env) => (draft.apiKeys[env] ?? '').trim().length > 0)
     case 4: return draft.openingGreeting.trim().length > 0 && draft.topicsHandled.trim().length > 0
@@ -121,7 +133,7 @@ const CreateAgentPage = () => {
         name: draft.name.trim(),
         flow_code: buildPlaceholderFlowCode(),
         config,
-      })
+      }, draft.agentType)
       refresh()
       showToast.success('Agent created', `"${draft.name.trim()}" is ready.`)
       navigate('/agents')
@@ -202,7 +214,7 @@ const CreateAgentPage = () => {
           <div className="flex-1 overflow-y-auto px-8 py-5">
             {step === 1 && (
               <Step1BasicInfo
-                draft={draft} onChange={updateDraft}
+                draft={draft} onChange={updateDraft} catalog={catalog}
                 onContinue={handleContinue} canContinue={continueReady} isFinalStep={isFinalStep}
               />
             )}

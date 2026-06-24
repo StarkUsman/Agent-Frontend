@@ -8,7 +8,7 @@ import Step1BasicInfo from '../components/create-agent/Step1BasicInfo'
 import Step2ChooseVoice from '../components/create-agent/Step2ChooseVoice'
 import Step3AISettings from '../components/create-agent/Step3AISettings'
 import Step5Review from '../components/create-agent/Step5Review'
-import { getAgent, updateAgent, type ManagerAgent, type ProviderCatalog } from '../api/manager'
+import { getAgent, updateAgent, agentKindOf, type ManagerAgent, type ProviderCatalog } from '../api/manager'
 import { useProviderCatalog, findProvider, neededKeyEnvs, buildAgentConfig } from '../components/create-agent/catalog'
 import { useAgents } from '../contexts/AgentsContext'
 import { showToast } from '../components/ui/Toast'
@@ -24,25 +24,34 @@ const TOTAL_STEPS = STEPS.length
 
 const draftFromAgent = (agent: ManagerAgent, catalog: ProviderCatalog): AgentDraft => {
   const cfg = agent.config ?? {}
+  const agentType = agentKindOf(agent)
 
   // Back-compat: agents created by the old form used OPENAI_MODEL/OPENAI_BASE_URL
   // with an implicit Groq/OpenAI provider.
   const llmProvider = cfg.LLM_PROVIDER
     ?? (cfg.OPENAI_BASE_URL?.includes('groq') ? 'groq' : 'openai')
-  const ttsProvider = cfg.TTS_PROVIDER ?? 'deepgram'
-  const voiceId     = cfg.TTS_VOICE ?? ''
 
-  const ttsCat = findProvider(catalog, 'tts', ttsProvider)
-  const voice  = ttsCat?.voices?.find((v) => v.id === voiceId)
+  // For s2s the voice comes from the realtime provider; otherwise the TTS one.
+  const s2sProvider = cfg.S2S_PROVIDER ?? 'openai_realtime'
+  const ttsProvider = cfg.TTS_PROVIDER ?? 'deepgram'
+  const voiceId     = (agentType === 's2s' ? cfg.S2S_VOICE : cfg.TTS_VOICE) ?? ''
+
+  const voiceCat = agentType === 's2s'
+    ? findProvider(catalog, 's2s', s2sProvider)
+    : findProvider(catalog, 'tts', ttsProvider)
+  const voice = voiceCat?.voices?.find((v) => v.id === voiceId)
 
   return {
     name:            agent.name,
     language:        'en-GB',
+    agentType,
+    s2sProvider,
+    s2sModel:        cfg.S2S_MODEL ?? '',
     ttsProvider,
     ttsModel:        cfg.TTS_MODEL ?? '',
     voiceId,
     voiceName:       voice?.name ?? voiceId,
-    voiceProvider:   ttsCat?.label ?? '',
+    voiceProvider:   voiceCat?.label ?? '',
     age:             '',
     voiceGender:     (voice?.gender as AgentDraft['voiceGender']) ?? 'neutral',
     llmProvider,
@@ -118,7 +127,7 @@ const EditAgentPage = () => {
     setSubmitting(true)
     setSubmitError(null)
     try {
-      await updateAgent(agent.id, { name: draft.name.trim(), config })
+      await updateAgent(agent.id, { name: draft.name.trim(), config }, draft.agentType)
       refresh()
       showToast.success('Agent updated', 'Changes saved successfully.')
       navigate('/agents')
@@ -204,7 +213,9 @@ const EditAgentPage = () => {
               <Step1BasicInfo
                 draft={draft}
                 onChange={updateDraft}
+                catalog={catalog}
                 nameDisabled
+                typeDisabled
                 onContinue={handleContinue}
                 canContinue={continueReady}
                 isFinalStep={isFinalStep}

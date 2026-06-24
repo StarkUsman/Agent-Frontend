@@ -38,6 +38,8 @@ const label = 'block text-xs font-semibold text-slate-500 dark:text-slate-400 up
 const Step3AISettings = ({ draft, onChange, catalog, neededEnvs, editMode, ...navProps }: Props) => {
   const [shown, setShown] = useState<Record<string, boolean>>({})
 
+  const isS2s = draft.agentType === 's2s'
+  const s2s = findProvider(catalog, 's2s', draft.s2sProvider)
   const llm = findProvider(catalog, 'llm', draft.llmProvider)
   const stt = findProvider(catalog, 'stt', draft.sttProvider)
 
@@ -62,6 +64,7 @@ const Step3AISettings = ({ draft, onChange, catalog, neededEnvs, editMode, ...na
 
   // Which provider(s) need each env var — shown as a hint on the key field.
   const keyHint = (env: string): string => {
+    if (isS2s) return s2s?.apiKeyEnv === env ? (s2s?.label ?? '') : ''
     const labels: string[] = []
     if (llm?.apiKeyEnv === env) labels.push(llm.label)
     if (stt?.apiKeyEnv === env) labels.push(stt.label)
@@ -77,97 +80,133 @@ const Step3AISettings = ({ draft, onChange, catalog, neededEnvs, editMode, ...na
       <div className="flex items-start gap-3 px-4 py-3.5 bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-100 dark:border-indigo-800 rounded-xl">
         <MdInfoOutline className="text-indigo-500 dark:text-indigo-400 text-base shrink-0 mt-0.5" />
         <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-          Choose the language model and speech-to-text provider that power your agent. Only the API keys
-          required by your selected providers (including the TTS provider from the previous step) are
-          requested below — they're stored securely and never shown after saving.
+          {isS2s
+            ? 'Pick the model for your realtime provider. Only the API key it requires is requested below — keys are stored securely and never shown after saving.'
+            : "Choose the language model and speech-to-text provider that power your agent. Only the API keys required by your selected providers (including the TTS provider from the previous step) are requested below — they're stored securely and never shown after saving."}
         </p>
       </div>
 
-      {/* ── LLM ── */}
-      <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5 space-y-4">
-        <div>
-          <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Language model (LLM)</h3>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-            The brain of your agent — decides what to say.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
+      {isS2s ? (
+        /* ── Speech-to-speech model ── */
+        <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5 space-y-4">
           <div>
-            <label className={label}>Provider</label>
-            <SearchableSelect
-              value={draft.llmProvider}
-              onChange={selectLlmProvider}
-              options={catalog.llm.map((p) => ({ value: p.id, label: p.label }))}
-              placeholder="Select an LLM provider…"
-            />
+            <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Speech-to-speech model</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+              The realtime model that listens and speaks. Provider and voice were chosen in the previous step.
+            </p>
           </div>
-          <div>
-            <label className={label}>Model</label>
-            <SearchableSelect
-              value={draft.llmModel}
-              onChange={(v) => onChange({ llmModel: v })}
-              options={toOpts(llm?.models)}
-              placeholder="Model id…"
-              allowCustom
-            />
-          </div>
-        </div>
 
-        <div>
-          <label className={label}>Base URL <span className="text-slate-400 normal-case font-normal">(optional)</span></label>
-          <input
-            type="text"
-            value={draft.llmBaseUrl}
-            onChange={(e) => onChange({ llmBaseUrl: e.target.value })}
-            placeholder={llm?.baseUrl ?? 'Provider default'}
-            className={inputClass}
-          />
-        </div>
-      </div>
-
-      {/* ── STT ── */}
-      <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5 space-y-4">
-        <div>
-          <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Speech recognition (STT)</h3>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-            Transcribes what the caller says.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className={label}>Provider</label>
-            <SearchableSelect
-              value={draft.sttProvider}
-              onChange={selectSttProvider}
-              options={catalog.stt.map((p) => ({ value: p.id, label: p.label }))}
-              placeholder="Select an STT provider…"
-            />
-          </div>
-          <div>
-            <label className={label}>Model <span className="text-slate-400 normal-case font-normal">(optional)</span></label>
-            <SearchableSelect
-              value={draft.sttModel}
-              onChange={(v) => onChange({ sttModel: v })}
-              options={toOpts(stt?.models)}
-              placeholder="Provider default"
-              allowCustom
-            />
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className={label}>Provider</label>
+              <input
+                type="text"
+                value={s2s?.label ?? draft.s2sProvider}
+                disabled
+                className={`${inputClass} opacity-60 cursor-not-allowed`}
+              />
+            </div>
+            <div>
+              <label className={label}>Model <span className="text-slate-400 normal-case font-normal">(optional)</span></label>
+              <SearchableSelect
+                value={draft.s2sModel}
+                onChange={(v) => onChange({ s2sModel: v })}
+                options={toOpts(s2s?.models)}
+                placeholder="Provider default"
+                allowCustom
+              />
+            </div>
           </div>
         </div>
+      ) : (
+        <>
+          {/* ── LLM ── */}
+          <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5 space-y-4">
+            <div>
+              <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Language model (LLM)</h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                The brain of your agent — decides what to say.
+              </p>
+            </div>
 
-        <div className="max-w-xs">
-          <label className={label}>Language <span className="text-slate-400 normal-case font-normal">(optional)</span></label>
-          <SearchableSelect
-            value={draft.sttLanguage}
-            onChange={(v) => onChange({ sttLanguage: v })}
-            options={STT_LANGUAGES}
-            placeholder="Auto / provider default"
-            allowCustom
-          />
-        </div>
-      </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className={label}>Provider</label>
+                <SearchableSelect
+                  value={draft.llmProvider}
+                  onChange={selectLlmProvider}
+                  options={catalog.llm.map((p) => ({ value: p.id, label: p.label }))}
+                  placeholder="Select an LLM provider…"
+                />
+              </div>
+              <div>
+                <label className={label}>Model</label>
+                <SearchableSelect
+                  value={draft.llmModel}
+                  onChange={(v) => onChange({ llmModel: v })}
+                  options={toOpts(llm?.models)}
+                  placeholder="Model id…"
+                  allowCustom
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className={label}>Base URL <span className="text-slate-400 normal-case font-normal">(optional)</span></label>
+              <input
+                type="text"
+                value={draft.llmBaseUrl}
+                onChange={(e) => onChange({ llmBaseUrl: e.target.value })}
+                placeholder={llm?.baseUrl ?? 'Provider default'}
+                className={inputClass}
+              />
+            </div>
+          </div>
+
+          {/* ── STT ── */}
+          <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5 space-y-4">
+            <div>
+              <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Speech recognition (STT)</h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                Transcribes what the caller says.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className={label}>Provider</label>
+                <SearchableSelect
+                  value={draft.sttProvider}
+                  onChange={selectSttProvider}
+                  options={catalog.stt.map((p) => ({ value: p.id, label: p.label }))}
+                  placeholder="Select an STT provider…"
+                />
+              </div>
+              <div>
+                <label className={label}>Model <span className="text-slate-400 normal-case font-normal">(optional)</span></label>
+                <SearchableSelect
+                  value={draft.sttModel}
+                  onChange={(v) => onChange({ sttModel: v })}
+                  options={toOpts(stt?.models)}
+                  placeholder="Provider default"
+                  allowCustom
+                />
+              </div>
+            </div>
+
+            <div className="max-w-xs">
+              <label className={label}>Language <span className="text-slate-400 normal-case font-normal">(optional)</span></label>
+              <SearchableSelect
+                value={draft.sttLanguage}
+                onChange={(v) => onChange({ sttLanguage: v })}
+                options={STT_LANGUAGES}
+                placeholder="Auto / provider default"
+                allowCustom
+              />
+            </div>
+          </div>
+        </>
+      )}
 
       {/* ── API keys (only the ones the selected providers need) ── */}
       <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5 space-y-4">
