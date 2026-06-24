@@ -32,6 +32,27 @@ export interface DashboardAvgLlmLatency {
   avg_llm_ttfb_ms: number
 }
 
+// ── Live agent status ─────────────────────────────────────────────────────────
+
+export interface LiveAgent {
+  name:        string
+  status:      string
+  port:        number
+  calls_today: number
+  avg_ttfb_ms: number
+  kind:        DashboardKind
+}
+
+export interface LiveAgentsResponse {
+  agents: LiveAgent[]
+}
+
+export function fetchAgentsLiveStatus(): Promise<LiveAgentsResponse> {
+  return authRequest<LiveAgentsResponse>('/api/reports/agents/live-status')
+}
+
+// ── Dashboard stats per kind ──────────────────────────────────────────────────
+
 export function fetchDashboardAgentStatus(kind: DashboardKind): Promise<DashboardAgentStatus> {
   return authRequest<DashboardAgentStatus>(`/api/reports/${kind}/dashboard/agent-status`)
 }

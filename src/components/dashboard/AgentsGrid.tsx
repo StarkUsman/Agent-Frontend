@@ -1,17 +1,17 @@
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useAgents } from '../../contexts/AgentsContext'
+import { fetchAgentsLiveStatus, type LiveAgent } from '../../api/dashboard'
 import AgentCard, { AgentCardSkeleton, type AgentCardProps } from './AgentCard'
-import type { ManagerAgent } from '../../api/manager'
 
 // ── Mapping ────────────────────────────────────────────────────────────────
 
-const toCard = (a: ManagerAgent): AgentCardProps => ({
-  id:          a.id,
+const toCard = (a: LiveAgent): AgentCardProps => ({
+  id:          a.port,
   name:        a.name,
   status:      a.status === 'running' ? 'Active' : 'Inactive',
-  description: a.config?.S2S_PROVIDER ?? a.config?.OPENAI_MODEL ?? `Port ${a.port}`,
-  callsToday:  0,
-  avgTtfb:     '—',
+  description: a.kind === 's2s' ? 'Speech-to-speech agent' : 'Pipeline agent',
+  callsToday:  a.calls_today,
+  avgTtfb:     a.avg_ttfb_ms > 0 ? `${Math.round(a.avg_ttfb_ms)}ms` : '—',
   nodes:       0,
 })
 
@@ -19,14 +19,22 @@ const toCard = (a: ManagerAgent): AgentCardProps => ({
 
 const AgentsGrid = () => {
   const navigate = useNavigate()
-  const { agents, loading } = useAgents()
 
-  // Split by kind: 'pipeline' = normal agents, 's2s' = STS agents
+  const [agents,  setAgents]  = useState<LiveAgent[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetchAgentsLiveStatus()
+      .then((res) => setAgents(res.agents))
+      .catch(() => setAgents([]))
+      .finally(() => setLoading(false))
+  }, [])
+
+  // 2 pipeline + 2 s2s; if one category is empty fill all 4 from the other
   const pipeline = agents.filter((a) => a.kind !== 's2s')
   const sts      = agents.filter((a) => a.kind === 's2s')
 
-  // Show 2 pipeline + 2 STS; if one category is empty, fill all 4 from the other
-  let displayed: ManagerAgent[]
+  let displayed: LiveAgent[]
   if (pipeline.length === 0) {
     displayed = sts.slice(0, 4)
   } else if (sts.length === 0) {
@@ -53,7 +61,7 @@ const AgentsGrid = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {loading
           ? Array.from({ length: 4 }).map((_, i) => <AgentCardSkeleton key={i} />)
-          : displayed.map((a) => <AgentCard key={a.id} {...toCard(a)} />)
+          : displayed.map((a) => <AgentCard key={a.port} {...toCard(a)} />)
         }
       </div>
 
