@@ -172,13 +172,13 @@ const LoginPage = () => {
                 <label className="block text-sm font-medium text-gray-700 dark:text-slate-300">
                   Password
                 </label>
-                <a
+                {/* <a
                   href="#"
                   className="text-xs font-medium hover:underline"
                   style={{ color: '#ea6c2e' }}
                 >
                   Forgot password?
-                </a>
+                </a> */}
               </div>
               <div className="relative">
                 <HiLockClosed className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-slate-500 text-base pointer-events-none" />
@@ -238,14 +238,14 @@ const LoginPage = () => {
           </form>
 
           {/* Divider */}
-          <div className="flex items-center gap-3 my-6">
+          {/* <div className="flex items-center gap-3 my-6">
             <div className="flex-1 h-px bg-gray-200 dark:bg-slate-700" />
             <span className="text-xs text-gray-400 dark:text-slate-500 font-medium">Or continue with</span>
             <div className="flex-1 h-px bg-gray-200 dark:bg-slate-700" />
-          </div>
+          </div> */}
 
           {/* Social login */}
-          <div className="grid grid-cols-3 gap-3">
+          {/* <div className="grid grid-cols-3 gap-3">
             <button className="flex items-center justify-center gap-2 py-2.5 border border-gray-200 dark:border-slate-700 rounded-lg text-sm font-medium text-gray-600 dark:text-slate-300 bg-white dark:bg-slate-800 hover:bg-gray-50 dark:hover:bg-slate-700 hover:border-gray-300 dark:hover:border-slate-600 transition-all cursor-pointer">
               <FaGoogle className="text-[#EA4335] text-base" />
               <span>Google</span>
@@ -258,10 +258,10 @@ const LoginPage = () => {
               <FaApple className="text-gray-900 dark:text-slate-100 text-base" />
               <span>Apple</span>
             </button>
-          </div>
+          </div> */}
 
           {/* Sign up */}
-          <p className="text-center text-sm text-gray-500 dark:text-slate-400 mt-8">
+          {/* <p className="text-center text-sm text-gray-500 dark:text-slate-400 mt-8">
             Don't have an account?{' '}
             <a
               href="#"
@@ -270,7 +270,7 @@ const LoginPage = () => {
             >
               Create one free
             </a>
-          </p>
+          </p> */}
         </div>
       </div>
 
