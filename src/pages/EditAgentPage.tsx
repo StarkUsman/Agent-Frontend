@@ -9,7 +9,7 @@ import Step2ChooseVoice from '../components/create-agent/Step2ChooseVoice'
 import Step3AISettings from '../components/create-agent/Step3AISettings'
 import Step5Review from '../components/create-agent/Step5Review'
 import { getAgent, updateAgent, agentKindOf, type ManagerAgent, type ProviderCatalog } from '../api/manager'
-import { useProviderCatalog, findProvider, neededKeyEnvs, buildAgentConfig } from '../components/create-agent/catalog'
+import { useProviderCatalog, findProvider, neededKeyEnvs, buildAgentConfig, LANGUAGE_LABELS } from '../components/create-agent/catalog'
 import { useAgents } from '../contexts/AgentsContext'
 import { showToast } from '../components/ui/Toast'
 import type { AgentDraft } from './CreateAgentPage'
@@ -41,9 +41,20 @@ const draftFromAgent = (agent: ManagerAgent, catalog: ProviderCatalog): AgentDra
     : findProvider(catalog, 'tts', ttsProvider)
   const voice = voiceCat?.voices?.find((v) => v.id === voiceId)
 
+  // Recover the agent language: prefer the explicit code (S2S_LANGUAGE for s2s,
+  // STT_LANGUAGE for pipeline), else reverse-map the AGENT_LANGUAGE label, else
+  // default to English.
+  const langFromLabel = Object.keys(LANGUAGE_LABELS).find(
+    (code) => LANGUAGE_LABELS[code] === cfg.AGENT_LANGUAGE
+  )
+  const language =
+    (agentType === 's2s' ? cfg.S2S_LANGUAGE : cfg.STT_LANGUAGE) ||
+    langFromLabel ||
+    'en-GB'
+
   return {
     name:            agent.name,
-    language:        'en-GB',
+    language,
     agentType,
     s2sProvider,
     s2sModel:        cfg.S2S_MODEL ?? '',

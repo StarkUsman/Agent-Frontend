@@ -2,6 +2,20 @@ import { useEffect, useState } from 'react'
 import { getProviders, getS2sProviders, type ProviderCatalog, type CatalogProvider } from '../../api/manager'
 import type { AgentDraft } from '../../pages/CreateAgentPage'
 
+// Human labels for the agent language codes — sent to the manager as
+// AGENT_LANGUAGE (used to steer the LLM's spoken language, e.g. Urdu/Hindi).
+// Keep in sync with the LANGUAGES list in Step1BasicInfo.
+export const LANGUAGE_LABELS: Record<string, string> = {
+  'en-GB': 'English', 'en-US': 'English', 'ur': 'Urdu', 'hi': 'Hindi',
+  'es': 'Spanish', 'fr': 'French', 'de': 'German', 'it': 'Italian',
+  'pt-BR': 'Portuguese', 'nl': 'Dutch', 'pl': 'Polish', 'ja': 'Japanese',
+  'ko': 'Korean', 'zh-CN': 'Chinese',
+}
+
+// English is the providers' default, so we don't force any language keys for it
+// (keeps existing English agents' config unchanged).
+const isEnglish = (code: string) => code.trim().toLowerCase().startsWith('en')
+
 // Resilient fallback mirroring services.PROVIDER_CATALOG on the manager, so the
 // form still works if GET /providers is briefly unreachable. The live fetch
 // overrides this on success.
@@ -147,11 +161,21 @@ export function neededKeyEnvs(catalog: ProviderCatalog, draft: AgentDraft): stri
 // keys in edit mode preserve the server's existing values). Shared by the
 // create and edit flows.
 export function buildAgentConfig(catalog: ProviderCatalog, draft: AgentDraft): Record<string, string> {
+  // The chosen agent language steers the LLM's spoken language (AGENT_LANGUAGE,
+  // a human label the manager injects into the system prompt). Only sent for
+  // non-English languages, since English is every provider's default.
+  const langCode  = draft.language.trim()
+  const langLabel = langCode && !isEnglish(langCode) ? (LANGUAGE_LABELS[langCode] ?? langCode) : ''
+
   // Speech-to-speech: a single realtime provider + optional model + voice.
   if (draft.agentType === 's2s') {
     const s2sConfig: Record<string, string> = { S2S_PROVIDER: draft.s2sProvider }
     if (draft.s2sModel.trim()) s2sConfig.S2S_MODEL = draft.s2sModel.trim()
     if (draft.voiceId.trim())  s2sConfig.S2S_VOICE = draft.voiceId.trim()
+    if (langLabel) {
+      s2sConfig.AGENT_LANGUAGE = langLabel       // prompt steering
+      s2sConfig.S2S_LANGUAGE   = langCode        // explicit realtime language (e.g. gemini_live)
+    }
     for (const env of neededKeyEnvs(catalog, draft)) {
       const v = draft.apiKeys[env]?.trim()
       if (v) s2sConfig[env] = v
@@ -167,7 +191,12 @@ export function buildAgentConfig(catalog: ProviderCatalog, draft: AgentDraft): R
   if (draft.llmModel.trim())    config.LLM_MODEL    = draft.llmModel.trim()
   if (draft.llmBaseUrl.trim())  config.LLM_BASE_URL = draft.llmBaseUrl.trim()
   if (draft.sttModel.trim())    config.STT_MODEL    = draft.sttModel.trim()
+  // Explicit STT-language picker wins; otherwise fall back to the agent language
+  // so speech recognition (and Azure TTS, which falls back to STT_LANGUAGE)
+  // follow the chosen language.
   if (draft.sttLanguage.trim()) config.STT_LANGUAGE = draft.sttLanguage.trim()
+  else if (langCode && !isEnglish(langCode)) config.STT_LANGUAGE = langCode
+  if (langLabel)                config.AGENT_LANGUAGE = langLabel
   if (draft.voiceId.trim())     config.TTS_VOICE    = draft.voiceId.trim()
   if (draft.ttsModel.trim())    config.TTS_MODEL    = draft.ttsModel.trim()
   for (const env of neededKeyEnvs(catalog, draft)) {

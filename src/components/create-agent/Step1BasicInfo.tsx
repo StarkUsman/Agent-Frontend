@@ -11,6 +11,8 @@ const inputClass =
 const LANGUAGES = [
   { value: 'en-GB', label: 'English (UK)' },
   { value: 'en-US', label: 'English (US)' },
+  { value: 'ur',    label: 'Urdu' },
+  { value: 'hi',    label: 'Hindi' },
   { value: 'es',    label: 'Spanish' },
   { value: 'fr',    label: 'French' },
   { value: 'de',    label: 'German' },

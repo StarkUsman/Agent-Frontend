@@ -4,6 +4,8 @@ import StepNav, { type StepNavProps } from './StepNav'
 const LANGUAGE_LABELS: Record<string, string> = {
   'en-GB': 'English (UK)',
   'en-US': 'English (US)',
+  'ur':    'Urdu',
+  'hi':    'Hindi',
   'es':    'Spanish',
   'fr':    'French',
   'de':    'German',
