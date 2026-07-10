@@ -1,6 +1,6 @@
-const BASE_URL = (
-  (import.meta.env.VITE_CALLS_URL as string | undefined) ?? 'http://localhost:8790'
-).replace(/\/+$/, '')
+import { CALLS_URL } from '../env'
+
+const BASE_URL = CALLS_URL
 
 export interface ApiAuthUser {
   user_id:           string

@@ -3,13 +3,11 @@
 // GET /agents and GET /agents/:id are served by the calls API (VITE_CALLS_URL).
 // All mutations (POST, PUT, DELETE) go to the manager API (VITE_MANAGER_URL).
 
-const BASE_URL = (
-  (import.meta.env.VITE_MANAGER_URL as string | undefined) ?? "http://84.46.251.98:8080"
-).replace(/\/+$/, "");
+import { MANAGER_URL, CALLS_URL } from "../env";
 
-const LIST_BASE_URL = (
-  (import.meta.env.VITE_CALLS_URL as string | undefined) ?? "http://localhost:8790"
-).replace(/\/+$/, "");
+const BASE_URL = MANAGER_URL;
+
+const LIST_BASE_URL = CALLS_URL;
 
 export type AgentStatus = "running" | "inactive";
 

@@ -1,0 +1,18 @@
+version: "3.4"
+
+services:
+  octave-agent-frontend:
+    container_name: octave-agent-frontend
+    build:
+      context: .
+    image: 747926693930.dkr.ecr.us-east-1.amazonaws.com/pipecat/agent-frontend:latest
+    env_file:
+      - ./agent-frontend.env
+    ports:
+      - "8791:8791"
+    networks:
+      - octave-network
+
+networks:
+  octave-network:
+    driver: bridge

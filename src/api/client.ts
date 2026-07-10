@@ -1,8 +1,7 @@
 import { apiRefresh } from './auth'
+import { CALLS_URL } from '../env'
 
-const BASE_URL = (
-  (import.meta.env.VITE_CALLS_URL as string | undefined) ?? 'http://localhost:8790'
-).replace(/\/+$/, '')
+const BASE_URL = CALLS_URL
 
 // ── Token helpers ──────────────────────────────────────────────────────────
 export function getAccessToken(): string | null {

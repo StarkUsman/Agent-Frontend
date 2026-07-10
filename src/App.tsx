@@ -19,7 +19,7 @@ const App = () => {
   return (
     <ThemeProvider>
       <CurrentUserProvider>
-        <BrowserRouter>
+        <BrowserRouter basename="/ui">
           <AgentsProvider>
           <Routes>
             <Route path="/" element={<LoginPage />} />
