@@ -26,6 +26,7 @@ export const FALLBACK_CATALOG: ProviderCatalog = {
     { id: 'gladia',     label: 'Gladia',             apiKeyEnv: 'GLADIA_API_KEY',     models: [] },
     { id: 'openai',     label: 'OpenAI (Whisper)',   apiKeyEnv: 'OPENAI_API_KEY',     models: ['whisper-1', 'gpt-4o-transcribe'] },
     { id: 'groq',       label: 'Groq (Whisper)',     apiKeyEnv: 'GROQ_API_KEY',       models: ['whisper-large-v3'] },
+    { id: 'azure',      label: 'Azure Speech',       apiKeyEnv: 'AZURE_SPEECH_API_KEY', regionEnv: 'AZURE_SPEECH_REGION', models: [] },
   ],
   llm: [
     { id: 'openai',     label: 'OpenAI',             apiKeyEnv: 'OPENAI_API_KEY',     models: ['gpt-4o', 'gpt-4o-mini'] },
@@ -66,6 +67,14 @@ export const FALLBACK_CATALOG: ProviderCatalog = {
       { id: 'onyx',    name: 'Onyx',    gender: 'male',    accent: 'American', description: 'Deep, authoritative.' },
       { id: 'nova',    name: 'Nova',    gender: 'female',  accent: 'American', description: 'Bright, friendly.' },
       { id: 'shimmer', name: 'Shimmer', gender: 'female',  accent: 'American', description: 'Soft, gentle.' },
+    ] },
+    { id: 'azure',      label: 'Azure Speech', apiKeyEnv: 'AZURE_SPEECH_API_KEY', regionEnv: 'AZURE_SPEECH_REGION', models: [], voices: [
+      { id: 'ur-PK-UzmaNeural',   name: 'Uzma',   gender: 'female', accent: 'Urdu (Pakistan)', description: 'Native Urdu.' },
+      { id: 'ur-PK-AsadNeural',   name: 'Asad',   gender: 'male',   accent: 'Urdu (Pakistan)', description: 'Native Urdu.' },
+      { id: 'ur-IN-GulNeural',    name: 'Gul',    gender: 'female', accent: 'Urdu (India)',    description: 'Native Urdu.' },
+      { id: 'hi-IN-SwaraNeural',  name: 'Swara',  gender: 'female', accent: 'Hindi (India)',   description: 'Native Hindi.' },
+      { id: 'hi-IN-MadhurNeural', name: 'Madhur', gender: 'male',   accent: 'Hindi (India)',   description: 'Native Hindi.' },
+      { id: 'en-US-JennyNeural',  name: 'Jenny',  gender: 'female', accent: 'American',        description: 'English (default).' },
     ] },
   ],
   // Mirrors services.S2S_PROVIDER_CATALOG on the manager (GET /STS/providers).
@@ -156,6 +165,17 @@ export function neededKeyEnvs(catalog: ProviderCatalog, draft: AgentDraft): stri
   return [...new Set(envs)]
 }
 
+// Non-secret region env vars required by the selected pipeline providers (e.g.
+// Azure Speech's AZURE_SPEECH_REGION). S2S providers don't use one today.
+export function neededRegionEnvs(catalog: ProviderCatalog, draft: AgentDraft): string[] {
+  if (draft.agentType === 's2s') return []
+  const envs = [
+    findProvider(catalog, 'stt', draft.sttProvider)?.regionEnv,
+    findProvider(catalog, 'tts', draft.ttsProvider)?.regionEnv,
+  ].filter((e): e is string => !!e)
+  return [...new Set(envs)]
+}
+
 // Build the manager `config` dict from the draft. Optional fields are only
 // included when set; only the needed, non-empty API keys are sent (so blank
 // keys in edit mode preserve the server's existing values). Shared by the
@@ -200,6 +220,12 @@ export function buildAgentConfig(catalog: ProviderCatalog, draft: AgentDraft): R
   if (draft.voiceId.trim())     config.TTS_VOICE    = draft.voiceId.trim()
   if (draft.ttsModel.trim())    config.TTS_MODEL    = draft.ttsModel.trim()
   for (const env of neededKeyEnvs(catalog, draft)) {
+    const v = draft.apiKeys[env]?.trim()
+    if (v) config[env] = v
+  }
+  // Non-secret region env vars (e.g. Azure's AZURE_SPEECH_REGION) also travel in
+  // the apiKeys dict, keyed by env var.
+  for (const env of neededRegionEnvs(catalog, draft)) {
     const v = draft.apiKeys[env]?.trim()
     if (v) config[env] = v
   }

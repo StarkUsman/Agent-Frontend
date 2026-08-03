@@ -21,7 +21,10 @@ const STT_LANGUAGES = [
   { value: 'en-US', label: 'English — US (en-US)' },
   { value: 'en-GB', label: 'English — UK (en-GB)' },
   { value: 'hi',    label: 'Hindi (hi)' },
+  { value: 'hi-IN', label: 'Hindi — India (hi-IN)' },
   { value: 'ur',    label: 'Urdu (ur)' },
+  { value: 'ur-PK', label: 'Urdu — Pakistan (ur-PK)' },
+  { value: 'ur-IN', label: 'Urdu — India (ur-IN)' },
   { value: 'es',    label: 'Spanish (es)' },
   { value: 'fr',    label: 'French (fr)' },
   { value: 'de',    label: 'German (de)' },
@@ -42,6 +45,9 @@ const Step3AISettings = ({ draft, onChange, catalog, neededEnvs, editMode, ...na
   const s2s = findProvider(catalog, 's2s', draft.s2sProvider)
   const llm = findProvider(catalog, 'llm', draft.llmProvider)
   const stt = findProvider(catalog, 'stt', draft.sttProvider)
+
+  // Region env shared by the selected Azure STT/TTS providers (AZURE_SPEECH_REGION).
+  const regionEnv = stt?.regionEnv || findProvider(catalog, 'tts', draft.ttsProvider)?.regionEnv || null
 
   const toOpts = (vals: string[] = []) => vals.map((v) => ({ value: v, label: v }))
 
@@ -204,6 +210,26 @@ const Step3AISettings = ({ draft, onChange, catalog, neededEnvs, editMode, ...na
                 allowCustom
               />
             </div>
+
+            {/* Azure Speech needs a resource region alongside the API key. Shown
+                whenever the selected STT or TTS provider declares a regionEnv. */}
+            {regionEnv && (
+              <div className="max-w-xs">
+                <label className={label}>
+                  Azure region <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={draft.apiKeys[regionEnv] ?? ''}
+                  onChange={(e) => setKey(regionEnv, e.target.value)}
+                  placeholder="e.g. eastus"
+                  className={inputClass}
+                />
+                <p className="text-xs text-slate-400 dark:text-slate-500 mt-1.5">
+                  Your Azure Speech resource region — required for Azure STT/TTS.
+                </p>
+              </div>
+            )}
           </div>
         </>
       )}

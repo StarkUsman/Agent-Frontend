@@ -71,7 +71,9 @@ const draftFromAgent = (agent: ManagerAgent, catalog: ProviderCatalog): AgentDra
     sttProvider:     cfg.STT_PROVIDER ?? 'deepgram',
     sttModel:        cfg.STT_MODEL ?? '',
     sttLanguage:     cfg.STT_LANGUAGE ?? '',
-    apiKeys:         {},
+    // Keys are never returned by the server, but the non-secret Azure region is
+    // part of the config — prefill it so the required field isn't blank on edit.
+    apiKeys:         cfg.AZURE_SPEECH_REGION ? { AZURE_SPEECH_REGION: cfg.AZURE_SPEECH_REGION } : {},
     openingGreeting: '',
     topicsHandled:   '',
     topicsToAvoid:   '',

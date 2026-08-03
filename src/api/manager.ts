@@ -157,6 +157,9 @@ export interface CatalogProvider {
   id: string;
   label: string;
   apiKeyEnv: string | null;
+  // Extra non-secret env var some providers need alongside the key, e.g. Azure
+  // Speech requires AZURE_SPEECH_REGION. Surfaced as its own form field.
+  regionEnv?: string | null;
   baseUrl?: string;
   models?: string[];
   voices?: CatalogVoice[];

@@ -9,7 +9,7 @@ import Step3AISettings  from '../components/create-agent/Step3AISettings'
 import Step4Behaviour   from '../components/create-agent/Step4Behaviour'
 import Step5Review      from '../components/create-agent/Step5Review'
 import { createAgent } from '../api/manager'
-import { useProviderCatalog, neededKeyEnvs, buildAgentConfig } from '../components/create-agent/catalog'
+import { useProviderCatalog, neededKeyEnvs, neededRegionEnvs, buildAgentConfig } from '../components/create-agent/catalog'
 import { useAgents } from '../contexts/AgentsContext'
 import { showToast } from '../components/ui/Toast'
 import { generatePythonCode } from '../features/flow-editor/lib/codegen/pythonGenerator'
@@ -112,6 +112,9 @@ const CreateAgentPage = () => {
   const [submitError, setSubmitError] = useState<string | null>(null)
 
   const neededEnvs = neededKeyEnvs(catalog, draft)
+  // Region env(s) are required too (e.g. Azure), but render as their own field
+  // in Step 3 rather than in the API-keys list — so gate on them separately.
+  const requiredEnvs = [...neededEnvs, ...neededRegionEnvs(catalog, draft)]
 
   const updateDraft = (patch: Partial<AgentDraft>) =>
     setDraft((prev) => ({ ...prev, ...patch }))
@@ -161,7 +164,7 @@ const CreateAgentPage = () => {
   const isStepClickable = (target: number): boolean => {
     if (target <= step) return true
     for (let s = step; s < target; s++) {
-      if (!canAdvance(s, draft, neededEnvs)) return false
+      if (!canAdvance(s, draft, requiredEnvs)) return false
     }
     return true
   }
@@ -171,7 +174,7 @@ const CreateAgentPage = () => {
   }
 
   const isFinalStep   = step === TOTAL_STEPS
-  const continueReady = canAdvance(step, draft, neededEnvs)
+  const continueReady = canAdvance(step, draft, requiredEnvs)
 
   return (
     <div className="flex h-screen bg-white dark:bg-slate-900 overflow-hidden">
